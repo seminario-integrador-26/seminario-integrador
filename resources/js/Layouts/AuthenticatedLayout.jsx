@@ -6,7 +6,10 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const page = usePage();
+    const user = page.props.auth.user;
+    const roles = page.props.auth.roles ?? [];
+    const esAdministrativo = roles.includes('Administrativo');
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -30,6 +33,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
+                                {esAdministrativo && (
+                                    <NavLink
+                                        href={route('usuarios.index')}
+                                        active={route().current('usuarios.*')}
+                                    >
+                                        Usuarios
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
@@ -134,6 +145,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        {esAdministrativo && (
+                            <ResponsiveNavLink
+                                href={route('usuarios.index')}
+                                active={route().current('usuarios.*')}
+                            >
+                                Usuarios
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">

@@ -7,7 +7,7 @@
 ## 1. Idea general
 
 Es un **monolito Laravel + Inertia.js + React**. No hay microservicios. El
-frontend interno (Operador / Administrador) se sirve con **Inertia**, así que
+frontend interno (Supervisor / Administrativo / Operador) se sirve con **Inertia**, así que
 **no existe una API interna** que el frontend consuma: el Controller pasa props
 directo a un componente React.
 
@@ -17,11 +17,11 @@ que conviven:
 
 | Frontend interno (Inertia) | API pública (`/api/v1`) |
 |---|---|
-| Operador y Administrador | Sistemas externos |
+| Supervisor, Administrativo, Operador | Sistemas externos |
 | Lectura y escritura | Solo lectura |
 | Controllers en `Http/Controllers/` | Controllers en `Http/Controllers/Api/V1/` |
 | Devuelve `Inertia::render(...)` | Devuelve JSON |
-| Auth de sesión + roles spatie | Sanctum token / rate limit (a confirmar) |
+| Auth de sesión + roles spatie | Sanctum token (personal access token) |
 
 Además, **Blade puro** se usa **solo** para las plantillas que se convierten a
 PDF (`resources/views/reportes/`). El resto de la UI es React.
@@ -33,7 +33,7 @@ Request
   → Route (routes/web.php | routes/api.php)
     → Controller            (FINO: valida entrada, orquesta, arma la respuesta)
       → Service             (TODA la lógica de negocio vive acá)
-        → Model (Eloquent)  → MySQL
+        → Model (Eloquent)  → PostgreSQL
         → Contracts (interfaces): Notificador / Exportador / EstadisticaCalculador
               ↑ la implementación concreta la inyecta el container / una Factory
   ← el Controller responde con Inertia::render(...) o JSON
@@ -131,7 +131,7 @@ usuario recibió respuesta rápido.
   - `EventServiceProvider` — mapea Events → Listeners.
 
 ### `routes/`
-- `web.php` — rutas Inertia autenticadas (Operador/Administrador), con roles.
+- `web.php` — rutas Inertia autenticadas (Supervisor/Administrativo/Operador), con roles.
 - `api.php` — API pública versionada `/api/v1`, solo lectura.
 
 ### `resources/js/` (frontend React + Inertia)
@@ -162,7 +162,7 @@ usuario recibió respuesta rápido.
 - ❌ Service o Controller instanciando una clase concreta de Notificador/Exportador
   a mano (pedila por interfaz o Factory)
 - ❌ Lógica de negocio dentro de un Model, una Route o un componente React
-- ❌ Editar un Evento (usar Errata) o crear roles fuera de Operador/Administrador
+- ❌ Editar un Evento (usar Errata) o crear roles fuera de Supervisor/Administrativo/Operador
 
 ## 5. Por qué esta separación
 

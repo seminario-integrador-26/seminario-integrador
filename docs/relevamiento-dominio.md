@@ -20,13 +20,19 @@ notificación y consulta de eventos detectados por el Centro de Monitoreo
 
 ## Actores
 
-- **Operador** — registra eventos.
-- **Administrador** — consulta, gestiona, genera estadísticas y reportes.
+- **Supervisor** — registra eventos, genera fe de errata y gestiona los turnos
+  de guardia (abre/cierra).
+- **Administrativo** — consulta, gestiona, genera estadísticas y reportes,
+  exporta y administra usuarios y tipos de evento.
+- **Operador** — monitorea en vivo; en el sistema tiene acceso de **solo
+  lectura** (dashboards). No carga eventos.
 - **Sistemas externos** (Gobierno Abierto) — consumen la API pública.
 
 ## Clasificación de eventos
 
 Los eventos se relacionan con **prevención**, **convivencia urbana** o
-**seguridad pública**, y se derivan al área correspondiente.
+**seguridad pública**; además existen eventos **informativos** (no
+cuantificables). El sistema **no** deriva ni hace seguimiento posterior del
+evento (fuera de alcance).
 
 <!-- TODO: detalles del proceso actual, áreas destino, grupos de WhatsApp reales -->

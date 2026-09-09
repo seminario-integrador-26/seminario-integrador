@@ -10,11 +10,11 @@ limpio. Pensada para cualquier integrante del equipo.
 
 Tené instalado (y disponible en el `PATH`):
 
-- **PHP 8.4** (mínimo 8.3) con las extensiones que pide Laravel: `pdo_mysql`,
-  `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `curl`.
+- **PHP 8.4** (mínimo 8.3) con las extensiones que pide Laravel: `pdo_pgsql`,
+  `pgsql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `curl`.
 - **Composer 2.x**
 - **Node 20+ y npm** (se desarrolló con Node 24 / npm 11)
-- **MySQL 8.x** corriendo localmente (o accesible por red)
+- **PostgreSQL 15+** corriendo localmente (o accesible por red)
 - **Git**
 
 Verificá versiones:
@@ -24,7 +24,7 @@ php -v
 composer -V
 node -v
 npm -v
-mysql --version
+psql --version
 ```
 
 ## 2. Clonar el repositorio
@@ -45,18 +45,17 @@ npm install
 
 ## 4. Crear la base de datos
 
-En MySQL, creá la base vacía (el nombre por defecto es `seminario_integrador`):
+En PostgreSQL, creá la base vacía (el nombre por defecto es `seminario_integrador`).
+PostgreSQL usa UTF-8 por defecto:
 
 ```sql
-CREATE DATABASE seminario_integrador
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE seminario_integrador ENCODING 'UTF8';
 ```
 
-Desde la terminal podés hacerlo así (te pedirá la contraseña de root):
+Desde la terminal podés hacerlo así (te pedirá la contraseña del usuario `postgres`):
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE seminario_integrador CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+psql -U postgres -c "CREATE DATABASE seminario_integrador ENCODING 'UTF8';"
 ```
 
 ## 5. Configurar el entorno (`.env`)
@@ -68,33 +67,36 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Editá `.env` y ajustá las credenciales de tu MySQL local:
+Editá `.env` y ajustá las credenciales de tu PostgreSQL local:
 
 ```dotenv
-DB_CONNECTION=mysql
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_PORT=5432
 DB_DATABASE=seminario_integrador
-DB_USERNAME=root
-DB_PASSWORD=tu_password_de_mysql
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password_de_postgres
 ```
 
-> **Si no querés configurar MySQL todavía**, podés arrancar con drivers de
+> **Si no querés configurar PostgreSQL todavía**, podés arrancar con drivers de
 > archivo para no depender de la base en sesión/cache/cola:
 > `SESSION_DRIVER=file`, `CACHE_STORE=file`, `QUEUE_CONNECTION=sync`.
-> Recordá revertir a `database` cuando tengas MySQL listo (es lo que usa prod).
+> Recordá revertir a `database` cuando tengas PostgreSQL listo (es lo que usa prod).
 
 ## 6. Migrar la base
 
 ```bash
-php artisan migrate
+php artisan migrate --seed
 ```
 
 Esto crea las tablas de base: `users`, `cache`, `jobs`,
 `personal_access_tokens` (Sanctum) y las de roles/permisos
-(spatie/laravel-permission).
+(spatie/laravel-permission). El `--seed` además carga los **3 roles**
+(Supervisor, Administrativo, Operador) y un **usuario de desarrollo por rol**
+(`supervisor@example.com`, `administrativo@example.com`, `operador@example.com`;
+password `password`).
 
-> Si querés partir de cero en cualquier momento: `php artisan migrate:fresh`.
+> Si querés partir de cero en cualquier momento: `php artisan migrate:fresh --seed`.
 
 ## 7. Compilar / servir el frontend (Vite)
 
@@ -126,19 +128,28 @@ php artisan queue:work
 > Si usás `QUEUE_CONNECTION=sync` no hace falta el worker (los jobs corren
 > inline), pero no representa el comportamiento real de producción.
 
-## Atajo: todo junto
+## Atajo: todo junto (recomendado)
 
-El repo define un script de Composer que levanta servidor, cola y Vite a la vez:
+El repo define un script de Composer que levanta **servidor + cola + Vite** a la
+vez (equivale a `php artisan dev`):
 
 ```bash
 composer run dev
 ```
 
+Dejalo corriendo en una sola terminal; con eso no hace falta abrir las
+terminales separadas de los pasos 7, 8 y 9. La app queda en
+**http://localhost:8000**.
+
 ## Verificar que funciona
 
 1. Abrí **http://localhost:8000** → deberías ver la pantalla de bienvenida.
-2. Entrá a **/register** para crear un usuario (auth de Breeze).
-3. Iniciá sesión → deberías llegar al **/dashboard**.
+2. Entrá a **/login** e iniciá sesión con un usuario sembrado, por ejemplo
+   `supervisor@example.com` / `password`.
+3. Deberías llegar al **/dashboard**.
+
+> También podés crear un usuario nuevo en **/register** (auth de Breeze), pero
+> queda sin rol asignado hasta que se le asigne uno.
 
 ## Comandos útiles
 
@@ -153,8 +164,8 @@ php artisan test           # correr los tests
 
 | Síntoma | Causa probable | Solución |
 | --- | --- | --- |
-| `SQLSTATE[HY000] [1045] Access denied` | credenciales de MySQL mal | revisá `DB_USERNAME` / `DB_PASSWORD` en `.env` |
-| `Unknown database 'seminario_integrador'` | no creaste la base | volvé al paso 4 |
+| `SQLSTATE[08006] ... password authentication failed` | credenciales de PostgreSQL mal | revisá `DB_USERNAME` / `DB_PASSWORD` en `.env` |
+| `SQLSTATE[08006] ... database "seminario_integrador" does not exist` | no creaste la base | volvé al paso 4 |
 | `No application encryption key has been specified` | falta la app key | `php artisan key:generate` |
 | Cambios del `.env` que no toman efecto | config cacheada | `php artisan config:clear` |
 | El front no actualiza / estilos rotos | Vite no está corriendo | dejá `npm run dev` activo |

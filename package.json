@@ -11,8 +11,8 @@
         "@inertiajs/react": "^2.0.0",
         "@tailwindcss/forms": "^0.5.3",
         "@vitejs/plugin-react": "^6.1.0",
-        "axios": "^1.19.0",
         "autoprefixer": "^10.4.12",
+        "axios": "^1.19.0",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1",
         "postcss": "^8.4.31",
@@ -23,5 +23,10 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "leaflet": "^1.9.4",
+        "react-leaflet": "^4.2.1",
+        "recharts": "^2.15.4"
     }
 }

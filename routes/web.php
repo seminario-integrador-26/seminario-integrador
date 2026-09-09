@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -25,6 +27,17 @@ Route::middleware('auth')->group(function () {
 });
 
 /*
+| Administración de usuarios y roles — solo rol Administrativo.
+*/
+Route::middleware(['auth', 'role:Administrativo'])->group(function () {
+    Route::resource('usuarios', UsuarioController::class)
+        ->parameters(['usuarios' => 'usuario'])
+        ->except(['show']);
+
+    Route::get('roles', [RolController::class, 'index'])->name('roles.index');
+});
+
+/*
 |--------------------------------------------------------------------------
 | Rutas de dominio (Inertia) — pendientes de implementar
 |--------------------------------------------------------------------------
@@ -35,8 +48,8 @@ Route::middleware('auth')->group(function () {
 //     Route::resource('eventos', EventoController::class)->except(['edit', 'update', 'destroy']);
 //     Route::get('eventos/{evento}/errata', [ErrataController::class, 'create']);
 //     Route::post('eventos/{evento}/errata', [ErrataController::class, 'store']);
-//     Route::get('dashboard', [DashboardController::class, 'index']);       // rol:Administrador
-//     Route::get('reportes', [ReporteController::class, 'index']);          // rol:Administrador
+//     Route::get('dashboard', [DashboardController::class, 'index']);       // rol:Administrativo|Operador (lectura)
+//     Route::get('reportes', [ReporteController::class, 'index']);          // rol:Administrativo
 //     Route::post('reportes/exportar', [ReporteController::class, 'exportar']);
 // });
 

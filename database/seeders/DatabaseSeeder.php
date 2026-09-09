@@ -15,11 +15,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            RoleSeeder::class,
+            PermissionSeeder::class,
         ]);
+
+        // Un usuario de desarrollo por cada rol (solo para entornos locales).
+        foreach (RoleSeeder::ROLES as $role) {
+            $slug = strtolower($role);
+
+            User::factory()
+                ->create([
+                    'name' => $role,
+                    'email' => "{$slug}@example.com",
+                ])
+                ->assignRole($role);
+        }
     }
 }
