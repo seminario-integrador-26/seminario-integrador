@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
+use App\Services\Auth\BloqueoCuentaService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,14 +38,33 @@ class LoginRequest extends FormRequest
     /**
      * Attempt to authenticate the request's credentials.
      *
+     * US-001: dos capas de defensa.
+     *  - RateLimiter (email+IP, en caché): freno grueso contra fuerza bruta,
+     *    también cubre emails inexistentes.
+     *  - BloqueoCuentaService (persistido en la cuenta): bloqueo temporal a los
+     *    3 intentos fallidos, independiente de la IP desde la que se intente.
+     *
      * @throws ValidationException
      */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
+        $bloqueo = app(BloqueoCuentaService::class);
+        $user = User::where('email', (string) $this->string('email'))->first();
+
+        if ($user !== null && $bloqueo->estaBloqueada($user)) {
+            throw $this->cuentaBloqueada($bloqueo->segundosRestantes($user));
+        }
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+
+            if ($user !== null && $bloqueo->registrarFallo($user)) {
+                event(new Lockout($this));
+
+                throw $this->cuentaBloqueada($bloqueo->segundosRestantes($user));
+            }
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -51,6 +72,8 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        $bloqueo->limpiar(Auth::user());
     }
 
     /**
@@ -82,5 +105,20 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+    }
+
+    /**
+     * Mensaje de cuenta bloqueada temporalmente.
+     */
+    private function cuentaBloqueada(int $segundos): ValidationException
+    {
+        $minutos = max(1, (int) ceil($segundos / 60));
+
+        return ValidationException::withMessages([
+            'email' => trans('auth.bloqueada', [
+                'intentos' => BloqueoCuentaService::MAX_INTENTOS,
+                'minutos' => $minutos,
+            ]),
+        ]);
     }
 }

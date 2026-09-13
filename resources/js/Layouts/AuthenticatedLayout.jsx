@@ -10,6 +10,10 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = page.props.auth.user;
     const roles = page.props.auth.roles ?? [];
     const esAdministrativo = roles.includes('Administrativo');
+    const esSupervisor = roles.includes('Supervisor');
+    const puedeConsultarEventos = (page.props.auth.permissions ?? []).includes(
+        'eventos.consultar',
+    );
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -31,8 +35,24 @@ export default function AuthenticatedLayout({ header, children }) {
                                     href={route('dashboard')}
                                     active={route().current('dashboard')}
                                 >
-                                    Dashboard
+                                    Panel
                                 </NavLink>
+                                {puedeConsultarEventos && (
+                                    <NavLink
+                                        href={route('eventos.index')}
+                                        active={route().current('eventos.index')}
+                                    >
+                                        Eventos
+                                    </NavLink>
+                                )}
+                                {esSupervisor && (
+                                    <NavLink
+                                        href={route('eventos.create')}
+                                        active={route().current('eventos.create')}
+                                    >
+                                        Registrar evento
+                                    </NavLink>
+                                )}
                                 {esAdministrativo && (
                                     <NavLink
                                         href={route('usuarios.index')}
@@ -75,14 +95,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <Dropdown.Link
                                             href={route('profile.edit')}
                                         >
-                                            Profile
+                                            Perfil
                                         </Dropdown.Link>
                                         <Dropdown.Link
                                             href={route('logout')}
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            Cerrar sesión
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
@@ -143,8 +163,24 @@ export default function AuthenticatedLayout({ header, children }) {
                             href={route('dashboard')}
                             active={route().current('dashboard')}
                         >
-                            Dashboard
+                            Panel
                         </ResponsiveNavLink>
+                        {puedeConsultarEventos && (
+                            <ResponsiveNavLink
+                                href={route('eventos.index')}
+                                active={route().current('eventos.index')}
+                            >
+                                Eventos
+                            </ResponsiveNavLink>
+                        )}
+                        {esSupervisor && (
+                            <ResponsiveNavLink
+                                href={route('eventos.create')}
+                                active={route().current('eventos.create')}
+                            >
+                                Registrar evento
+                            </ResponsiveNavLink>
+                        )}
                         {esAdministrativo && (
                             <ResponsiveNavLink
                                 href={route('usuarios.index')}
@@ -167,14 +203,14 @@ export default function AuthenticatedLayout({ header, children }) {
 
                         <div className="mt-3 space-y-1">
                             <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
+                                Perfil
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 method="post"
                                 href={route('logout')}
                                 as="button"
                             >
-                                Log Out
+                                Cerrar sesión
                             </ResponsiveNavLink>
                         </div>
                     </div>

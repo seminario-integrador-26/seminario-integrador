@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\NotificadorInterface;
 use App\Services\Notificadores\WhatsappNotificador;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,5 +29,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // Fechas y diffForHumans en español (toda la UI está en es).
+        Carbon::setLocale(config('app.locale'));
     }
 }

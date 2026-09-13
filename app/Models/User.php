@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -29,6 +30,24 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'bloqueado_hasta' => 'datetime',
+            'intentos_fallidos' => 'integer',
         ];
+    }
+
+    /**
+     * Eventos registrados por el usuario (Supervisor).
+     */
+    public function eventos(): HasMany
+    {
+        return $this->hasMany(Evento::class, 'usuario_id');
+    }
+
+    /**
+     * Turnos de guardia abiertos por el usuario (Supervisor).
+     */
+    public function turnos(): HasMany
+    {
+        return $this->hasMany(Turno::class, 'supervisor_id');
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EventoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\UsuarioController;
@@ -38,14 +39,28 @@ Route::middleware(['auth', 'role:Administrativo'])->group(function () {
 });
 
 /*
+| Registro de eventos (US-003) — solo rol Supervisor.
+| NO agregar edición directa de eventos (inmutabilidad -> usar Errata).
+*/
+Route::middleware(['auth', 'role:Supervisor'])->group(function () {
+    Route::resource('eventos', EventoController::class)->only(['create', 'store']);
+});
+
+/*
+| Consulta de eventos (CU04) — permiso eventos.consultar (Supervisor, Administrativo).
+| TODO: confirmar con el equipo si el Operador también consulta el listado.
+*/
+Route::middleware(['auth', 'permission:eventos.consultar'])->group(function () {
+    Route::get('eventos', [EventoController::class, 'index'])->name('eventos.index');
+});
+
+/*
 |--------------------------------------------------------------------------
 | Rutas de dominio (Inertia) — pendientes de implementar
 |--------------------------------------------------------------------------
 | Protegidas con auth + roles de spatie/laravel-permission.
-| NO agregar edición directa de eventos (inmutabilidad -> usar Errata).
 */
 // Route::middleware(['auth'])->group(function () {
-//     Route::resource('eventos', EventoController::class)->except(['edit', 'update', 'destroy']);
 //     Route::get('eventos/{evento}/errata', [ErrataController::class, 'create']);
 //     Route::post('eventos/{evento}/errata', [ErrataController::class, 'store']);
 //     Route::get('dashboard', [DashboardController::class, 'index']);       // rol:Administrativo|Operador (lectura)

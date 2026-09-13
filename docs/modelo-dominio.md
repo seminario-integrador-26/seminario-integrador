@@ -7,14 +7,15 @@
 
 | Entidad | Campos | Notas |
 |---|---|---|
-| **Evento** | tipo_evento_id, punto_monitoreo_id (nullable), turno_id, usuario_id, fecha_hora, descripcion, asistencia_operativo (bool) | **Inmutable**. Sin edición directa. Ligado al turno activo (RN). Sin derivación. |
+| **Evento** | tipo_evento_id, punto_monitoreo_id (nullable), turno_id, usuario_id, fecha_hora, timestamp_video (hh:mm:ss, nullable), descripcion (nullable), created_at, asistencia_operativo (bool, pendiente) | **Inmutable** (sin updated_at; el modelo bloquea update/delete). Ligado al turno activo (RN). Sin derivación. `timestamp_video` obligatorio cuando hay PM (US-003). |
 | **Errata** | evento_id, campo_corregido, valor_anterior, valor_nuevo, motivo, usuario_id, created_at | Tabla separada. Único mecanismo de corrección. |
 | **TipoEvento** | nombre, categoria, requiere_ubicacion (bool), es_cuantificable (bool) | Flags independientes. N:M con GrupoInteresado. |
-| **PuntoMonitoreo** | nombre, latitud, longitud | Leaflet / OpenStreetMap. |
+| **PuntoMonitoreo** | codigo (único), nombre, jurisdiccion (`municipal` \| `provincial`), latitud, longitud (nullable) | 394 PM: 235 municipales + 159 provinciales. Leaflet / OpenStreetMap. Carga desde `database/data/puntos_monitoreo.csv`. |
 | **Turno** | fecha, hora_inicio, hora_fin, supervisor_id | Lo abre/cierra un Supervisor. |
 | **GrupoInteresado** | nombre | N:M con TipoEvento; 1:N con Contacto. |
 | **Contacto** | nombre, numero_whatsapp, grupo_interesado_id | |
-| **Usuario** | nombre, email, rol | Rol vía spatie: Supervisor, Administrativo u Operador. |
+| **Usuario** | nombre, email, rol, intentos_fallidos, bloqueado_hasta | Rol vía spatie: Supervisor, Administrativo u Operador. Bloqueo temporal de cuenta (US-001). |
+| **AuditoriaAcceso** | user_id (nullable), email, evento, ip_address, user_agent, created_at | Traza de login/logout/intento fallido/bloqueo (US-001). Inmutable, solo created_at. |
 
 ## Relaciones
 
@@ -23,10 +24,15 @@
 - TipoEvento **N:M** GrupoInteresado (tabla pivote).
 - GrupoInteresado **1:N** Contacto.
 - Turno **N:1** Usuario (supervisor).
+- AuditoriaAcceso **N:1** Usuario (nullable: el email puede no existir).
 
 ## Categorías (TipoEvento.categoria)
 
-`prevención` · `convivencia urbana` · `seguridad pública` · `informativo`
+Valor persistido → etiqueta (`TipoEvento::CATEGORIAS`):
+`prevencion` → Prevención · `convivencia_urbana` → Convivencia Urbana ·
+`seguridad_publica` → Seguridad Pública · `informativo` → Informativo
+
+Tablas: `tipos_evento`, `puntos_monitoreo`, `turnos`, `eventos`.
 
 > Los tipos de categoría `informativo` suelen ser **no cuantificables**
 > (`es_cuantificable = false`) y no entran en estadísticas.
