@@ -9,11 +9,12 @@ export default function ResponsiveNavLink({
     return (
         <Link
             {...props}
-            className={`flex w-full items-start border-l-4 py-2 pe-4 ps-3 ${
+            aria-current={active ? 'page' : undefined}
+            className={`flex w-full items-start border-l-4 py-2 pe-4 ps-3 text-base font-medium transition-colors duration-150 focus:outline-none ${
                 active
-                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700 focus:border-indigo-700 focus:bg-indigo-100 focus:text-indigo-800'
-                    : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 focus:border-gray-300 focus:bg-gray-50 focus:text-gray-800'
-            } text-base font-medium transition duration-150 ease-in-out focus:outline-none ${className}`}
+                    ? 'border-brand bg-surface-2 text-ink'
+                    : 'border-transparent text-ink-muted hover:bg-surface-2 hover:text-ink focus:bg-surface-2 focus:text-ink'
+            } ${className}`}
         >
             {children}
         </Link>

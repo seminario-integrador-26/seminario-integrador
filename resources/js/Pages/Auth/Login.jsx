@@ -1,3 +1,4 @@
+import Alerta from '@/Components/Alerta';
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -25,13 +26,20 @@ export default function Login({ status, canResetPassword }) {
         <GuestLayout>
             <Head title="Iniciar sesión" />
 
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+                Iniciar sesión
+            </h1>
+            <p className="mt-1 text-sm text-ink-muted">
+                Ingrese con su cuenta del Centro de Monitoreo.
+            </p>
+
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <Alerta tipo="exito" className="mt-6">
                     {status}
-                </div>
+                </Alerta>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="mt-8 space-y-5">
                 <div>
                     <InputLabel htmlFor="email" value="Correo electrónico" />
 
@@ -40,7 +48,7 @@ export default function Login({ status, canResetPassword }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className="mt-1"
                         autoComplete="username"
                         isFocused={true}
                         onChange={(e) => setData('email', e.target.value)}
@@ -49,7 +57,7 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.email} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
+                <div>
                     <InputLabel htmlFor="password" value="Contraseña" />
 
                     <TextInput
@@ -57,7 +65,7 @@ export default function Login({ status, canResetPassword }) {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="mt-1"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
@@ -65,7 +73,7 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 block">
+                <div className="flex items-center justify-between gap-4">
                     <label className="flex items-center">
                         <Checkbox
                             name="remember"
@@ -74,26 +82,24 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-gray-600">
+                        <span className="ms-2 text-sm text-ink-muted">
                             Recordarme
                         </span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="enlace text-sm"
                         >
                             ¿Olvidó su contraseña?
                         </Link>
                     )}
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Iniciar sesión
-                    </PrimaryButton>
                 </div>
+
+                <PrimaryButton className="w-full" disabled={processing}>
+                    Iniciar sesión
+                </PrimaryButton>
             </form>
         </GuestLayout>
     );

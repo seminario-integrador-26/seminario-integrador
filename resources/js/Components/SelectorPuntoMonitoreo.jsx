@@ -58,17 +58,18 @@ export default function SelectorPuntoMonitoreo({
 
     return (
         <div className="mt-1 space-y-2">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
                 {filtros.map(([clave, etiqueta]) => (
                     <button
                         key={clave || 'todos'}
                         type="button"
+                        aria-pressed={jurisdiccion === clave}
                         onClick={() => setJurisdiccion(clave)}
                         className={
-                            'rounded-full px-3 py-1 text-xs font-medium ' +
+                            'rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
                             (jurisdiccion === clave
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                                ? 'bg-brand text-brand-ink'
+                                : 'bg-surface-2 text-ink-muted hover:text-ink')
                         }
                     >
                         {etiqueta}
@@ -86,18 +87,18 @@ export default function SelectorPuntoMonitoreo({
                         id={id}
                         autoComplete="off"
                         placeholder="Buscar por código o nombre…"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="campo"
                         displayValue={(p) =>
-                            p ? `${p.codigo} — ${p.nombre}` : ''
+                            p ? `${p.codigo} · ${p.nombre}` : ''
                         }
                         onChange={(e) => setQuery(e.target.value)}
                     />
                     <ComboboxOptions
                         anchor="bottom start"
-                        className="z-[1100] mt-1 max-h-72 w-[var(--input-width)] overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 empty:invisible"
+                        className="z-[1100] mt-1 max-h-72 w-[var(--input-width)] overflow-auto rounded-lg border border-line bg-surface py-1 text-sm shadow-panel empty:invisible"
                     >
                         {filtrados.length === 0 && (
-                            <div className="px-3 py-2 text-gray-500">
+                            <div className="px-3 py-2 text-ink-muted">
                                 Sin resultados.
                             </div>
                         )}
@@ -105,21 +106,21 @@ export default function SelectorPuntoMonitoreo({
                             <ComboboxOption
                                 key={p.id}
                                 value={p}
-                                className="flex cursor-pointer items-center justify-between px-3 py-2 data-[focus]:bg-indigo-600 data-[focus]:text-white"
+                                className="flex cursor-pointer items-center justify-between px-3 py-2 text-ink data-[focus]:bg-accent-soft data-[selected]:font-medium"
                             >
                                 <span>
-                                    <span className="font-medium">
+                                    <span className="font-mono text-xs font-medium">
                                         {p.codigo}
                                     </span>{' '}
-                                    — {p.nombre}
+                                    {p.nombre}
                                 </span>
-                                <span className="ms-3 text-xs opacity-70">
+                                <span className="ms-3 text-xs text-ink-subtle">
                                     {jurisdicciones[p.jurisdiccion]}
                                 </span>
                             </ComboboxOption>
                         ))}
                         {filtrados.length > MAX_RESULTADOS && (
-                            <div className="px-3 py-2 text-xs text-gray-500">
+                            <div className="px-3 py-2 text-xs text-ink-muted">
                                 Mostrando {MAX_RESULTADOS} de{' '}
                                 {filtrados.length}. Refiná la búsqueda.
                             </div>
@@ -131,7 +132,7 @@ export default function SelectorPuntoMonitoreo({
                     <button
                         type="button"
                         onClick={() => onChange(null)}
-                        className="shrink-0 rounded-md border border-gray-300 px-3 text-sm text-gray-600 hover:bg-gray-50"
+                        className="shrink-0 rounded-md border border-line-strong bg-surface px-3 text-sm font-medium text-ink-muted transition-colors duration-150 hover:bg-surface-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                         Quitar
                     </button>

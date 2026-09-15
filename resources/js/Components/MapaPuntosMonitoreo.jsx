@@ -10,10 +10,11 @@ import {
 
 const CENTRO_VILLA_MARIA = [-32.4075, -63.2402];
 
+// Legibles sobre los tiles claros y sobre los oscurecidos del tema marino.
 const COLORES = {
-    municipal: '#4f46e5',
-    provincial: '#059669',
-    seleccionado: '#dc2626',
+    municipal: '#3b6fd0',
+    provincial: '#12937f',
+    seleccionado: '#e0483d',
 };
 
 function CentrarEn({ punto }) {
@@ -60,7 +61,7 @@ export default function MapaPuntosMonitoreo({
             center={CENTRO_VILLA_MARIA}
             zoom={13}
             scrollWheelZoom={false}
-            className={'z-0 rounded-md ' + className}
+            className={'z-0 rounded-md border border-line ' + className}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -85,7 +86,7 @@ export default function MapaPuntosMonitoreo({
                         eventHandlers={{ click: () => onSelect?.(p.id) }}
                     >
                         <Tooltip>
-                            {p.codigo} — {p.nombre}
+                            {p.codigo} · {p.nombre}
                         </Tooltip>
                     </CircleMarker>
                 );

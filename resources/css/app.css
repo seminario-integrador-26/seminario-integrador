@@ -1,3 +1,194 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Tokens de tema. <html data-theme="claro|marino"> se fija antes del primer
+ * pintado (resources/views/app.blade.php) y desde resources/js/tema.js.
+ * Valores en canales RGB para permitir opacidad en Tailwind (bg-brand/10).
+ */
+@layer base {
+    :root,
+    [data-theme='claro'] {
+        color-scheme: light;
+        --canvas: 243 245 249;
+        --surface: 252 253 255;
+        --surface-2: 236 240 246;
+        --line: 218 225 235;
+        --line-strong: 190 201 217;
+        --ink: 13 26 46;
+        --ink-muted: 67 82 105;
+        --ink-subtle: 92 106 130;
+        --brand: 18 42 82;
+        --brand-hover: 29 58 108;
+        --brand-ink: 243 245 249;
+        --brand-deep: 16 37 72;
+        --brand-deep-ink: 236 241 248;
+        --brand-deep-muted: 160 177 204;
+        --accent: 35 80 158;
+        --accent-soft: 229 237 250;
+        --success: 22 118 60;
+        --success-soft: 232 246 237;
+        --warning: 146 88 8;
+        --warning-soft: 252 245 226;
+        --danger: 180 35 40;
+        --danger-soft: 252 238 238;
+        --danger-solid: 180 35 40;
+        --danger-solid-ink: 252 253 255;
+        --shadow: 13 26 46;
+    }
+
+    [data-theme='marino'] {
+        color-scheme: dark;
+        --canvas: 7 16 31;
+        --surface: 12 26 48;
+        --surface-2: 19 36 64;
+        --line: 30 50 83;
+        --line-strong: 48 72 112;
+        --ink: 229 235 245;
+        --ink-muted: 164 179 203;
+        --ink-subtle: 128 145 173;
+        --brand: 196 215 246;
+        --brand-hover: 220 232 250;
+        --brand-ink: 9 22 44;
+        --brand-deep: 14 30 56;
+        --brand-deep-ink: 236 241 248;
+        --brand-deep-muted: 160 177 204;
+        --accent: 134 173 240;
+        --accent-soft: 22 44 82;
+        --success: 125 220 160;
+        --success-soft: 17 52 42;
+        --warning: 240 200 110;
+        --warning-soft: 58 44 14;
+        --danger: 248 150 150;
+        --danger-soft: 66 22 32;
+        --danger-solid: 236 120 120;
+        --danger-solid-ink: 30 8 12;
+        --shadow: 0 6 16;
+    }
+
+    body {
+        @apply bg-canvas text-ink;
+    }
+
+    ::selection {
+        background-color: rgb(var(--accent) / 0.22);
+    }
+
+    select option,
+    select optgroup {
+        background-color: rgb(var(--surface));
+        color: rgb(var(--ink));
+    }
+}
+
+@layer components {
+    .panel {
+        @apply rounded-xl border border-line bg-surface shadow-panel;
+    }
+
+    .campo {
+        @apply block w-full rounded-md border-line-strong bg-surface text-base text-ink shadow-sm transition-colors duration-150 placeholder:text-ink-subtle focus:border-accent focus:ring-1 focus:ring-accent disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-subtle sm:text-sm;
+    }
+
+    .enlace {
+        @apply rounded-sm font-medium text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+    }
+
+    .badge {
+        @apply inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-medium;
+    }
+
+    .titulo-pagina {
+        @apply text-xl font-semibold tracking-tight text-ink;
+    }
+
+    .tabla {
+        @apply min-w-full divide-y divide-line text-sm;
+    }
+
+    .tabla thead th {
+        @apply whitespace-nowrap bg-surface-2 px-4 py-2.5 text-left text-xs font-semibold text-ink-muted;
+    }
+
+    .tabla tbody {
+        @apply divide-y divide-line;
+    }
+
+    .tabla tbody tr {
+        @apply transition-colors duration-100 hover:bg-surface-2/50;
+    }
+
+    .tabla td {
+        @apply px-4 py-3 align-top;
+    }
+
+    .fondo-marca {
+        background-image:
+            radial-gradient(120% 80% at 0% 100%, rgb(var(--accent) / 0.28), transparent 60%),
+            radial-gradient(90% 60% at 100% 0%, rgb(var(--brand-deep-ink) / 0.06), transparent 70%);
+    }
+}
+
+/* Leaflet: controles y tooltips con los tokens del tema; tiles oscurecidos en marino. */
+[data-theme] .leaflet-container {
+    background-color: rgb(var(--surface-2));
+    font-family: inherit;
+}
+
+[data-theme='marino'] .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(185deg) brightness(0.9) contrast(0.85) saturate(0.4);
+}
+
+[data-theme] .leaflet-tooltip {
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--line));
+    color: rgb(var(--ink));
+    box-shadow: 0 2px 8px rgb(var(--shadow) / 0.15);
+}
+
+[data-theme] .leaflet-tooltip-top::before {
+    border-top-color: rgb(var(--surface));
+}
+
+[data-theme] .leaflet-tooltip-bottom::before {
+    border-bottom-color: rgb(var(--surface));
+}
+
+[data-theme] .leaflet-tooltip-left::before {
+    border-left-color: rgb(var(--surface));
+}
+
+[data-theme] .leaflet-tooltip-right::before {
+    border-right-color: rgb(var(--surface));
+}
+
+[data-theme] .leaflet-touch .leaflet-bar {
+    border-color: rgb(var(--line));
+}
+
+[data-theme] .leaflet-bar a {
+    background-color: rgb(var(--surface));
+    border-bottom-color: rgb(var(--line));
+    color: rgb(var(--ink));
+}
+
+[data-theme] .leaflet-control-attribution {
+    background-color: rgb(var(--surface) / 0.85);
+    color: rgb(var(--ink-muted));
+}
+
+[data-theme] .leaflet-control-attribution a {
+    color: rgb(var(--accent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

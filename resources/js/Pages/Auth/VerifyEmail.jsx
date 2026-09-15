@@ -1,3 +1,4 @@
+import Alerta from '@/Components/Alerta';
 import PrimaryButton from '@/Components/PrimaryButton';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -15,34 +16,38 @@ export default function VerifyEmail({ status }) {
         <GuestLayout>
             <Head title="Verificación de correo" />
 
-            <div className="mb-4 text-sm text-gray-600">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+                Verificación de correo
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                 Gracias por registrarse. Antes de comenzar, verifique su
                 dirección de correo haciendo clic en el enlace que le enviamos.
                 Si no recibió el correo, podemos enviarle otro.
-            </div>
+            </p>
 
             {status === 'verification-link-sent' && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <Alerta tipo="exito" className="mt-6">
                     Se envió un nuevo enlace de verificación a la dirección de
                     correo indicada durante el registro.
-                </div>
+                </Alerta>
             )}
 
-            <form onSubmit={submit}>
-                <div className="mt-4 flex items-center justify-between">
-                    <PrimaryButton disabled={processing}>
-                        Reenviar correo de verificación
-                    </PrimaryButton>
+            <form
+                onSubmit={submit}
+                className="mt-8 flex flex-wrap items-center justify-between gap-4"
+            >
+                <PrimaryButton disabled={processing}>
+                    Reenviar correo de verificación
+                </PrimaryButton>
 
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Cerrar sesión
-                    </Link>
-                </div>
+                <Link
+                    href={route('logout')}
+                    method="post"
+                    as="button"
+                    className="enlace text-sm"
+                >
+                    Cerrar sesión
+                </Link>
             </form>
         </GuestLayout>
     );

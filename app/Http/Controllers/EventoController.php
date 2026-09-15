@@ -35,7 +35,7 @@ class EventoController extends Controller
             'tipo' => $e->tipoEvento->nombre,
             'categoria' => TipoEvento::CATEGORIAS[$e->tipoEvento->categoria] ?? $e->tipoEvento->categoria,
             'punto' => $e->puntoMonitoreo
-                ? "{$e->puntoMonitoreo->codigo} — {$e->puntoMonitoreo->nombre}"
+                ? "{$e->puntoMonitoreo->codigo} · {$e->puntoMonitoreo->nombre}"
                 : null,
             'timestamp_video' => $e->timestamp_video,
             'descripcion' => $e->descripcion,

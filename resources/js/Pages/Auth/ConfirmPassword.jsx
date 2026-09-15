@@ -22,13 +22,16 @@ export default function ConfirmPassword() {
         <GuestLayout>
             <Head title="Confirmar contraseña" />
 
-            <div className="mb-4 text-sm text-gray-600">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
+                Confirmar contraseña
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                 Esta es un área protegida del sistema. Confirme su contraseña
                 para continuar.
-            </div>
+            </p>
 
-            <form onSubmit={submit}>
-                <div className="mt-4">
+            <form onSubmit={submit} className="mt-8 space-y-5">
+                <div>
                     <InputLabel htmlFor="password" value="Contraseña" />
 
                     <TextInput
@@ -36,7 +39,7 @@ export default function ConfirmPassword() {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="mt-1"
                         isFocused={true}
                         onChange={(e) => setData('password', e.target.value)}
                     />
@@ -44,11 +47,9 @@ export default function ConfirmPassword() {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirmar
-                    </PrimaryButton>
-                </div>
+                <PrimaryButton className="w-full" disabled={processing}>
+                    Confirmar
+                </PrimaryButton>
             </form>
         </GuestLayout>
     );
