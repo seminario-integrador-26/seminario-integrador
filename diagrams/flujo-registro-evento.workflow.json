@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Flujo de registro de evento (US-003)",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "Interfaz" },
+        "backend": { "label": "Lógica de negocio" },
+        "security": { "label": "Autorización / validación" },
+        "database": { "label": "Base de datos" },
+        "messagebus": { "label": "Eventos / cola" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "ui", "label": "Supervisor (Inertia/React)" },
+    { "id": "app", "label": "Laravel" },
+    { "id": "rechazo", "label": "Rechazo", "variant": "exception" },
+    { "id": "cola", "label": "Side-effects en cola" }
+  ],
+  "phases": [
+    { "id": "entrada", "label": "Entrada", "fromCol": 0, "toCol": 2 },
+    { "id": "registro", "label": "Registro inmutable", "fromCol": 3, "toCol": 4, "variant": "emphasis" },
+    { "id": "salida", "label": "Respuesta", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["form", "middleware", "validacion", "servicio", "db", "confirmacion"],
+  "nodes": [
+    { "id": "form", "lane": "ui", "col": 0, "type": "frontend", "label": "Eventos/Create", "sublabel": "tipo, fecha, PM", "width": 132 },
+    { "id": "confirmacion", "lane": "ui", "col": 5, "type": "frontend", "label": "Confirmación", "sublabel": "flash success", "width": 132 },
+    { "id": "middleware", "lane": "app", "col": 1, "type": "security", "label": "Middleware", "sublabel": "role:Supervisor", "width": 132 },
+    { "id": "validacion", "lane": "app", "col": 2, "type": "security", "label": "StoreEventoRequest", "sublabel": "PM según tipo", "width": 132 },
+    { "id": "servicio", "lane": "app", "col": 3, "type": "backend", "label": "EventoService", "sublabel": "registrar()", "width": 132 },
+    { "id": "db", "lane": "app", "col": 4, "type": "database", "label": "PostgreSQL", "sublabel": "eventos + turno_id", "width": 132 },
+    { "id": "error_validacion", "lane": "rechazo", "col": 2, "type": "security", "label": "Errores 422", "sublabel": "PM / hecho futuro", "width": 132 },
+    { "id": "sin_turno", "lane": "rechazo", "col": 3, "type": "security", "label": "Sin turno activo", "sublabel": "SinTurnoActivo", "width": 132 },
+    { "id": "evento_dominio", "lane": "cola", "col": 4, "type": "messagebus", "label": "EventoRegistrado", "sublabel": "post-commit", "width": 132 },
+    { "id": "listener", "lane": "cola", "col": 5, "type": "messagebus", "label": "Notificar", "sublabel": "listener en cola", "tag": "TODO WhatsApp", "width": 132 }
+  ],
+  "edges": [
+    { "id": "post", "from": "form", "to": "middleware", "label": "POST /eventos", "variant": "emphasis" },
+    { "id": "autorizado", "from": "middleware", "to": "validacion", "variant": "default", "fromSide": "right", "toSide": "left" },
+    { "id": "validado", "from": "validacion", "to": "servicio", "label": "validated()", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "insert", "from": "servicio", "to": "db", "label": "transacción", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "redirect", "from": "db", "to": "confirmacion", "label": "redirect", "variant": "emphasis", "role": "return" },
+    { "id": "falla_validacion", "from": "validacion", "to": "error_validacion", "label": "inválido", "variant": "security", "role": "error" },
+    { "id": "falla_turno", "from": "servicio", "to": "sin_turno", "label": "sin turno", "variant": "security", "role": "error" },
+    { "id": "dispatch", "from": "db", "to": "evento_dominio", "label": "dispatch", "variant": "dashed", "role": "async" },
+    { "id": "encolar", "from": "evento_dominio", "to": "listener", "variant": "dashed", "role": "async" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Reglas aplicadas",
+      "items": [
+        "Evento inmutable: sin update ni delete (usar fe de errata)",
+        "Ligado al turno abierto con lockForUpdate",
+        "timestamp_video obligatorio sólo si hay PM"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Desacople",
+      "items": [
+        "EventoRegistrado se dispara fuera de la transacción",
+        "Si WhatsApp falla, el evento ya quedó guardado"
+      ]
+    }
+  ]
+}

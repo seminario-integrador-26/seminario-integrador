@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Flujo de login con bloqueo de cuenta (US-001)",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "Interfaz" },
+        "backend": { "label": "Lógica" },
+        "security": { "label": "Seguridad" },
+        "database": { "label": "Base de datos" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "ui", "label": "Usuario" },
+    { "id": "auth", "label": "LoginRequest::authenticate()" },
+    { "id": "rechazo", "label": "Rechazo y bloqueo", "variant": "exception" },
+    { "id": "auditoria", "label": "Auditoría (sincrónica)" }
+  ],
+  "phases": [
+    { "id": "defensa", "label": "Defensas", "fromCol": 1, "toCol": 2, "variant": "security" },
+    { "id": "credenciales", "label": "Credenciales", "fromCol": 3, "toCol": 4, "variant": "emphasis" }
+  ],
+  "mainPath": ["login", "rate_limit", "bloqueo", "attempt", "limpiar", "dashboard"],
+  "nodes": [
+    { "id": "login", "lane": "ui", "col": 0, "type": "frontend", "label": "Auth/Login", "sublabel": "email + password", "width": 132 },
+    { "id": "dashboard", "lane": "ui", "col": 5, "type": "frontend", "label": "Dashboard", "sublabel": "sesión regenerada", "width": 132 },
+    { "id": "rate_limit", "lane": "auth", "col": 1, "type": "security", "label": "RateLimiter", "sublabel": "5 por email+IP", "width": 132 },
+    { "id": "bloqueo", "lane": "auth", "col": 2, "type": "security", "label": "¿Bloqueada?", "sublabel": "bloqueado_hasta", "width": 132 },
+    { "id": "attempt", "lane": "auth", "col": 3, "type": "backend", "label": "Auth::attempt", "sublabel": "credenciales", "width": 132 },
+    { "id": "limpiar", "lane": "auth", "col": 4, "type": "backend", "label": "limpiar()", "sublabel": "contador a 0", "width": 132 },
+    { "id": "throttle", "lane": "rechazo", "col": 1, "type": "security", "label": "Throttle", "sublabel": "auth.throttle", "width": 132 },
+    { "id": "cuenta_bloqueada", "lane": "rechazo", "col": 2, "type": "security", "label": "Cuenta bloqueada", "sublabel": "15 minutos", "width": 132 },
+    { "id": "registrar_fallo", "lane": "rechazo", "col": 3, "type": "security", "label": "registrarFallo()", "sublabel": "intentos++ (máx 3)", "width": 132 },
+    { "id": "listener", "lane": "auditoria", "col": 4, "type": "backend", "label": "AuditarAccesos", "sublabel": "listener", "width": 132 },
+    { "id": "tabla_auditoria", "lane": "auditoria", "col": 5, "type": "database", "label": "auditoria_accesos", "sublabel": "inmutable", "width": 132 }
+  ],
+  "edges": [
+    { "id": "post", "from": "login", "to": "rate_limit", "label": "POST /login", "variant": "emphasis" },
+    { "id": "permitido", "from": "rate_limit", "to": "bloqueo", "variant": "default", "fromSide": "right", "toSide": "left" },
+    { "id": "no_bloqueada", "from": "bloqueo", "to": "attempt", "label": "no", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "ok", "from": "attempt", "to": "limpiar", "label": "ok", "variant": "emphasis" },
+    { "id": "redirect", "from": "limpiar", "to": "dashboard", "label": "redirect", "variant": "emphasis", "role": "return" },
+    { "id": "excedido", "from": "rate_limit", "to": "throttle", "label": "excedido", "variant": "security", "role": "error" },
+    { "id": "si_bloqueada", "from": "bloqueo", "to": "cuenta_bloqueada", "label": "sí", "variant": "security", "role": "error" },
+    { "id": "falla", "from": "attempt", "to": "registrar_fallo", "label": "falla", "variant": "security", "role": "error" },
+    { "id": "tercer_fallo", "from": "registrar_fallo", "to": "cuenta_bloqueada", "label": "3er fallo", "variant": "security", "role": "error" },
+    { "id": "evento_auth", "from": "limpiar", "to": "listener", "label": "Login", "variant": "dashed", "role": "async" },
+    { "id": "insert", "from": "listener", "to": "tabla_auditoria", "label": "INSERT", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Dos capas de defensa",
+      "items": [
+        "RateLimiter en caché: frena fuerza bruta, cubre emails inexistentes",
+        "Bloqueo persistido en users: sigue a la cuenta, no a la IP"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Auditoría",
+      "items": [
+        "Registra Login, Failed, Logout y Lockout",
+        "Sincrónica a propósito: la traza queda aunque la cola esté caída"
+      ]
+    }
+  ]
+}

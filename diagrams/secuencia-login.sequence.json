@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia de login con bloqueo de cuenta (US-001)",
+    "viewBox": [1080, 540],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "emphasis": { "label": "llamada" },
+        "return": { "label": "respuesta" },
+        "security": { "label": "verificación" },
+        "default": { "label": "actualización" }
+      }
+    }
+  },
+  "participants": [
+    { "id": "usuario", "type": "frontend", "label": "Usuario", "sublabel": "Auth/Login" },
+    { "id": "controller", "type": "backend", "label": "Controller", "sublabel": "AuthenticatedSession" },
+    { "id": "request", "type": "security", "label": "LoginRequest", "sublabel": "authenticate()" },
+    { "id": "bloqueo", "type": "security", "label": "BloqueoCuenta", "sublabel": "service" },
+    { "id": "guard", "type": "security", "label": "Auth guard", "sublabel": "web" },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "users" }
+  ],
+  "segments": [
+    { "from": 150, "to": 286, "label": "Bloqueo previo" },
+    { "from": 292, "to": 346, "label": "Credenciales" },
+    { "from": 352, "to": 470, "label": "Contador + respuesta" }
+  ],
+  "messages": [
+    { "id": "post", "from": "usuario", "to": "controller", "y": 180, "label": "POST /login", "variant": "emphasis" },
+    { "id": "authenticate", "from": "controller", "to": "request", "y": 210, "label": "authenticate()", "variant": "emphasis" },
+    { "id": "esta_bloqueada", "from": "request", "to": "bloqueo", "y": 240, "label": "estaBloqueada(user)?", "variant": "security" },
+    { "id": "esta_bloqueada_no", "from": "bloqueo", "to": "request", "y": 270, "label": "no", "variant": "return" },
+    { "id": "attempt", "from": "request", "to": "guard", "y": 300, "label": "Auth::attempt", "variant": "emphasis" },
+    { "id": "resultado", "from": "guard", "to": "request", "y": 330, "label": "true / false", "variant": "return" },
+    { "id": "contador", "from": "request", "to": "bloqueo", "y": 360, "label": "limpiar() | registrarFallo()", "variant": "default" },
+    { "id": "update_users", "from": "bloqueo", "to": "db", "y": 390, "label": "UPDATE intentos, bloqueado_hasta", "variant": "default" },
+    { "id": "fin_auth", "from": "request", "to": "controller", "y": 420, "label": "ok | ValidationException", "variant": "return" },
+    { "id": "respuesta", "from": "controller", "to": "usuario", "y": 450, "label": "302 dashboard | error", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "controller", "from": 174, "to": 456, "type": "backend" },
+    { "participant": "request", "from": 204, "to": 426, "type": "security" },
+    { "participant": "bloqueo", "from": 234, "to": 276, "type": "security" },
+    { "participant": "guard", "from": 294, "to": 336, "type": "security" },
+    { "participant": "bloqueo", "from": 354, "to": 396, "type": "security" },
+    { "participant": "db", "from": 384, "to": 396, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Alrededor de esta secuencia",
+      "items": [
+        "Antes: RateLimiter (5 por email+IP) corta con auth.throttle",
+        "En paralelo: AuditarAccesos registra Login, Failed y Lockout"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Bloqueo de cuenta",
+      "items": [
+        "3 fallos: bloqueado_hasta = ahora + 15 minutos",
+        "Login exitoso: session()->regenerate() y contador a 0"
+      ]
+    }
+  ]
+}

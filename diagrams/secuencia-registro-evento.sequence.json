@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Secuencia de registro de evento (US-003)",
+    "viewBox": [1080, 540],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "emphasis": { "label": "llamada" },
+        "return": { "label": "respuesta" },
+        "security": { "label": "autorización" },
+        "dashed": { "label": "evento asíncrono" }
+      }
+    }
+  },
+  "participants": [
+    { "id": "supervisor", "type": "frontend", "label": "Supervisor", "sublabel": "Eventos/Create" },
+    { "id": "middleware", "type": "security", "label": "Middleware", "sublabel": "auth + role" },
+    { "id": "request", "type": "security", "label": "FormRequest", "sublabel": "StoreEventoRequest" },
+    { "id": "controller", "type": "backend", "label": "EventoController", "sublabel": "store()" },
+    { "id": "service", "type": "backend", "label": "EventoService", "sublabel": "registrar()" },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "eventos, turnos" },
+    { "id": "cola", "type": "messagebus", "label": "Cola", "sublabel": "driver database" }
+  ],
+  "segments": [
+    { "from": 150, "to": 256, "label": "Autorización + validación" },
+    { "from": 262, "to": 376, "label": "Transacción" },
+    { "from": 382, "to": 470, "label": "Post-commit + respuesta" }
+  ],
+  "messages": [
+    { "id": "post", "from": "supervisor", "to": "middleware", "y": 180, "label": "POST /eventos", "variant": "emphasis" },
+    { "id": "autorizado", "from": "middleware", "to": "request", "y": 210, "label": "role:Supervisor ok", "variant": "security" },
+    { "id": "validated", "from": "request", "to": "controller", "y": 240, "label": "validated()", "variant": "emphasis" },
+    { "id": "registrar", "from": "controller", "to": "service", "y": 270, "label": "registrar(datos, autor)", "variant": "emphasis" },
+    { "id": "turno", "from": "service", "to": "db", "y": 300, "label": "turno abierto FOR UPDATE", "variant": "emphasis" },
+    { "id": "turno_ok", "from": "db", "to": "service", "y": 330, "label": "turno", "variant": "return" },
+    { "id": "insert", "from": "service", "to": "db", "y": 360, "label": "INSERT evento + COMMIT", "variant": "emphasis" },
+    { "id": "dispatch", "from": "service", "to": "cola", "y": 390, "label": "EventoRegistrado", "variant": "dashed" },
+    { "id": "evento", "from": "service", "to": "controller", "y": 420, "label": "Evento", "variant": "return" },
+    { "id": "respuesta", "from": "controller", "to": "supervisor", "y": 450, "label": "302 + flash success", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "middleware", "from": 174, "to": 216, "type": "security" },
+    { "participant": "request", "from": 204, "to": 246, "type": "security" },
+    { "participant": "controller", "from": 234, "to": 456, "type": "backend" },
+    { "participant": "service", "from": 264, "to": 426, "type": "backend" },
+    { "participant": "db", "from": 294, "to": 366, "type": "database" },
+    { "participant": "cola", "from": 384, "to": 396, "type": "messagebus" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Caminos de rechazo",
+      "items": [
+        "Validación falla (tipo/PM inexistente, PM requerido, hecho futuro): 422",
+        "Sin turno abierto: SinTurnoActivoException pasa a error de validación"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Notificación desacoplada",
+      "items": [
+        "EventoRegistrado se despacha después del COMMIT",
+        "NotificarInteresadosListener corre en cola (envío WhatsApp: TODO)"
+      ]
+    }
+  ]
+}
