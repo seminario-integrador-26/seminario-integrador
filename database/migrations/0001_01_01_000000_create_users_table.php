@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            // US-001: el login es por nombre de usuario. El email queda como
+            // canal de recuperación de contraseña.
+            $table->string('username', 50)->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

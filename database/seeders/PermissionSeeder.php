@@ -24,14 +24,15 @@ class PermissionSeeder extends Seeder
      */
     private const MATRIZ = [
         'eventos.registrar' => ['Supervisor'],
-        'eventos.consultar' => ['Supervisor', 'Administrativo'],
+        'eventos.consultar' => ['Supervisor', 'Administrativo', 'Administrador de sistema'],
         'erratas.crear' => ['Supervisor'],
         'turnos.gestionar' => ['Supervisor'],
-        'estadisticas.ver' => ['Administrativo', 'Operador'],
-        'dashboards.ver' => ['Administrativo', 'Operador'],
-        'reportes.exportar' => ['Administrativo'],
-        'usuarios.gestionar' => ['Administrativo'],
-        'tipos_evento.gestionar' => ['Administrativo'],
+        'estadisticas.ver' => ['Administrativo', 'Administrador de sistema'],
+        'dashboards.ver' => ['Administrativo', 'Administrador de sistema'],
+        'reportes.exportar' => ['Administrativo', 'Administrador de sistema'],
+        // Gestión reservada al Administrador de sistema (el Administrativo es solo lectura).
+        'usuarios.gestionar' => ['Administrador de sistema'],
+        'tipos_evento.gestionar' => ['Administrador de sistema'],
     ];
 
     public function run(): void

@@ -11,7 +11,7 @@ class UpdateUsuarioRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // La ruta ya está gateada por middleware role:Administrativo.
+        // La ruta ya está gateada por middleware permission:usuarios.gestionar (Administrador de sistema).
         return true;
     }
 
@@ -24,6 +24,7 @@ class UpdateUsuarioRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9._-]+$/', Rule::unique('users', 'username')->ignore($usuarioId)],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuarioId)],
             // Password opcional: solo se cambia si se completa.
             'password' => ['nullable', 'confirmed', Password::defaults()],

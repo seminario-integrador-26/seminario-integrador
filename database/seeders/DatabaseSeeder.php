@@ -6,6 +6,7 @@ use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -24,12 +25,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Un usuario de desarrollo por cada rol (solo para entornos locales).
+        // El slug quita espacios/acentos para que el email sea válido
+        // (p. ej. "Administrador de sistema" -> "administradordesistema").
         foreach (RoleSeeder::ROLES as $role) {
-            $slug = strtolower($role);
+            $slug = (string) Str::of($role)->ascii()->lower()->replaceMatches('/[^a-z0-9]/', '');
 
             User::factory()
                 ->create([
                     'name' => $role,
+                    'username' => $slug,
                     'email' => "{$slug}@example.com",
                 ])
                 ->assignRole($role);

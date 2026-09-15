@@ -9,14 +9,15 @@ use Spatie\Permission\PermissionRegistrar;
 /**
  * Roles del sistema (spatie/laravel-permission). SÓLO estos tres:
  *   - Supervisor:    registra eventos, fe de errata, abre/cierra turnos.
- *   - Administrativo: consulta, estadísticas, dashboards, export, admin usuarios/tipos.
- *   - Operador:      solo lectura (dashboards); no carga eventos.
+ *   - Administrativo: SOLO visualización — consulta eventos, estadísticas,
+ *                     dashboards y exporta (.xlsx/PDF). No gestiona usuarios ni tipos.
+ *   - Administrador de sistema:    todo lo del Administrativo + gestiona usuarios y tipos de evento.
  *
  * No agregar otros roles (ver CLAUDE.md).
  */
 class RoleSeeder extends Seeder
 {
-    public const ROLES = ['Supervisor', 'Administrativo', 'Operador'];
+    public const ROLES = ['Supervisor', 'Administrativo', 'Administrador de sistema'];
 
     public function run(): void
     {

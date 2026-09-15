@@ -20,7 +20,7 @@ class AuditoriaAccesoTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
 
@@ -38,7 +38,7 @@ class AuditoriaAccesoTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password-incorrecta',
         ]);
 
@@ -54,7 +54,7 @@ class AuditoriaAccesoTest extends TestCase
 
         foreach (range(1, BloqueoCuentaService::MAX_INTENTOS) as $_) {
             $this->post('/login', [
-                'email' => $user->email,
+                'username' => $user->username,
                 'password' => 'password-incorrecta',
             ]);
         }

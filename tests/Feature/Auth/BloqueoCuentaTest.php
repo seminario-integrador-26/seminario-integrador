@@ -17,7 +17,7 @@ class BloqueoCuentaTest extends TestCase
     private function intentoFallido(User $user): void
     {
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password-incorrecta',
         ]);
     }
@@ -46,16 +46,16 @@ class BloqueoCuentaTest extends TestCase
         }
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('username');
 
         $this->assertStringContainsString(
             'Cuenta bloqueada temporalmente',
-            session('errors')->first('email'),
+            session('errors')->first('username'),
         );
     }
 
@@ -83,7 +83,7 @@ class BloqueoCuentaTest extends TestCase
         $this->travel(BloqueoCuentaService::MINUTOS_BLOQUEO + 1)->minutes();
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
 
@@ -99,7 +99,7 @@ class BloqueoCuentaTest extends TestCase
         $this->intentoFallido($user);
 
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
 

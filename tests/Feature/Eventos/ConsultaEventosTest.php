@@ -71,9 +71,10 @@ class ConsultaEventosTest extends TestCase
             ->assertOk();
     }
 
-    public function test_el_operador_no_consulta_el_listado(): void
+    public function test_un_usuario_sin_permiso_no_consulta_el_listado(): void
     {
-        $this->actingAs($this->usuarioConRol('Operador'))
+        // Sin el permiso eventos.consultar (usuario sin rol) -> 403.
+        $this->actingAs(User::factory()->create())
             ->get(route('eventos.index'))
             ->assertForbidden();
     }

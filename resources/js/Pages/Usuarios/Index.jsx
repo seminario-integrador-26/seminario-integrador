@@ -9,7 +9,7 @@ import { useState } from 'react';
 const rolBadge = {
     Supervisor: 'bg-indigo-100 text-indigo-800',
     Administrativo: 'bg-emerald-100 text-emerald-800',
-    Operador: 'bg-amber-100 text-amber-800',
+    'Administrador de sistema': 'bg-rose-100 text-rose-800',
 };
 
 export default function Index({ usuarios, authUserId }) {
@@ -47,12 +47,20 @@ export default function Index({ usuarios, authUserId }) {
                     )}
 
                     <div className="flex items-center justify-between">
-                        <Link
-                            href={route('roles.index')}
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
-                        >
-                            Ver roles y permisos →
-                        </Link>
+                        <div className="flex gap-4">
+                            <Link
+                                href={route('roles.index')}
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                            >
+                                Ver roles y permisos →
+                            </Link>
+                            <Link
+                                href={route('usuarios.auditoria')}
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                            >
+                                Ver bitácora de auditoría →
+                            </Link>
+                        </div>
                         <PrimaryButton
                             onClick={() =>
                                 router.visit(route('usuarios.create'))
@@ -68,6 +76,9 @@ export default function Index({ usuarios, authUserId }) {
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Nombre
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                        Usuario
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Email
@@ -87,7 +98,7 @@ export default function Index({ usuarios, authUserId }) {
                                 {usuarios.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="px-6 py-4 text-center text-sm text-gray-500"
                                         >
                                             No hay usuarios.
@@ -103,6 +114,9 @@ export default function Index({ usuarios, authUserId }) {
                                                     (vos)
                                                 </span>
                                             )}
+                                        </td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                            {u.username}
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                                             {u.email}

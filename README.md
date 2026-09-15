@@ -14,7 +14,7 @@ Villa María (UTN FRVM).
 - **Notificaciones:** WhatsApp Cloud API (Meta)
 - **Exportación:** maatwebsite/laravel-excel (.xlsx) · barryvdh/laravel-dompdf (PDF)
 - **Gráficos:** Recharts
-- **Roles:** spatie/laravel-permission (Operador, Administrador)
+- **Roles:** spatie/laravel-permission (Supervisor, Administrativo, Administrador de sistema)
 
 ## Documentación
 

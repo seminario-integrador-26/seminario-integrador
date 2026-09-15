@@ -7,7 +7,7 @@
 ## 1. Idea general
 
 Es un **monolito Laravel + Inertia.js + React**. No hay microservicios. El
-frontend interno (Supervisor / Administrativo / Operador) se sirve con **Inertia**, así que
+frontend interno (Supervisor / Administrativo / Administrador de sistema) se sirve con **Inertia**, así que
 **no existe una API interna** que el frontend consuma: el Controller pasa props
 directo a un componente React.
 
@@ -17,7 +17,7 @@ que conviven:
 
 | Frontend interno (Inertia) | API pública (`/api/v1`) |
 |---|---|
-| Supervisor, Administrativo, Operador | Sistemas externos |
+| Supervisor, Administrativo, Administrador de sistema | Sistemas externos |
 | Lectura y escritura | Solo lectura |
 | Controllers en `Http/Controllers/` | Controllers en `Http/Controllers/Api/V1/` |
 | Devuelve `Inertia::render(...)` | Devuelve JSON |
@@ -131,7 +131,7 @@ usuario recibió respuesta rápido.
   - `EventServiceProvider` — mapea Events → Listeners.
 
 ### `routes/`
-- `web.php` — rutas Inertia autenticadas (Supervisor/Administrativo/Operador), con roles.
+- `web.php` — rutas Inertia autenticadas (Supervisor/Administrativo/Administrador de sistema), con roles.
 - `api.php` — API pública versionada `/api/v1`, solo lectura.
 
 ### `resources/js/` (frontend React + Inertia)
@@ -162,7 +162,7 @@ usuario recibió respuesta rápido.
 - ❌ Service o Controller instanciando una clase concreta de Notificador/Exportador
   a mano (pedila por interfaz o Factory)
 - ❌ Lógica de negocio dentro de un Model, una Route o un componente React
-- ❌ Editar un Evento (usar Errata) o crear roles fuera de Supervisor/Administrativo/Operador
+- ❌ Editar un Evento (usar Errata) o crear roles fuera de Supervisor/Administrativo/Administrador de sistema
 
 ## 5. Por qué esta separación
 

@@ -22,10 +22,10 @@ notificación y consulta de eventos detectados por el Centro de Monitoreo
 
 - **Supervisor** — registra eventos, genera fe de errata y gestiona los turnos
   de guardia (abre/cierra).
-- **Administrativo** — consulta, gestiona, genera estadísticas y reportes,
-  exporta y administra usuarios y tipos de evento.
-- **Operador** — monitorea en vivo; en el sistema tiene acceso de **solo
-  lectura** (dashboards). No carga eventos.
+- **Administrativo** — **solo visualización**: consulta, ve estadísticas y
+  dashboards, y exporta. No administra usuarios ni tipos de evento.
+- **Administrador de sistema** — todo lo del Administrativo más la gestión de usuarios/roles
+  y tipos de evento.
 - **Sistemas externos** (Gobierno Abierto) — consumen la API pública.
 
 ## Clasificación de eventos

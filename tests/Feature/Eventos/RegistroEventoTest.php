@@ -78,7 +78,7 @@ class RegistroEventoTest extends TestCase
 
     public function test_solo_el_supervisor_puede_registrar_eventos(): void
     {
-        foreach (['Administrativo', 'Operador'] as $rol) {
+        foreach (['Administrativo', 'Administrador de sistema'] as $rol) {
             $usuario = User::factory()->create()->assignRole($rol);
 
             $this->actingAs($usuario)->get(route('eventos.create'))->assertForbidden();

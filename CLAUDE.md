@@ -19,11 +19,18 @@ Roles vía `spatie/laravel-permission` — **solo estos tres**:
   corresponde; evento **inmutable**); genera la **fe de errata**; abre y cierra
   los **turnos de guardia**. Al registrar un evento se dispara la notificación
   automática por WhatsApp al grupo según clasificación.
-- **Administrativo** — consulta/gestiona registros, búsquedas/filtros,
-  estadísticas, dashboards, exporta a `.xlsx` y PDF, administra usuarios y
-  tipos de evento. Hereda lo que el dominio original llamaba "Administrador".
-- **Operador** — **solo lectura**: monitorea en vivo y visualiza dashboards;
-  **no** carga eventos (detecta y avisa al Supervisor).
+- **Administrativo** — **solo visualización**: consulta registros,
+  búsquedas/filtros, estadísticas y dashboards, y exporta a `.xlsx` y PDF.
+  **No** administra usuarios ni tipos de evento.
+- **Administrador de sistema** — todo lo del Administrativo **más** la gestión: administra
+  usuarios/roles y tipos de evento. Hereda lo que el dominio original llamaba
+  "Administrador".
+
+**Autenticación (US-001).** El login es por **nombre de usuario** (`username`) y
+contraseña; el email es solo el canal de recuperación. Reset de contraseña:
+el Administrador de sistema **blanquea** la clave de los demás roles; **entre
+Administradores de sistema no** pueden blanquearse (si la pierden, la recuperan
+por email vía el flujo estándar de reseteo).
 
 ## Reglas de negocio (no negociables)
 
@@ -87,7 +94,7 @@ auth por token) · Leaflet + OpenStreetMap (react-leaflet) · **PostgreSQL** ·
 Laravel Queues (driver database) + Supervisor · WhatsApp Cloud API de Meta (no
 Twilio) · maatwebsite/laravel-excel (export `.xlsx` UTF-8) ·
 barryvdh/laravel-dompdf (reporte de turno) · Recharts ·
-spatie/laravel-permission (roles **Supervisor, Administrativo, Operador** —
+spatie/laravel-permission (roles **Supervisor, Administrativo, Administrador de sistema** —
 solo esos).
 
 ## Requerimientos no funcionales (clave)
@@ -103,7 +110,7 @@ solo esos).
 
 Ver `docs/modelo-dominio.md`. Entidades: Evento, Errata, TipoEvento,
 PuntoMonitoreo, Turno, GrupoInteresado, Contacto, Usuario (rol Supervisor,
-Administrativo u Operador).
+Administrativo o Administrador de sistema).
 
 ## Estado actual del repo
 

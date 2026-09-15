@@ -33,12 +33,16 @@ class AuditarAccesosListener
 
     public function handleFailed(Failed $event): void
     {
-        $user = $event->user;
+        $usuario = (string) ($event->credentials['username'] ?? '');
+        $user = $event->user instanceof User
+            ? $event->user
+            : User::where('username', $usuario)->first();
 
         $this->auditoria->registrar(
             AuditoriaAcceso::EVENTO_LOGIN_FALLIDO,
-            (string) ($event->credentials['email'] ?? ''),
-            $user instanceof User ? $user : null,
+            $user?->email ?? $usuario,
+            $user,
+            "Intento fallido con el usuario '{$usuario}'.",
         );
     }
 
@@ -59,12 +63,14 @@ class AuditarAccesosListener
 
     public function handleLockout(Lockout $event): void
     {
-        $email = (string) $event->request->input('email', '');
+        $usuario = (string) $event->request->input('username', '');
+        $user = User::where('username', $usuario)->first();
 
         $this->auditoria->registrar(
             AuditoriaAcceso::EVENTO_BLOQUEO,
-            $email,
-            User::where('email', $email)->first(),
+            $user?->email ?? $usuario,
+            $user,
+            "Cuenta bloqueada tras superar los intentos (usuario '{$usuario}').",
         );
     }
 

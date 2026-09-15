@@ -14,7 +14,7 @@
 | **Turno** | fecha, hora_inicio, hora_fin, supervisor_id | Lo abre/cierra un Supervisor. |
 | **GrupoInteresado** | nombre | N:M con TipoEvento; 1:N con Contacto. |
 | **Contacto** | nombre, numero_whatsapp, grupo_interesado_id | |
-| **Usuario** | nombre, email, rol, intentos_fallidos, bloqueado_hasta | Rol vía spatie: Supervisor, Administrativo u Operador. Bloqueo temporal de cuenta (US-001). |
+| **Usuario** | nombre, username, email, rol, intentos_fallidos, bloqueado_hasta | Login por **username** (US-001); el email es el canal de recuperación de clave. Rol vía spatie: Supervisor, Administrativo o Administrador de sistema. Bloqueo temporal de cuenta. |
 | **AuditoriaAcceso** | user_id (nullable), email, evento, ip_address, user_agent, created_at | Traza de login/logout/intento fallido/bloqueo (US-001). Inmutable, solo created_at. |
 
 ## Relaciones

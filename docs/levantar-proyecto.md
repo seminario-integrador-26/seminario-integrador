@@ -92,8 +92,8 @@ php artisan migrate --seed
 Esto crea las tablas de base: `users`, `cache`, `jobs`,
 `personal_access_tokens` (Sanctum) y las de roles/permisos
 (spatie/laravel-permission). El `--seed` además carga los **3 roles**
-(Supervisor, Administrativo, Operador) y un **usuario de desarrollo por rol**
-(`supervisor@example.com`, `administrativo@example.com`, `operador@example.com`;
+(Supervisor, Administrativo, Administrador de sistema) y un **usuario de desarrollo por rol**
+(`supervisor@example.com`, `administrativo@example.com`, `administradordesistema@example.com`;
 password `password`).
 
 > Si querés partir de cero en cualquier momento: `php artisan migrate:fresh --seed`.
@@ -144,12 +144,12 @@ terminales separadas de los pasos 7, 8 y 9. La app queda en
 ## Verificar que funciona
 
 1. Abrí **http://localhost:8000** → deberías ver la pantalla de bienvenida.
-2. Entrá a **/login** e iniciá sesión con un usuario sembrado, por ejemplo
-   `supervisor@example.com` / `password`.
+2. Entrá a **/login** e iniciá sesión con un usuario sembrado. El login es por
+   **nombre de usuario**, por ejemplo `supervisor` / `password`.
 3. Deberías llegar al **/dashboard**.
 
-> También podés crear un usuario nuevo en **/register** (auth de Breeze), pero
-> queda sin rol asignado hasta que se le asigne uno.
+> No hay auto-registro: los usuarios los da de alta el **Administrador de
+> sistema** desde la sección Usuarios (o con `php artisan user:role`).
 
 ## Comandos útiles
 

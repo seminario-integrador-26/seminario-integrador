@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Exceptions\SinTurnoActivoException;
 use App\Http\Requests\BuscarEventosRequest;
 use App\Http\Requests\StoreEventoRequest;
+use App\Models\AuditoriaAcceso;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
+use App\Services\Auth\AuditoriaAccesoService;
 use App\Services\EventoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
@@ -20,7 +22,10 @@ use Inertia\Response;
  */
 class EventoController extends Controller
 {
-    public function __construct(private readonly EventoService $eventos) {}
+    public function __construct(
+        private readonly EventoService $eventos,
+        private readonly AuditoriaAccesoService $auditoria,
+    ) {}
 
     /**
      * CU04: consulta de eventos registrados con filtros (eventos.consultar).
@@ -80,6 +85,12 @@ class EventoController extends Controller
         } catch (SinTurnoActivoException $e) {
             throw ValidationException::withMessages(['turno' => $e->getMessage()]);
         }
+
+        $this->auditoria->registrarAccion(
+            AuditoriaAcceso::EVENTO_REGISTRO_EVENTO,
+            $request->user(),
+            "Evento #{$evento->id} registrado ({$evento->tipoEvento->nombre}) en el turno #{$evento->turno_id}.",
+        );
 
         return redirect()->route('eventos.create')
             ->with('success', "Evento #{$evento->id} registrado correctamente.");

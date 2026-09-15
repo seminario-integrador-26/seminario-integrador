@@ -12,6 +12,7 @@ const selectClass =
 export default function Create({ roles }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -53,6 +54,22 @@ export default function Create({ roles }) {
                             <InputError
                                 className="mt-2"
                                 message={errors.name}
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="username" value="Usuario" />
+                            <TextInput
+                                id="username"
+                                className="mt-1 block w-full"
+                                value={data.username}
+                                onChange={(e) =>
+                                    setData('username', e.target.value)
+                                }
+                            />
+                            <InputError
+                                className="mt-2"
+                                message={errors.username}
                             />
                         </div>
 

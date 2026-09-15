@@ -11,7 +11,7 @@ class StoreUsuarioRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // La ruta ya está gateada por middleware role:Administrativo.
+        // La ruta ya está gateada por middleware permission:usuarios.gestionar (Administrador de sistema).
         return true;
     }
 
@@ -22,6 +22,7 @@ class StoreUsuarioRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9._-]+$/', 'unique:users,username'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'rol' => ['required', 'string', Rule::in(RoleSeeder::ROLES)],

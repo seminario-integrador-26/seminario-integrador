@@ -30,7 +30,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
@@ -51,13 +51,13 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $bloqueo = app(BloqueoCuentaService::class);
-        $user = User::where('email', (string) $this->string('email'))->first();
+        $user = User::where('username', (string) $this->string('username'))->first();
 
         if ($user !== null && $bloqueo->estaBloqueada($user)) {
             throw $this->cuentaBloqueada($bloqueo->segundosRestantes($user));
         }
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt($this->only('username', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             if ($user !== null && $bloqueo->registrarFallo($user)) {
@@ -67,7 +67,7 @@ class LoginRequest extends FormRequest
             }
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'username' => trans('auth.failed'),
             ]);
         }
 
@@ -92,7 +92,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'username' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -104,7 +104,7 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('username')).'|'.$this->ip());
     }
 
     /**
@@ -115,7 +115,7 @@ class LoginRequest extends FormRequest
         $minutos = max(1, (int) ceil($segundos / 60));
 
         return ValidationException::withMessages([
-            'email' => trans('auth.bloqueada', [
+            'username' => trans('auth.bloqueada', [
                 'intentos' => BloqueoCuentaService::MAX_INTENTOS,
                 'minutos' => $minutos,
             ]),

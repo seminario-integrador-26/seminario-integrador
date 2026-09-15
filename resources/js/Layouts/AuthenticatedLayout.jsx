@@ -9,7 +9,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const page = usePage();
     const user = page.props.auth.user;
     const roles = page.props.auth.roles ?? [];
-    const esAdministrativo = roles.includes('Administrativo');
+    const esAdminSistema = roles.includes('Administrador de sistema');
     const esSupervisor = roles.includes('Supervisor');
     const puedeConsultarEventos = (page.props.auth.permissions ?? []).includes(
         'eventos.consultar',
@@ -53,7 +53,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         Registrar evento
                                     </NavLink>
                                 )}
-                                {esAdministrativo && (
+                                {esAdminSistema && (
                                     <NavLink
                                         href={route('usuarios.index')}
                                         active={route().current('usuarios.*')}
@@ -181,7 +181,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 Registrar evento
                             </ResponsiveNavLink>
                         )}
-                        {esAdministrativo && (
+                        {esAdminSistema && (
                             <ResponsiveNavLink
                                 href={route('usuarios.index')}
                                 active={route().current('usuarios.*')}

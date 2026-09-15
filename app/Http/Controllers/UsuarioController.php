@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUsuarioRequest;
 use App\Http\Requests\UpdateUsuarioRequest;
+use App\Models\AuditoriaAcceso;
 use App\Models\User;
+use App\Services\Auth\AuditoriaAccesoService;
 use App\Services\UsuarioService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Http\RedirectResponse;
@@ -13,18 +15,22 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Gestión de usuarios (rol Administrativo). Controller fino: delega en
+ * Gestión de usuarios (rol Administrador de sistema). Controller fino: delega en
  * UsuarioService. Ver CLAUDE.md.
  */
 class UsuarioController extends Controller
 {
-    public function __construct(private readonly UsuarioService $usuarios) {}
+    public function __construct(
+        private readonly UsuarioService $usuarios,
+        private readonly AuditoriaAccesoService $auditoria,
+    ) {}
 
     public function index(): Response
     {
         $usuarios = $this->usuarios->listar()->map(fn (User $u) => [
             'id' => $u->id,
             'name' => $u->name,
+            'username' => $u->username,
             'email' => $u->email,
             'rol' => $u->roles->first()?->name,
             'created_at' => $u->created_at?->format('d/m/Y'),
@@ -45,7 +51,14 @@ class UsuarioController extends Controller
 
     public function store(StoreUsuarioRequest $request): RedirectResponse
     {
-        $this->usuarios->crear($request->validated());
+        $data = $request->validated();
+        $this->usuarios->crear($data);
+
+        $this->auditoria->registrarAccion(
+            AuditoriaAcceso::EVENTO_ALTA_USUARIO,
+            $request->user(),
+            "Alta de usuario {$data['email']} con rol {$data['rol']}.",
+        );
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario creado correctamente.');
@@ -57,21 +70,39 @@ class UsuarioController extends Controller
             'usuario' => [
                 'id' => $usuario->id,
                 'name' => $usuario->name,
+                'username' => $usuario->username,
                 'email' => $usuario->email,
                 'rol' => $usuario->roles->first()?->name,
             ],
             'roles' => RoleSeeder::ROLES,
+            // Entre Administradores de sistema no se blanquean la clave:
+            // esa cuenta recupera su contraseña por email.
+            'puedeResetPassword' => ! $usuario->hasRole('Administrador de sistema'),
         ]);
     }
 
     public function update(UpdateUsuarioRequest $request, User $usuario): RedirectResponse
     {
-        // Evita que un Administrativo se quite a sí mismo el rol (auto-bloqueo).
-        if ($usuario->id === Auth::id() && $request->validated()['rol'] !== 'Administrativo') {
-            return back()->with('error', 'No podés cambiar tu propio rol de Administrativo.');
+        $data = $request->validated();
+
+        // Evita que un Administrador de sistema se quite a sí mismo el rol (auto-bloqueo).
+        if ($usuario->id === Auth::id() && $data['rol'] !== 'Administrador de sistema') {
+            return back()->with('error', 'No podés cambiar tu propio rol de Administrador de sistema.');
         }
 
-        $this->usuarios->actualizar($usuario, $request->validated());
+        // Entre Administradores de sistema no se blanquean la clave: esa cuenta
+        // recupera su contraseña por email.
+        if ($usuario->hasRole('Administrador de sistema') && ! empty($data['password'])) {
+            return back()->with('error', 'No se puede blanquear la contraseña de un Administrador de sistema. Debe recuperarla por email.');
+        }
+
+        $this->usuarios->actualizar($usuario, $data);
+
+        $this->auditoria->registrarAccion(
+            AuditoriaAcceso::EVENTO_MOD_USUARIO,
+            $request->user(),
+            "Modificación de usuario {$data['email']} (rol {$data['rol']}).",
+        );
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario actualizado correctamente.');
@@ -88,7 +119,14 @@ class UsuarioController extends Controller
             return back()->with('error', 'No se puede eliminar un usuario con eventos o turnos registrados.');
         }
 
+        $emailEliminado = $usuario->email;
         $this->usuarios->eliminar($usuario);
+
+        $this->auditoria->registrarAccion(
+            AuditoriaAcceso::EVENTO_BAJA_USUARIO,
+            Auth::user(),
+            "Baja de usuario {$emailEliminado}.",
+        );
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario eliminado.');

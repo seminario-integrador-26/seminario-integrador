@@ -1,12 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 
-export default function Welcome({
-    auth,
-    canLogin,
-    canRegister,
-    laravelVersion,
-    phpVersion,
-}) {
+export default function Welcome({ auth, canLogin, laravelVersion, phpVersion }) {
     return (
         <>
             <Head title="Inicio" />
@@ -34,15 +28,6 @@ export default function Welcome({
                                             className="rounded-md px-3 py-2 text-gray-700 underline hover:text-gray-900"
                                         >
                                             Iniciar sesión
-                                        </Link>
-                                    )}
-
-                                    {canRegister && (
-                                        <Link
-                                            href={route('register')}
-                                            className="rounded-md px-3 py-2 text-gray-700 underline hover:text-gray-900"
-                                        >
-                                            Registrarse
                                         </Link>
                                     )}
                                 </>

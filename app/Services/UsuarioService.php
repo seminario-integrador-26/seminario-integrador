@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Lógica de gestión de usuarios y sus roles (usada por el rol Administrativo).
+ * Lógica de gestión de usuarios y sus roles (usada por el rol Administrador de sistema).
  * Toda la escritura sobre usuarios/roles pasa por acá (SRP).
  */
 class UsuarioService
@@ -27,12 +27,13 @@ class UsuarioService
     /**
      * Crea un usuario y le asigna un rol.
      *
-     * @param  array{name: string, email: string, password: string, rol: string}  $data
+     * @param  array{name: string, username: string, email: string, password: string, rol: string}  $data
      */
     public function crear(array $data): User
     {
         $user = User::create([
             'name' => $data['name'],
+            'username' => $data['username'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
@@ -45,11 +46,12 @@ class UsuarioService
     /**
      * Actualiza datos del usuario y su rol. La password es opcional.
      *
-     * @param  array{name: string, email: string, rol: string, password?: string|null}  $data
+     * @param  array{name: string, username: string, email: string, rol: string, password?: string|null}  $data
      */
     public function actualizar(User $user, array $data): User
     {
         $user->name = $data['name'];
+        $user->username = $data['username'];
         $user->email = $data['email'];
 
         if (! empty($data['password'])) {

@@ -19,17 +19,17 @@
 ## CU03 — Corregir evento con fe de errata (Supervisor)
 - Registrar una errata que referencia al evento sin modificarlo.
 
-## CU04 — Consultar y filtrar eventos (Administrativo)
+## CU04 — Consultar y filtrar eventos (Administrativo / Administrador de sistema)
 - Filtros por tipo, fecha, horario, ubicación.
 
-## CU05 — Ver estadísticas y dashboard (Administrativo / Operador lectura)
+## CU05 — Ver estadísticas y dashboard (Administrativo / Administrador de sistema)
 - Agregados mensuales/anuales por tipo y ubicación (excluye no cuantificables).
-- El Operador tiene acceso de **solo lectura** a los dashboards.
+- El Administrativo es de **solo visualización** (ve dashboards y estadísticas).
 
-## CU06 — Exportar (Administrativo)
+## CU06 — Exportar (Administrativo / Administrador de sistema)
 - `.xlsx` UTF-8 (datos abiertos) y PDF/A (reporte de turno).
 
-## CU07 — Administrar usuarios y tipos de evento (Administrativo)
+## CU07 — Administrar usuarios y tipos de evento (Administrador de sistema)
 - Alta/baja de usuarios y roles; gestión de tipos y categorías de evento.
 
 ## CU08 — Consumir API pública (Sistema externo)

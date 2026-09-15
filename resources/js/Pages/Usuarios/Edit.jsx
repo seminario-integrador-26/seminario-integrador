@@ -9,9 +9,10 @@ import { Head, router, useForm } from '@inertiajs/react';
 const selectClass =
     'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
 
-export default function Edit({ usuario, roles }) {
+export default function Edit({ usuario, roles, puedeResetPassword }) {
     const { data, setData, put, processing, errors } = useForm({
         name: usuario.name,
+        username: usuario.username,
         email: usuario.email,
         password: '',
         password_confirmation: '',
@@ -57,6 +58,22 @@ export default function Edit({ usuario, roles }) {
                         </div>
 
                         <div>
+                            <InputLabel htmlFor="username" value="Usuario" />
+                            <TextInput
+                                id="username"
+                                className="mt-1 block w-full"
+                                value={data.username}
+                                onChange={(e) =>
+                                    setData('username', e.target.value)
+                                }
+                            />
+                            <InputError
+                                className="mt-2"
+                                message={errors.username}
+                            />
+                        </div>
+
+                        <div>
                             <InputLabel htmlFor="email" value="Email" />
                             <TextInput
                                 id="email"
@@ -90,50 +107,63 @@ export default function Edit({ usuario, roles }) {
                             <InputError className="mt-2" message={errors.rol} />
                         </div>
 
-                        <div className="border-t border-gray-100 pt-4">
-                            <p className="text-sm text-gray-500">
-                                Dejá la contraseña en blanco para no cambiarla.
-                            </p>
-                        </div>
+                        {puedeResetPassword ? (
+                            <>
+                                <div className="border-t border-gray-100 pt-4">
+                                    <p className="text-sm text-gray-500">
+                                        Dejá la contraseña en blanco para no
+                                        cambiarla.
+                                    </p>
+                                </div>
 
-                        <div>
-                            <InputLabel
-                                htmlFor="password"
-                                value="Nueva contraseña"
-                            />
-                            <TextInput
-                                id="password"
-                                type="password"
-                                className="mt-1 block w-full"
-                                value={data.password}
-                                onChange={(e) =>
-                                    setData('password', e.target.value)
-                                }
-                            />
-                            <InputError
-                                className="mt-2"
-                                message={errors.password}
-                            />
-                        </div>
+                                <div>
+                                    <InputLabel
+                                        htmlFor="password"
+                                        value="Nueva contraseña"
+                                    />
+                                    <TextInput
+                                        id="password"
+                                        type="password"
+                                        className="mt-1 block w-full"
+                                        value={data.password}
+                                        onChange={(e) =>
+                                            setData('password', e.target.value)
+                                        }
+                                    />
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.password}
+                                    />
+                                </div>
 
-                        <div>
-                            <InputLabel
-                                htmlFor="password_confirmation"
-                                value="Confirmar nueva contraseña"
-                            />
-                            <TextInput
-                                id="password_confirmation"
-                                type="password"
-                                className="mt-1 block w-full"
-                                value={data.password_confirmation}
-                                onChange={(e) =>
-                                    setData(
-                                        'password_confirmation',
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                        </div>
+                                <div>
+                                    <InputLabel
+                                        htmlFor="password_confirmation"
+                                        value="Confirmar nueva contraseña"
+                                    />
+                                    <TextInput
+                                        id="password_confirmation"
+                                        type="password"
+                                        className="mt-1 block w-full"
+                                        value={data.password_confirmation}
+                                        onChange={(e) =>
+                                            setData(
+                                                'password_confirmation',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="border-t border-gray-100 pt-4">
+                                <p className="text-sm text-gray-500">
+                                    La contraseña de un Administrador de sistema
+                                    no se blanquea desde acá: esa cuenta la
+                                    recupera por email.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-end gap-3">
                             <SecondaryButton

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RolController;
@@ -11,7 +12,6 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
@@ -28,9 +28,12 @@ Route::middleware('auth')->group(function () {
 });
 
 /*
-| Administración de usuarios y roles — solo rol Administrativo.
+| Administración de usuarios y roles — permiso usuarios.gestionar (solo Administrador de sistema).
 */
-Route::middleware(['auth', 'role:Administrativo'])->group(function () {
+Route::middleware(['auth', 'permission:usuarios.gestionar'])->group(function () {
+    // Antes del resource: evita que 'auditoria' se resuelva como {usuario}.
+    Route::get('usuarios/auditoria', [AuditoriaController::class, 'index'])->name('usuarios.auditoria');
+
     Route::resource('usuarios', UsuarioController::class)
         ->parameters(['usuarios' => 'usuario'])
         ->except(['show']);
@@ -47,8 +50,8 @@ Route::middleware(['auth', 'role:Supervisor'])->group(function () {
 });
 
 /*
-| Consulta de eventos (CU04) — permiso eventos.consultar (Supervisor, Administrativo).
-| TODO: confirmar con el equipo si el Operador también consulta el listado.
+| Consulta de eventos (CU04) — permiso eventos.consultar
+| (Supervisor, Administrativo y Administrador de sistema).
 */
 Route::middleware(['auth', 'permission:eventos.consultar'])->group(function () {
     Route::get('eventos', [EventoController::class, 'index'])->name('eventos.index');
@@ -63,8 +66,8 @@ Route::middleware(['auth', 'permission:eventos.consultar'])->group(function () {
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('eventos/{evento}/errata', [ErrataController::class, 'create']);
 //     Route::post('eventos/{evento}/errata', [ErrataController::class, 'store']);
-//     Route::get('dashboard', [DashboardController::class, 'index']);       // rol:Administrativo|Operador (lectura)
-//     Route::get('reportes', [ReporteController::class, 'index']);          // rol:Administrativo
+//     Route::get('dashboard', [DashboardController::class, 'index']);       // permission:dashboards.ver (Administrativo|Administrador de sistema)
+//     Route::get('reportes', [ReporteController::class, 'index']);          // permission:reportes.exportar (Administrativo|Administrador de sistema)
 //     Route::post('reportes/exportar', [ReporteController::class, 'exportar']);
 // });
 

@@ -14,11 +14,12 @@
   Convivencia Urbana o Seguridad Pública (más los Informativos, no cuantificables).
 - **RF4** — Gestión de turnos de guardia (Supervisor): abrir y cerrar el turno;
   todo evento queda asociado unívocamente al turno activo.
-- **RF5** — Consulta y gestión (Administrativo): búsquedas/filtros por tipo,
-  fecha, horario, ubicación; gestión de usuarios y de tipos/categorías de evento.
+- **RF5** — Consulta (Administrativo / Administrador de sistema): búsquedas/filtros por tipo,
+  fecha, horario, ubicación. La gestión de usuarios y de tipos/categorías de
+  evento es exclusiva del **Administrador de sistema** (el Administrativo es solo lectura).
 - **RF6** — Estadísticas mensuales y anuales por tipo y por ubicación.
 - **RF7** — Exportación a `.xlsx` (datos abiertos) y PDF (reporte de turno).
-- **RF8** — Dashboards (Recharts) — visibles también para el Operador (lectura).
+- **RF8** — Dashboards (Recharts) — visibles para Administrativo y Administrador de sistema.
 - **RF9** — API pública de solo lectura, versionada, para Datos Abiertos.
 - **RF10** — Visualización de ubicaciones en mapa (Leaflet + OpenStreetMap).
 
@@ -26,7 +27,7 @@
 
 ## Requerimientos no funcionales
 
-- **RNF1** — Roles: Supervisor, Administrativo y Operador (spatie), sólo esos tres.
+- **RNF1** — Roles: Supervisor, Administrativo y Administrador de sistema (spatie), sólo esos tres.
 - **RNF2** — Notificaciones desacopladas (cola) para no bloquear el registro.
 - **RNF3** — API pública actualizada "minuto a minuto".
 - **RNF4** — Alta disponibilidad / Zero Downtime: el centro no frena;

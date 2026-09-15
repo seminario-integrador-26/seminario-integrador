@@ -7,7 +7,7 @@ use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 /**
- * Vista de SOLO LECTURA de roles y sus permisos (rol Administrativo).
+ * Vista de SOLO LECTURA de roles y sus permisos (rol Administrador de sistema).
  * La edición de permisos por rol es una fase posterior.
  */
 class RolController extends Controller
