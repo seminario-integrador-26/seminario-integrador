@@ -5,18 +5,37 @@ import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 
+/** Dato de identidad que el usuario ve pero no puede cambiarse solo. */
+function DatoSoloLectura({ etiqueta, valor }) {
+    return (
+        <div>
+            <InputLabel value={etiqueta} />
+            <p className="mt-1 border border-atalaya-border bg-atalaya-canvas px-3 py-2 font-mono text-xs text-atalaya-text-muted">
+                {valor}
+            </p>
+        </div>
+    );
+}
+
 export default function UpdateProfileInformation({
     mustVerifyEmail,
     status,
+    puedeEditarIdentidad = false,
     className = '',
 }) {
     const user = usePage().props.auth.user;
 
+    // El usuario y el correo solo viajan si quien edita puede cambiarlos.
     const { data, setData, patch, errors, processing, recentlySuccessful } =
-        useForm({
-            name: user.name,
-            email: user.email,
-        });
+        useForm(
+            puedeEditarIdentidad
+                ? {
+                      name: user.name,
+                      username: user.username,
+                      email: user.email,
+                  }
+                : { name: user.name },
+        );
 
     const submit = (e) => {
         e.preventDefault();
@@ -32,7 +51,9 @@ export default function UpdateProfileInformation({
                 </h2>
 
                 <p className="mt-1 text-sm text-atalaya-text-muted">
-                    Actualice los datos de su cuenta y su dirección de correo.
+                    {puedeEditarIdentidad
+                        ? 'Actualice los datos de su cuenta y su dirección de correo.'
+                        : 'Actualice su nombre para mostrar. El usuario y el correo los administra el Administrador de sistema.'}
                 </p>
             </header>
 
@@ -53,21 +74,58 @@ export default function UpdateProfileInformation({
                     <InputError className="mt-2" message={errors.name} />
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="email" value="Correo electrónico" />
+                {puedeEditarIdentidad ? (
+                    <div>
+                        <InputLabel htmlFor="username" value="Usuario" />
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
+                        <TextInput
+                            id="username"
+                            className="mt-1 block w-full"
+                            value={data.username}
+                            onChange={(e) =>
+                                setData('username', e.target.value)
+                            }
+                            required
+                            autoComplete="username"
+                        />
+
+                        <InputError
+                            className="mt-2"
+                            message={errors.username}
+                        />
+                    </div>
+                ) : (
+                    <DatoSoloLectura
+                        etiqueta="Usuario"
+                        valor={user.username}
                     />
+                )}
 
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
+                {puedeEditarIdentidad ? (
+                    <div>
+                        <InputLabel
+                            htmlFor="email"
+                            value="Correo electrónico"
+                        />
+
+                        <TextInput
+                            id="email"
+                            type="email"
+                            className="mt-1 block w-full"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            required
+                            autoComplete="email"
+                        />
+
+                        <InputError className="mt-2" message={errors.email} />
+                    </div>
+                ) : (
+                    <DatoSoloLectura
+                        etiqueta="Correo electrónico"
+                        valor={user.email}
+                    />
+                )}
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
@@ -77,7 +135,7 @@ export default function UpdateProfileInformation({
                                 href={route('verification.send')}
                                 method="post"
                                 as="button"
-                                className="rounded-none text-sm text-atalaya-text-muted underline hover:text-white focus:outline-none focus:ring-2 focus:ring-atalaya-cyan focus:ring-offset-2"
+                                className="rounded-none text-sm text-atalaya-text-muted underline hover:text-white focus:outline-none focus:ring-1 focus:ring-atalaya-cyan"
                             >
                                 Haga clic aquí para reenviar el correo de verificación.
                             </Link>

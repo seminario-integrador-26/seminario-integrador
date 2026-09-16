@@ -21,6 +21,9 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            // El correo y el usuario los administra el Administrador de sistema:
+            // para el resto se muestran como solo lectura.
+            'puedeEditarIdentidad' => $request->user()->can('usuarios.gestionar'),
         ]);
     }
 
