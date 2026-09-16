@@ -21,7 +21,7 @@ class UsuarioService
     {
         return User::with('roles:id,name')
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'created_at']);
+            ->get(['id', 'name', 'username', 'email', 'created_at']);
     }
 
     /**

@@ -7,6 +7,7 @@ use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -23,6 +24,28 @@ class GestionUsuariosTest extends TestCase
         parent::setUp();
 
         $this->seed([RoleSeeder::class, PermissionSeeder::class]);
+    }
+
+    public function test_el_listado_incluye_el_nombre_de_usuario(): void
+    {
+        // Nombres explicitos: el listado ordena por name.
+        $admin = User::factory()->create([
+            'name' => 'Ana Admin',
+            'username' => 'admin.sistema',
+        ])->assignRole('Administrador de sistema');
+
+        User::factory()->create(['name' => 'Juan Perez', 'username' => 'jperez'])
+            ->assignRole('Supervisor');
+
+        $this->actingAs($admin)
+            ->get(route('usuarios.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Usuarios/Index')
+                ->has('usuarios', 2)
+                // La vista muestra una columna Usuario: sin este campo sale vacia.
+                ->where('usuarios.1.username', 'jperez')
+            );
     }
 
     public function test_el_login_es_por_usuario_no_por_email(): void
