@@ -1,0 +1,184 @@
+@startuml clases-dominio
+' Diagrama de clases del dominio — Sistema de Videovigilancia
+' Centro de Monitoreo de la Ciudad de Villa María (UTN FRVM — Seminario Integrador)
+'
+' Fuente: migraciones de database/migrations y modelos de app/Models.
+' Mantener sincronizado con docs/modelo-dominio.md.
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+
+package "Dominio implementado" {
+
+    class Usuario <<Eloquent>> {
+        - id : bigint
+        - name : string
+        - username : string <<unique>>
+        - email : string <<unique>>
+        - email_verified_at : datetime [0..1]
+        - password : string <<hashed>>
+        - intentos_fallidos : int
+        - bloqueado_hasta : datetime [0..1]
+        --
+        + eventos() : HasMany
+        + turnos() : HasMany
+        + hasRole(rol) : bool
+        .. US-001 ..
+        Login por username; el email
+        solo recupera la contraseña.
+    }
+
+    class Rol <<spatie>> {
+        - id : bigint
+        - name : string
+        --
+        Supervisor
+        Administrativo
+        Administrador de sistema
+    }
+
+    class Evento <<Eloquent>> <<inmutable>> {
+        - id : bigint
+        - tipo_evento_id : bigint
+        - punto_monitoreo_id : bigint [0..1]
+        - turno_id : bigint
+        - usuario_id : bigint
+        - fecha_hora : timestamp
+        - timestamp_video : time [0..1]
+        - descripcion : text [0..1]
+        - created_at : timestamp
+        --
+        + tipoEvento() : BelongsTo
+        + puntoMonitoreo() : BelongsTo
+        + turno() : BelongsTo
+        + usuario() : BelongsTo
+        - {static} booted() : void
+        .. RN-01 ..
+        Sin updated_at. El modelo lanza
+        LogicException en update y delete.
+    }
+
+    class TipoEvento <<Eloquent>> {
+        - id : bigint
+        - nombre : string
+        - categoria : string
+        - requiere_ubicacion : bool
+        - es_cuantificable : bool
+        --
+        + {static} CATEGORIAS : array
+        + eventos() : HasMany
+        .. RN-03 / RN-04 ..
+        Flags independientes entre sí.
+    }
+
+    class PuntoMonitoreo <<Eloquent>> {
+        - id : bigint
+        - codigo : string <<unique>>
+        - nombre : string
+        - jurisdiccion : string
+        - latitud : float [0..1]
+        - longitud : float [0..1]
+        --
+        + {static} JURISDICCIONES : array
+        + eventos() : HasMany
+        .. 394 PM ..
+        235 municipales + 159 provinciales.
+        Se dibujan con Leaflet + OpenStreetMap.
+    }
+
+    class Turno <<Eloquent>> {
+        - id : bigint
+        - supervisor_id : bigint
+        - fecha : date
+        - hora_inicio : time
+        - hora_fin : time [0..1]
+        --
+        + {static} activo() : Turno [0..1]
+        + scopeAbierto(query) : void
+        + supervisor() : BelongsTo
+        + eventos() : HasMany
+        .. Abierto mientras hora_fin sea null ..
+    }
+
+    class AuditoriaAcceso <<Eloquent>> <<inmutable>> {
+        - id : bigint
+        - user_id : bigint [0..1]
+        - email : string
+        - rol : string [0..1]
+        - evento : string
+        - descripcion : string [0..1]
+        - ip_address : string [0..1]
+        - user_agent : text [0..1]
+        - created_at : timestamp
+        --
+        + {static} ACCIONES : array
+        + user() : BelongsTo
+        .. Bitácora ..
+        Login, logout, intento fallido, bloqueo
+        y acciones de dominio.
+    }
+}
+
+package "Pendiente de implementar" <<Rectangle>> {
+
+    class Errata <<pendiente>> {
+        - id : bigint
+        - evento_id : bigint
+        - campo_corregido : string
+        - valor_anterior : string
+        - valor_nuevo : string
+        - motivo : text
+        - usuario_id : bigint
+        - created_at : timestamp
+        .. RN-01 ..
+        Único mecanismo de corrección.
+        El evento original nunca se sobreescribe.
+    }
+
+    class GrupoInteresado <<pendiente>> {
+        - id : bigint
+        - nombre : string
+    }
+
+    class Contacto <<pendiente>> {
+        - id : bigint
+        - nombre : string
+        - numero_whatsapp : string
+        - grupo_interesado_id : bigint
+    }
+}
+
+' ── Relaciones ──────────────────────────────────────────────
+Usuario "1" -- "0..*" Rol : tiene >
+
+TipoEvento      "1"    -- "0..*" Evento : clasifica >
+PuntoMonitoreo  "0..1" -- "0..*" Evento : localiza >
+Turno           "1"    -- "1..*" Evento : agrupa >
+Usuario         "1"    -- "0..*" Evento : registra >
+
+Usuario  "1"    -- "0..*" Turno : abre >
+Usuario  "0..1" -- "0..*" AuditoriaAcceso : genera >
+
+Evento          "1" -- "0..*" Errata : se corrige con >
+Usuario         "1" -- "0..*" Errata : firma >
+TipoEvento      "0..*" -- "0..*" GrupoInteresado : notifica a >
+GrupoInteresado "1" -- "0..*" Contacto : agrupa >
+
+' ── Notas de reglas de negocio ──────────────────────────────
+note top of Evento
+  <b>RN-05</b> — Todo evento queda asociado
+  unívocamente al turno abierto al
+  momento de la carga.
+end note
+
+note bottom of TipoEvento
+  <b>RN-03</b> requiere_ubicacion = false
+  → punto_monitoreo_id puede ser null.
+
+  <b>RN-04</b> es_cuantificable = false
+  (Informativos) → no entra en estadísticas.
+end note
+
+@enduml

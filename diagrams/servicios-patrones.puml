@@ -1,0 +1,279 @@
+@startuml servicios-patrones
+' Capa de servicios y patrones de diseño — Sistema de Videovigilancia
+' Centro de Monitoreo de la Ciudad de Villa María (UTN FRVM — Seminario Integrador)
+'
+' Fuente: app/Contracts, app/Factories, app/Services, app/Events, app/Listeners,
+' app/Jobs y app/Providers. Ver docs/arquitectura.md y CLAUDE.md.
+'
+' Patrones representados: STRATEGY, FACTORY, OBSERVER.
+' Principios SOLID anotados sobre las relaciones que los materializan.
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+hide empty members
+
+skinparam class {
+    BorderColor<<pendiente>> #999999
+    BackgroundColor<<pendiente>> #F5F5F5
+}
+
+' ═══════════════════════════════════════════════════════════
+' Entrada HTTP — controllers finos (SRP)
+' ═══════════════════════════════════════════════════════════
+package "Http\\Controllers" {
+    class EventoController {
+        - eventos : EventoService
+        - auditoria : AuditoriaAccesoService
+        + index(BuscarEventosRequest) : Response
+        + create() : Response
+        + store(StoreEventoRequest) : RedirectResponse
+    }
+
+    class DashboardController {
+        - dashboard : DashboardService
+        + index() : Response
+    }
+
+    class ReporteController <<pendiente>> {
+        + exportar() : Response
+    }
+
+    note right of EventoController
+        <b>SRP</b> — El controller solo orquesta.
+        No hay update(): los eventos son
+        inmutables (RN-01).
+    end note
+}
+
+' ═══════════════════════════════════════════════════════════
+' Servicios de negocio
+' ═══════════════════════════════════════════════════════════
+package "Services" {
+    class EventoService {
+        + registrar(datos, autor) : Evento
+        + buscar(filtros, porPagina) : LengthAwarePaginator
+        + tiposEvento() : Collection
+        + puntosMonitoreo() : Collection
+        + turnoActivo() : Turno
+    }
+
+    class DashboardService {
+        + turnoVigente() : array
+        + eventosDelTurno(turnoId) : array
+        + conteoPorCategoria(eventos) : array
+        + puntosMonitoreo() : Collection
+        + resumenPuntosMonitoreo(puntos) : array
+    }
+
+    class ExportacionService {
+        - factory : ExportadorFactory
+        + exportar(formato, datos) : string
+    }
+
+    class EstadisticaService <<pendiente>> {
+        + mensual(anio, mes) : array
+        + anual(anio) : array
+    }
+
+    class ErrataService <<pendiente>>
+    class UsuarioService {
+        + listar() : Collection
+        + crear(data) : User
+        + actualizar(user, data) : User
+        + eliminar(user) : void
+    }
+}
+
+package "Services\\Auth" {
+    class AuditoriaAccesoService {
+        - request : Request
+        + registrar(...) : AuditoriaAcceso
+        + registrarAccion(accion, actor, descripcion) : AuditoriaAcceso
+    }
+
+    class BloqueoCuentaService {
+        + estaBloqueada(user) : bool
+        + segundosRestantes(user) : int
+        + registrarFallo(user) : bool
+        + limpiar(user) : void
+    }
+}
+
+' ═══════════════════════════════════════════════════════════
+' STRATEGY — Exportadores
+' ═══════════════════════════════════════════════════════════
+package "Contracts" {
+    interface ExportadorInterface <<interface>> {
+        + exportar(datos : iterable) : string
+    }
+
+    interface NotificadorInterface <<interface>> {
+        + notificar(destinatarios : array, mensaje : string) : void
+    }
+
+    interface EstadisticaCalculadorInterface <<interface>> {
+        + calcular(desde, hasta) : array
+    }
+}
+
+package "Services\\Exportadores" {
+    class XlsxExportador {
+        + exportar(datos) : string
+        .. maatwebsite/laravel-excel ..
+        UTF-8 para datos abiertos.
+    }
+
+    class PdfExportador {
+        + exportar(datos) : string
+        .. barryvdh/laravel-dompdf ..
+        TODO: PDF/A no es nativo.
+    }
+}
+
+package "Services\\Notificadores" {
+    class WhatsappNotificador {
+        + notificar(destinatarios, mensaje) : void
+        .. WhatsApp Cloud API (Meta) ..
+        No Twilio.
+    }
+}
+
+' ═══════════════════════════════════════════════════════════
+' FACTORY
+' ═══════════════════════════════════════════════════════════
+package "Factories" {
+    class ExportadorFactory {
+        + crear(formato : string) : ExportadorInterface
+        .. match ..
+        'xlsx' | 'pdf'
+        default -> InvalidArgumentException
+    }
+
+    class NotificadorFactory {
+        + crear(canal : string = 'whatsapp') : NotificadorInterface
+    }
+}
+
+' ═══════════════════════════════════════════════════════════
+' OBSERVER — evento de dominio, listener en cola y job
+' ═══════════════════════════════════════════════════════════
+package "Events / Listeners / Jobs" {
+    class EventoRegistrado <<event>> {
+        + evento : Evento <<readonly>>
+    }
+
+    class NotificarInteresadosListener <<ShouldQueue>> {
+        + handle(EventoRegistrado) : void
+    }
+
+    class AuditarAccesosListener <<subscriber>> {
+        - auditoria : AuditoriaAccesoService
+        + handleLogin(Login) : void
+        + handleFailed(Failed) : void
+        + handleLogout(Logout) : void
+        + handleLockout(Lockout) : void
+        + subscribe(Dispatcher) : array
+    }
+
+    class EnviarNotificacionWhatsapp <<ShouldQueue>> {
+        - destinatarios : array
+        - mensaje : string
+        + handle(NotificadorInterface) : void
+    }
+}
+
+package "Providers" {
+    class AppServiceProvider {
+        + register() : void
+        .. DIP ..
+        bind(NotificadorInterface
+        -> WhatsappNotificador)
+    }
+
+    class EventServiceProvider {
+        # listen : array
+        # subscribe : array
+    }
+}
+
+' ── Controllers -> Services (SRP) ───────────────────────────
+EventoController    --> EventoService
+EventoController    --> AuditoriaAccesoService
+DashboardController --> DashboardService
+ReporteController   ..> ExportacionService
+
+' ── STRATEGY: exportación ───────────────────────────────────
+ExportadorInterface <|.. XlsxExportador
+ExportadorInterface <|.. PdfExportador
+
+' ── STRATEGY: notificación ──────────────────────────────────
+NotificadorInterface <|.. WhatsappNotificador
+
+' ── FACTORY ─────────────────────────────────────────────────
+ExportacionService  --> ExportadorFactory : delega el "cuál"
+ExportadorFactory   ..> ExportadorInterface : <<crea>>
+NotificadorFactory  ..> NotificadorInterface : <<crea>>
+
+' ── STRATEGY: estadísticas ──────────────────────────────────
+EstadisticaService ..> EstadisticaCalculadorInterface : <<usa>>
+
+' ── OBSERVER: registro de evento -> notificación ────────────
+EventoService                 ..> EventoRegistrado : dispatch >
+EventServiceProvider          ..> EventoRegistrado : mapea
+EventoRegistrado              --> NotificarInteresadosListener : notifica >
+NotificarInteresadosListener  ..> EnviarNotificacionWhatsapp : dispatch a cola >
+EnviarNotificacionWhatsapp    ..> NotificadorInterface : <<inyectado>>
+
+' ── OBSERVER: auditoría de accesos (US-001) ─────────────────
+EventServiceProvider   ..> AuditarAccesosListener : suscribe
+AuditarAccesosListener --> AuditoriaAccesoService
+
+' ── DIP: binding en el container ────────────────────────────
+AppServiceProvider ..> NotificadorInterface : bind >
+AppServiceProvider ..> WhatsappNotificador
+
+' ═══════════════════════════════════════════════════════════
+' Notas de patrones y principios
+' ═══════════════════════════════════════════════════════════
+note as N_STRATEGY
+  <b>STRATEGY + OPEN/CLOSED</b>
+  Cada formato de exportación y cada canal de
+  notificación es una clase detrás de su interfaz.
+  Sumar .csv o email = clase nueva, sin tocar
+  ExportacionService ni el Job.
+end note
+N_STRATEGY .. ExportadorInterface
+
+note as N_FACTORY
+  <b>FACTORY</b>
+  ExportadorInterface tiene varias implementaciones,
+  así que no se puede bindear 1:1 en el container:
+  la decisión se centraliza en ExportadorFactory.
+  NotificadorInterface sí se bindea 1:1 en
+  AppServiceProvider (una sola implementación).
+end note
+N_FACTORY .. ExportadorFactory
+
+note as N_OBSERVER
+  <b>OBSERVER</b>
+  EventoService dispara EventoRegistrado <i>fuera</i>
+  de la transacción: el listener solo ve eventos ya
+  confirmados. El listener corre en cola (driver
+  database), así que si WhatsApp está caído el evento
+  igual queda registrado.
+end note
+N_OBSERVER .. EventoRegistrado
+
+note as N_SOLID
+  <b>SOLID en este diagrama</b>
+  <b>S</b> — un Service por responsabilidad; controllers finos.
+  <b>O</b> — formatos y canales se agregan sin modificar lo existente.
+  <b>L</b> — cualquier NotificadorInterface reemplaza a otra (incluido un fake en tests).
+  <b>I</b> — interfaces de un solo método: exportar(), notificar(), calcular().
+  <b>D</b> — Services y Jobs dependen de interfaces; el binding vive en el Provider o la Factory.
+
+  <b>Sin Repository Pattern</b> sobre Eloquent (sobre-ingeniería, ver CLAUDE.md).
+end note
+
+@enduml
