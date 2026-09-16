@@ -8,10 +8,12 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const categoriaBadge = {
-    Prevención: 'bg-sky-100 text-sky-800',
-    'Convivencia Urbana': 'bg-amber-100 text-amber-800',
-    'Seguridad Pública': 'bg-red-100 text-red-800',
-    Informativo: 'bg-gray-100 text-gray-800',
+    Prevención: 'border-atalaya-orange bg-atalaya-orange/10 text-atalaya-orange',
+    'Convivencia Urbana':
+        'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
+    'Seguridad Pública':
+        'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
+    Informativo: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
 };
 
 const filtrosVacios = {
@@ -23,7 +25,8 @@ const filtrosVacios = {
 };
 
 const selectClass =
-    'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'mt-1 block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs '
+    + 'text-white focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan';
 
 export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
     const { errors } = usePage().props;
@@ -51,7 +54,7 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
                     Eventos
                 </h2>
             }
@@ -65,7 +68,7 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
                             e.preventDefault();
                             buscar(form);
                         }}
-                        className="grid grid-cols-1 gap-4 bg-white p-6 shadow-sm sm:rounded-lg md:grid-cols-3 lg:grid-cols-6"
+                        className="grid grid-cols-1 gap-4 bg-atalaya-surface p-6 border border-atalaya-border md:grid-cols-3 lg:grid-cols-6"
                     >
                         <div className="lg:col-span-2">
                             <InputLabel htmlFor="tipo_evento_id" value="Tipo" />
@@ -158,15 +161,15 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
                         </div>
                     </form>
 
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-atalaya-text-muted">
                         {eventos.total === 0
                             ? 'Sin resultados.'
                             : `Mostrando ${eventos.from}–${eventos.to} de ${eventos.total} eventos.`}
                     </p>
 
-                    <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                    <div className="overflow-x-auto bg-atalaya-surface border border-atalaya-border">
+                        <table className="min-w-full divide-y divide-atalaya-border">
+                            <thead className="bg-atalaya-canvas">
                                 <tr>
                                     {[
                                         '#',
@@ -178,19 +181,19 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
                                     ].map((titulo) => (
                                         <th
                                             key={titulo}
-                                            className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                                            className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim"
                                         >
                                             {titulo}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
+                            <tbody className="divide-y divide-atalaya-border bg-atalaya-surface">
                                 {eventos.data.length === 0 && (
                                     <tr>
                                         <td
                                             colSpan={6}
-                                            className="px-6 py-4 text-center text-sm text-gray-500"
+                                            className="px-6 py-4 text-center text-sm text-atalaya-text-dim"
                                         >
                                             No hay eventos registrados con esos
                                             filtros.
@@ -199,43 +202,43 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
                                 )}
                                 {eventos.data.map((e) => (
                                     <tr key={e.id} className="align-top">
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-atalaya-text-dim">
                                             {e.id}
                                         </td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-white">
                                             {e.fecha_hora}
-                                            <div className="text-xs text-gray-400">
+                                            <div className="text-xs text-atalaya-text-dim">
                                                 Turno #{e.turno_id}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm">
-                                            <div className="font-medium text-gray-900">
+                                            <div className="font-medium text-white">
                                                 {e.tipo}
                                             </div>
                                             <span
                                                 className={
-                                                    'mt-1 inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' +
+                                                    'mt-1 inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4 ' +
                                                     (categoriaBadge[
                                                         e.categoria
                                                     ] ||
-                                                        'bg-gray-100 text-gray-800')
+                                                        'border-atalaya-border bg-atalaya-canvas text-atalaya-text-muted')
                                                 }
                                             >
                                                 {e.categoria}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                        <td className="px-6 py-4 text-sm text-atalaya-text-dim">
                                             {e.punto ?? '—'}
                                             {e.timestamp_video && (
-                                                <div className="text-xs text-gray-400">
+                                                <div className="text-xs text-atalaya-text-dim">
                                                     Video {e.timestamp_video}
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="max-w-md px-6 py-4 text-sm text-gray-700">
+                                        <td className="max-w-md px-6 py-4 text-sm text-atalaya-text-muted">
                                             {e.descripcion ?? '—'}
                                         </td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-atalaya-text-dim">
                                             {e.autor}
                                         </td>
                                     </tr>
@@ -254,10 +257,10 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
                                         preserveScroll
                                         preserveState
                                         className={
-                                            'rounded-md border px-3 py-1 text-sm ' +
+                                            'rounded-none border px-3 py-1 text-sm ' +
                                             (link.active
-                                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50')
+                                                ? 'border-atalaya-cyan bg-atalaya-cyan/20 text-atalaya-cyan'
+                                                : 'border-atalaya-border bg-atalaya-surface text-atalaya-text-muted hover:bg-atalaya-canvas')
                                         }
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
@@ -266,7 +269,7 @@ export default function Index({ eventos, filtros, tipos, categorias, puntos }) {
                                 ) : (
                                     <span
                                         key={i}
-                                        className="rounded-md border border-gray-200 px-3 py-1 text-sm text-gray-400"
+                                        className="rounded-none border border-atalaya-border px-3 py-1 text-sm text-atalaya-text-dim"
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}

@@ -65,10 +65,10 @@ export default function SelectorPuntoMonitoreo({
                         type="button"
                         onClick={() => setJurisdiccion(clave)}
                         className={
-                            'rounded-full px-3 py-1 text-xs font-medium ' +
+                            'border px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider transition ' +
                             (jurisdiccion === clave
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+                                ? 'border-atalaya-cyan bg-atalaya-cyan text-black'
+                                : 'border-atalaya-border bg-atalaya-canvas text-atalaya-text-muted hover:border-atalaya-cyan hover:text-white')
                         }
                     >
                         {etiqueta}
@@ -86,7 +86,7 @@ export default function SelectorPuntoMonitoreo({
                         id={id}
                         autoComplete="off"
                         placeholder="Buscar por código o nombre…"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs text-white placeholder-atalaya-text-dim focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan"
                         displayValue={(p) =>
                             p ? `${p.codigo} — ${p.nombre}` : ''
                         }
@@ -94,10 +94,10 @@ export default function SelectorPuntoMonitoreo({
                     />
                     <ComboboxOptions
                         anchor="bottom start"
-                        className="z-[1100] mt-1 max-h-72 w-[var(--input-width)] overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 empty:invisible"
+                        className="z-[1100] mt-1 max-h-72 w-[var(--input-width)] overflow-auto border border-atalaya-border bg-atalaya-surface py-1 font-mono text-xs text-atalaya-text-muted shadow-2xl empty:invisible"
                     >
                         {filtrados.length === 0 && (
-                            <div className="px-3 py-2 text-gray-500">
+                            <div className="px-3 py-2 text-atalaya-text-dim">
                                 Sin resultados.
                             </div>
                         )}
@@ -105,7 +105,7 @@ export default function SelectorPuntoMonitoreo({
                             <ComboboxOption
                                 key={p.id}
                                 value={p}
-                                className="flex cursor-pointer items-center justify-between px-3 py-2 data-[focus]:bg-indigo-600 data-[focus]:text-white"
+                                className="flex cursor-pointer items-center justify-between px-3 py-2 data-[focus]:bg-atalaya-elevated data-[focus]:text-atalaya-cyan"
                             >
                                 <span>
                                     <span className="font-medium">
@@ -119,7 +119,7 @@ export default function SelectorPuntoMonitoreo({
                             </ComboboxOption>
                         ))}
                         {filtrados.length > MAX_RESULTADOS && (
-                            <div className="px-3 py-2 text-xs text-gray-500">
+                            <div className="px-3 py-2 text-xs text-atalaya-text-dim">
                                 Mostrando {MAX_RESULTADOS} de{' '}
                                 {filtrados.length}. Refiná la búsqueda.
                             </div>
@@ -131,7 +131,7 @@ export default function SelectorPuntoMonitoreo({
                     <button
                         type="button"
                         onClick={() => onChange(null)}
-                        className="shrink-0 rounded-md border border-gray-300 px-3 text-sm text-gray-600 hover:bg-gray-50"
+                        className="shrink-0 border border-atalaya-border px-3 font-mono text-[11px] uppercase tracking-wider text-atalaya-text-muted transition hover:border-atalaya-crimson hover:text-atalaya-crimson"
                     >
                         Quitar
                     </button>

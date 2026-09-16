@@ -1,4 +1,3 @@
-import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo } from 'react';
 import {
     CircleMarker,
@@ -10,10 +9,12 @@ import {
 
 const CENTRO_VILLA_MARIA = [-32.4075, -63.2402];
 
+// Paleta Atalaya: cian para la red municipal, azul de operaciones para la
+// provincial y naranja de alta visibilidad para el punto seleccionado.
 const COLORES = {
-    municipal: '#4f46e5',
-    provincial: '#059669',
-    seleccionado: '#dc2626',
+    municipal: '#00D2FF',
+    provincial: '#0284C7',
+    seleccionado: '#F97316',
 };
 
 function CentrarEn({ punto }) {
@@ -60,7 +61,7 @@ export default function MapaPuntosMonitoreo({
             center={CENTRO_VILLA_MARIA}
             zoom={13}
             scrollWheelZoom={false}
-            className={'z-0 rounded-md ' + className}
+            className={'mapa-tactico z-0 rounded-none ' + className}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

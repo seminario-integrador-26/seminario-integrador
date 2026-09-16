@@ -7,7 +7,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 
 const selectClass =
-    'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'mt-1 block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs '
+    + 'text-white focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan';
 
 export default function Edit({ usuario, roles, puedeResetPassword }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -27,7 +28,7 @@ export default function Edit({ usuario, roles, puedeResetPassword }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
                     Editar usuario
                 </h2>
             }
@@ -38,7 +39,7 @@ export default function Edit({ usuario, roles, puedeResetPassword }) {
                 <div className="mx-auto max-w-xl sm:px-6 lg:px-8">
                     <form
                         onSubmit={submit}
-                        className="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg"
+                        className="space-y-6 bg-atalaya-surface p-6 border border-atalaya-border"
                     >
                         <div>
                             <InputLabel htmlFor="name" value="Nombre" />
@@ -109,8 +110,8 @@ export default function Edit({ usuario, roles, puedeResetPassword }) {
 
                         {puedeResetPassword ? (
                             <>
-                                <div className="border-t border-gray-100 pt-4">
-                                    <p className="text-sm text-gray-500">
+                                <div className="border-t border-atalaya-border pt-4">
+                                    <p className="text-sm text-atalaya-text-dim">
                                         Dejá la contraseña en blanco para no
                                         cambiarla.
                                     </p>
@@ -156,8 +157,8 @@ export default function Edit({ usuario, roles, puedeResetPassword }) {
                                 </div>
                             </>
                         ) : (
-                            <div className="border-t border-gray-100 pt-4">
-                                <p className="text-sm text-gray-500">
+                            <div className="border-t border-atalaya-border pt-4">
+                                <p className="text-sm text-atalaya-text-dim">
                                     La contraseña de un Administrador de sistema
                                     no se blanquea desde acá: esa cuenta la
                                     recupera por email.

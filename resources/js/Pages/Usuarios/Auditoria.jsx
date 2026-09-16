@@ -2,21 +2,23 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 const accionBadge = {
-    'Inicio de sesión': 'bg-green-100 text-green-800',
-    'Cierre de sesión': 'bg-gray-100 text-gray-800',
-    'Intento fallido': 'bg-amber-100 text-amber-800',
-    'Cuenta bloqueada': 'bg-red-100 text-red-800',
-    'Evento registrado': 'bg-indigo-100 text-indigo-800',
-    'Usuario creado': 'bg-emerald-100 text-emerald-800',
-    'Usuario actualizado': 'bg-sky-100 text-sky-800',
-    'Usuario eliminado': 'bg-rose-100 text-rose-800',
+    'Inicio de sesión': 'border-green-500 bg-green-500/10 text-green-400',
+    'Cierre de sesión': 'bg-atalaya-canvas text-white',
+    'Intento fallido': 'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
+    'Cuenta bloqueada':
+        'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
+    'Evento registrado': 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
+    'Usuario creado': 'border-green-500 bg-green-500/10 text-green-400',
+    'Usuario actualizado': 'border-atalaya-sky bg-atalaya-sky/10 text-atalaya-sky',
+    'Usuario eliminado':
+        'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
 };
 
 export default function Auditoria({ registros }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
                     Bitácora de auditoría
                 </h2>
             }
@@ -27,46 +29,46 @@ export default function Auditoria({ registros }) {
                 <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
                     <Link
                         href={route('usuarios.index')}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                        className="text-sm font-medium text-atalaya-cyan hover:text-white"
                     >
                         ← Volver a usuarios
                     </Link>
 
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-atalaya-text-muted">
                         Movimientos de los usuarios en el sistema: quién, con qué
                         rol, desde qué IP y qué acción realizó.
                     </p>
 
-                    <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                    <div className="overflow-x-auto bg-atalaya-surface border border-atalaya-border">
+                        <table className="min-w-full divide-y divide-atalaya-border">
+                            <thead className="bg-atalaya-canvas">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim">
                                         Fecha y hora
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim">
                                         Usuario
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim">
                                         Rol
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim">
                                         Acción
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim">
                                         IP
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-atalaya-text-dim">
                                         Detalle
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white">
+                            <tbody className="divide-y divide-atalaya-border bg-atalaya-surface">
                                 {registros.data.length === 0 && (
                                     <tr>
                                         <td
                                             colSpan={6}
-                                            className="px-6 py-4 text-center text-sm text-gray-500"
+                                            className="px-6 py-4 text-center text-sm text-atalaya-text-dim"
                                         >
                                             No hay registros de auditoría.
                                         </td>
@@ -74,37 +76,37 @@ export default function Auditoria({ registros }) {
                                 )}
                                 {registros.data.map((r) => (
                                     <tr key={r.id}>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-atalaya-text-dim">
                                             {r.fecha_hora}
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm">
-                                            <div className="font-medium text-gray-900">
+                                            <div className="font-medium text-white">
                                                 {r.usuario}
                                             </div>
                                             {r.email && r.email !== r.usuario && (
-                                                <div className="text-xs text-gray-400">
+                                                <div className="text-xs text-atalaya-text-dim">
                                                     {r.email}
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-atalaya-text-dim">
                                             {r.rol || '—'}
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm">
                                             <span
                                                 className={
-                                                    'inline-flex rounded-full px-2 text-xs font-semibold leading-5 ' +
+                                                    'inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4 ' +
                                                     (accionBadge[r.accion] ||
-                                                        'bg-gray-100 text-gray-800')
+                                                        'border-atalaya-border bg-atalaya-canvas text-atalaya-text-muted')
                                                 }
                                             >
                                                 {r.accion}
                                             </span>
                                         </td>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-atalaya-text-dim">
                                             {r.ip || '—'}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                        <td className="px-6 py-4 text-sm text-atalaya-text-muted">
                                             {r.descripcion || '—'}
                                         </td>
                                     </tr>
@@ -123,10 +125,10 @@ export default function Auditoria({ registros }) {
                                         preserveScroll
                                         preserveState
                                         className={
-                                            'rounded-md border px-3 py-1 text-sm ' +
+                                            'rounded-none border px-3 py-1 text-sm ' +
                                             (link.active
-                                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50')
+                                                ? 'border-atalaya-cyan bg-atalaya-cyan/20 text-atalaya-cyan'
+                                                : 'border-atalaya-border bg-atalaya-surface text-atalaya-text-muted hover:bg-atalaya-canvas')
                                         }
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
@@ -135,7 +137,7 @@ export default function Auditoria({ registros }) {
                                 ) : (
                                     <span
                                         key={i}
-                                        className="rounded-md border border-gray-200 px-3 py-1 text-sm text-gray-400"
+                                        className="rounded-none border border-atalaya-border px-3 py-1 text-sm text-atalaya-text-dim"
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}

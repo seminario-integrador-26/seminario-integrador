@@ -8,13 +8,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 const campoClass =
-    'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'mt-1 block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs '
+    + 'text-white focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan';
 
 // Fecha local en formato YYYY-MM-DD.
 const hoy = () => new Date().toLocaleDateString('en-CA');
 
 function Obligatorio() {
-    return <span className="text-red-600"> *</span>;
+    return <span className="text-atalaya-crimson"> *</span>;
 }
 
 export default function Create({
@@ -59,7 +60,7 @@ export default function Create({
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
                     Registrar evento
                 </h2>
             }
@@ -69,13 +70,13 @@ export default function Create({
             <div className="py-12">
                 <div className="mx-auto max-w-3xl space-y-4 sm:px-6 lg:px-8">
                     {flash?.success && (
-                        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
+                        <div className="rounded-none bg-green-50 p-4 text-sm text-green-800">
                             {flash.success}
                         </div>
                     )}
 
                     {turnoActivo ? (
-                        <div className="rounded-md bg-indigo-50 p-4 text-sm text-indigo-800">
+                        <div className="rounded-none bg-atalaya-cyan/20 p-4 text-sm text-atalaya-cyan">
                             Turno #{turnoActivo.id} abierto el{' '}
                             {turnoActivo.fecha} a las {turnoActivo.hora_inicio}
                             {turnoActivo.supervisor &&
@@ -83,21 +84,21 @@ export default function Create({
                             . El evento quedará asociado a este turno.
                         </div>
                     ) : (
-                        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                        <div className="rounded-none bg-red-50 p-4 text-sm text-red-800">
                             No hay un turno de guardia abierto. Abrí un turno
                             antes de registrar eventos.
                         </div>
                     )}
 
                     {errors.turno && (
-                        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                        <div className="rounded-none bg-red-50 p-4 text-sm text-red-800">
                             {errors.turno}
                         </div>
                     )}
 
                     <form
                         onSubmit={submit}
-                        className="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg"
+                        className="space-y-6 bg-atalaya-surface p-6 border border-atalaya-border"
                     >
                         <div>
                             <InputLabel htmlFor="tipo_evento_id">
@@ -195,7 +196,7 @@ export default function Create({
                                 {requiereUbicacion ? (
                                     <Obligatorio />
                                 ) : (
-                                    <span className="font-normal text-gray-500">
+                                    <span className="font-normal text-atalaya-text-dim">
                                         {' '}
                                         (opcional)
                                     </span>
@@ -230,14 +231,14 @@ export default function Create({
                                 type="time"
                                 step="1"
                                 disabled={!hayPunto}
-                                className="mt-1 block w-full disabled:bg-gray-100"
+                                className="mt-1 block w-full disabled:bg-atalaya-canvas"
                                 value={data.timestamp_video}
                                 onChange={(e) =>
                                     setData('timestamp_video', e.target.value)
                                 }
                             />
                             {!hayPunto && (
-                                <p className="mt-1 text-xs text-gray-500">
+                                <p className="mt-1 text-xs text-atalaya-text-dim">
                                     Seleccioná un punto de monitoreo para
                                     indicar el momento exacto del video.
                                 </p>
@@ -270,8 +271,8 @@ export default function Create({
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <p className="text-xs text-gray-500">
-                                <span className="text-red-600">*</span>{' '}
+                            <p className="text-xs text-atalaya-text-dim">
+                                <span className="text-atalaya-crimson">*</span>{' '}
                                 Obligatorio. El evento no se puede editar una
                                 vez registrado.
                             </p>

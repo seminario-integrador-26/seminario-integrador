@@ -7,6 +7,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
+    // US-001: el ingreso es por nombre de usuario; el email sólo recupera la clave.
     const { data, setData, post, processing, errors, reset } = useForm({
         username: '',
         password: '',
@@ -25,13 +26,22 @@ export default function Login({ status, canResetPassword }) {
         <GuestLayout>
             <Head title="Iniciar sesión" />
 
+            <div className="mb-4 flex items-center justify-between border-b border-atalaya-border pb-3">
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                    [ Autenticación de operador ]
+                </span>
+                <span className="font-mono text-[10px] text-atalaya-cyan">
+                    Sesión segura
+                </span>
+            </div>
+
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 border border-green-800 bg-green-950/40 p-2 font-mono text-xs text-green-400">
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="space-y-4">
                 <div>
                     <InputLabel htmlFor="username" value="Usuario" />
 
@@ -49,8 +59,8 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.username} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Contraseña" />
+                <div>
+                    <InputLabel htmlFor="password" value="Clave de acceso" />
 
                     <TextInput
                         id="password"
@@ -65,8 +75,8 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 block">
-                    <label className="flex items-center">
+                <div className="flex items-center justify-between pt-1 font-mono text-xs">
+                    <label className="flex cursor-pointer items-center text-atalaya-text-muted">
                         <Checkbox
                             name="remember"
                             checked={data.remember}
@@ -74,24 +84,24 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Recordarme
+                        <span className="ms-2 text-[11px] text-atalaya-text-muted">
+                            Recordar terminal
                         </span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="text-[11px] text-atalaya-text-muted transition hover:text-atalaya-cyan"
                         >
                             ¿Olvidó su contraseña?
                         </Link>
                     )}
+                </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Iniciar sesión
+                <div className="pt-2">
+                    <PrimaryButton className="w-full py-2.5" disabled={processing}>
+                        [ Ingresar al centro de control ]
                     </PrimaryButton>
                 </div>
             </form>

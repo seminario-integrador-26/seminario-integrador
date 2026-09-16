@@ -19,13 +19,13 @@ export default function ForgotPassword({ status }) {
         <GuestLayout>
             <Head title="Recuperar contraseña" />
 
-            <div className="mb-4 text-sm text-gray-600">
+            <div className="mb-4 text-sm text-atalaya-text-muted">
                 ¿Olvidó su contraseña? Indique su dirección de correo y le
                 enviaremos un enlace para elegir una nueva.
             </div>
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 text-sm font-medium text-green-400">
                     {status}
                 </div>
             )}

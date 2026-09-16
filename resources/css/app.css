@@ -1,3 +1,108 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* Controles nativos (date, time, select, scrollbars) en variante oscura. */
+    :root {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-atalaya-canvas text-atalaya-text-primary antialiased selection:bg-atalaya-cyan selection:text-atalaya-canvas;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+}
+
+/* Scrollbar táctica minimalista */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #031427;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e3a5f;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #00d2ff;
+}
+
+/*
+ * Grilla suiza: separadores de 1px hechos con el gap sobre fondo de borde.
+ * Cada celda es un .swiss-panel (placa monolítica, sin sombras difusas).
+ */
+.swiss-grid {
+    display: grid;
+    gap: 1px;
+    background-color: #1e3a5f;
+}
+.swiss-panel {
+    background-color: #0b1c30;
+}
+
+/* Leaflet: tema oscuro táctico */
+.leaflet-popup-content-wrapper {
+    background: #0b1c30 !important;
+    color: #ffffff !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+    padding: 2px !important;
+}
+.leaflet-popup-tip {
+    background: #0b1c30 !important;
+    border: 1px solid #1e3a5f !important;
+}
+.leaflet-popup-close-button {
+    color: #94a3b8 !important;
+}
+.leaflet-container {
+    font-family: inherit;
+    background: #031427;
+}
+.leaflet-control-attribution {
+    background: rgba(3, 20, 39, 0.8) !important;
+    color: #475569 !important;
+    font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+    color: #94a3b8 !important;
+}
+.leaflet-bar a {
+    background: #0b1c30 !important;
+    border-color: #1e3a5f !important;
+    color: #94a3b8 !important;
+}
+.leaflet-bar a:hover {
+    background: #0f2847 !important;
+    color: #00d2ff !important;
+}
+.leaflet-tooltip {
+    background: #0b1c30 !important;
+    border: 1px solid #1e3a5f !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+}
+.leaflet-tooltip::before {
+    border-top-color: #1e3a5f !important;
+    border-bottom-color: #1e3a5f !important;
+    border-left-color: #1e3a5f !important;
+    border-right-color: #1e3a5f !important;
+}
+
+/*
+ * Cartografía oscura sobre teselas estándar de OpenStreetMap (CLAUDE.md: OSM
+ * vía Leaflet, sin Google Maps). Se oscurece por filtro CSS en lugar de usar
+ * un proveedor de teselas oscuras, que hoy exige API key.
+ */
+.mapa-tactico .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.05)
+        saturate(0.55);
+}
