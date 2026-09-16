@@ -7,12 +7,20 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
- * US-001: el login es por nombre de usuario.
+ * US-001: el login es por nombre de usuario. Esta es la ÚNICA migración que
+ * declara `username`; create_users_table no lo hace.
  *
- * `username` ya figura en create_users_table, pero se agregó editando esa
- * migración después de que varias bases la habían corrido: esos entornos nunca
- * recibieron la columna. Esta migración los pone al día sin recrear la base y
- * es inocua donde la columna ya existe.
+ * En su momento la columna se agregó editando create_users_table, que ya había
+ * corrido en varios entornos. Eso dejó tres estados posibles de base:
+ *
+ *   1. Creada antes de aquella edición  -> no tiene la columna: se agrega acá.
+ *   2. Creada con create_users_table ya editado -> la tiene, pero sin registro
+ *      de esta migración: el guard hasColumn evita el error al correrla.
+ *   3. Nueva, con el código actual -> create_users_table ya no la declara y la
+ *      agrega esta migración.
+ *
+ * El guard cubre el caso 2 y hay que conservarlo hasta que no queden bases en
+ * ese estado.
  */
 return new class extends Migration
 {
