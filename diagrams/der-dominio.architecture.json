@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Diagrama entidad-relación — PostgreSQL",
+    "output": "der-dominio.html",
+    "quality_profile": "showcase",
+    "viewBox": [1330, 510],
+    "legend": {
+      "entries": {
+        "database": { "label": "Tabla existente" },
+        "security": { "label": "Tablas de spatie/laravel-permission" },
+        "external": { "label": "Tabla pendiente (sin migración)" }
+      }
+    }
+  },
+  "components": [
+    { "id": "roles", "type": "security", "label": "roles / model_has_roles", "sublabel": "spatie/permission", "tag": "3 roles del dominio", "pos": [60, 20], "size": [180, 84] },
+    { "id": "users", "type": "database", "label": "users", "sublabel": "PK id · username UNQ", "tag": "bloqueo temporal", "pos": [60, 190], "size": [180, 84] },
+    { "id": "auditoria", "type": "database", "label": "auditoria_accesos", "sublabel": "PK id · FK user_id?", "tag": "solo created_at", "pos": [60, 360], "size": [180, 84] },
+    { "id": "turnos", "type": "database", "label": "turnos", "sublabel": "PK id · FK supervisor_id", "tag": "hora_fin NULL = abierto", "pos": [400, 20], "size": [180, 84] },
+    { "id": "eventos", "type": "database", "label": "eventos", "sublabel": "PK id · 4 FK", "tag": "solo created_at", "pos": [400, 190], "size": [180, 84] },
+    { "id": "erratas", "type": "external", "label": "erratas", "sublabel": "PK id · 2 FK", "tag": "TODO: sin migración", "pos": [400, 360], "size": [180, 84] },
+    { "id": "tiposEvento", "type": "database", "label": "tipos_evento", "sublabel": "PK id · nombre UNQ", "tag": "categoria · 2 flags", "pos": [740, 20], "size": [180, 84] },
+    { "id": "puntosMonitoreo", "type": "database", "label": "puntos_monitoreo", "sublabel": "PK id · codigo UNQ", "tag": "lat/lng decimal NULL", "pos": [740, 360], "size": [180, 84] },
+    { "id": "pivote", "type": "external", "label": "grupo_tipo_evento", "sublabel": "pivote N:M", "tag": "TODO: nombre a definir", "pos": [1080, 20], "size": [180, 84] },
+    { "id": "grupos", "type": "external", "label": "grupos_interesados", "sublabel": "PK id · nombre", "tag": "TODO: sin migración", "pos": [1080, 190], "size": [180, 84] },
+    { "id": "contactos", "type": "external", "label": "contactos", "sublabel": "PK id · FK grupo_id", "tag": "numero_whatsapp", "pos": [1080, 360], "size": [180, 84] }
+  ],
+  "connections": [
+    { "id": "eventos-tipos", "from": "eventos", "to": "tiposEvento", "label": "N:1 tipo_evento_id", "variant": "emphasis" },
+    { "id": "eventos-puntos", "from": "eventos", "to": "puntosMonitoreo", "label": "N:0..1 punto_monitoreo_id", "variant": "dashed" },
+    { "id": "eventos-turnos", "from": "eventos", "to": "turnos", "label": "N:1 turno_id" },
+    { "id": "eventos-users", "from": "eventos", "to": "users", "label": "N:1 usuario_id", "variant": "emphasis", "labelDy": 20 },
+    { "id": "turnos-users", "from": "turnos", "to": "users", "label": "N:1 supervisor_id" },
+    { "id": "auditoria-users", "from": "auditoria", "to": "users", "label": "N:1 user_id · NULL ON DELETE", "variant": "security" },
+    { "id": "roles-users", "from": "roles", "to": "users", "label": "N:M model_has_roles", "variant": "security", "labelDy": 24 },
+    { "id": "erratas-eventos", "from": "erratas", "to": "eventos", "label": "N:1 evento_id", "variant": "dashed" },
+    { "id": "pivote-tipos", "from": "pivote", "to": "tiposEvento", "label": "N:1 tipo_evento_id", "variant": "dashed" },
+    { "id": "pivote-grupos", "from": "pivote", "to": "grupos", "label": "N:1 grupo_interesado_id", "variant": "dashed", "labelDy": 24 },
+    { "id": "contactos-grupos", "from": "contactos", "to": "grupos", "label": "N:1 grupo_interesado_id", "variant": "dashed", "labelDy": -24 }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Integridad e índices", "items": ["eventos: los 4 FK son RESTRICT; solo punto_monitoreo_id es nullable", "auditoria_accesos.user_id: NULL ON DELETE", "UNQ: username, email, tipos_evento.nombre, puntos_monitoreo.codigo"] },
+    { "dot": "amber", "title": "Pendiente", "items": ["erratas, grupos_interesados, contactos y la pivote N:M: sin migración", "El nombre de la tabla pivote no está definido — confirmar con el equipo"] }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Modelo de clases — Dominio Videovigilancia",
+    "output": "clases-dominio.html",
+    "quality_profile": "showcase",
+    "viewBox": [1260, 510],
+    "legend": {
+      "entries": {
+        "backend": { "label": "Entidad de dominio" },
+        "database": { "label": "Catálogo" },
+        "security": { "label": "Identidad y roles" },
+        "external": { "label": "Pendiente (sin migración)" }
+      }
+    }
+  },
+  "components": [
+    { "id": "auditoria", "type": "backend", "label": "AuditoriaAcceso", "sublabel": "bitácora de acciones", "tag": "inmutable · solo created_at", "pos": [60, 20], "size": [180, 84] },
+    { "id": "user", "type": "security", "label": "User", "sublabel": "Authenticatable", "tag": "HasRoles · HasApiTokens", "pos": [60, 190], "size": [180, 84] },
+    { "id": "turno", "type": "backend", "label": "Turno", "sublabel": "turno de guardia", "tag": "scopeAbierto() · activo()", "pos": [60, 360], "size": [180, 84] },
+    { "id": "tipoEvento", "type": "database", "label": "TipoEvento", "sublabel": "catálogo · CATEGORIAS", "tag": "2 flags booleanos", "pos": [370, 20], "size": [180, 84] },
+    { "id": "evento", "type": "backend", "label": "Evento", "sublabel": "hecho detectado", "tag": "update/delete bloqueados", "pos": [370, 190], "size": [180, 84] },
+    { "id": "puntoMonitoreo", "type": "database", "label": "PuntoMonitoreo", "sublabel": "catálogo · 394 PM", "tag": "lat/lng → Leaflet", "pos": [370, 360], "size": [180, 84] },
+    { "id": "grupoInteresado", "type": "external", "label": "GrupoInteresado", "sublabel": "destinatario WhatsApp", "tag": "TODO: sin migración", "pos": [680, 20], "size": [180, 84] },
+    { "id": "errata", "type": "external", "label": "Errata", "sublabel": "fe de errata", "tag": "TODO: sin migración", "pos": [680, 190], "size": [180, 84] },
+    { "id": "contacto", "type": "external", "label": "Contacto", "sublabel": "numero_whatsapp", "tag": "TODO: sin migración", "pos": [990, 20], "size": [180, 84] }
+  ],
+  "connections": [
+    { "id": "evento-tipo", "from": "evento", "to": "tipoEvento", "label": "N:1 tipoEvento()", "variant": "emphasis" },
+    { "id": "evento-punto", "from": "evento", "to": "puntoMonitoreo", "label": "N:0..1 puntoMonitoreo()", "variant": "dashed", "labelDy": 24 },
+    { "id": "evento-turno", "from": "evento", "to": "turno", "label": "N:1 turno()" },
+    { "id": "evento-user", "from": "evento", "to": "user", "label": "N:1 usuario()", "variant": "emphasis" },
+    { "id": "turno-user", "from": "turno", "to": "user", "label": "N:1 supervisor()" },
+    { "id": "auditoria-user", "from": "auditoria", "to": "user", "label": "N:1 user() nullable", "variant": "security", "labelDy": 24 },
+    { "id": "errata-evento", "from": "errata", "to": "evento", "label": "N:1 evento()", "variant": "dashed" },
+    { "id": "tipo-grupo", "from": "tipoEvento", "to": "grupoInteresado", "label": "N:M gruposInteresados()", "variant": "dashed" },
+    { "id": "grupo-contacto", "from": "grupoInteresado", "to": "contacto", "label": "1:N contactos()", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Reglas del modelo", "items": ["Evento inmutable: update/delete lanzan LogicException", "punto_monitoreo_id es nullable según requiere_ubicacion", "Todo Evento se ata al Turno abierto (hora_fin null)"] },
+    { "dot": "amber", "title": "Pendiente", "items": ["Errata, GrupoInteresado y Contacto: sin migración ni relaciones", "Errata N:1 User (autor) no se dibuja para no cruzar el mapa"] }
+  ]
+}
