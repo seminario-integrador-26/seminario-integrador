@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RolController;
@@ -17,9 +18,9 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -66,7 +67,6 @@ Route::middleware(['auth', 'permission:eventos.consultar'])->group(function () {
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('eventos/{evento}/errata', [ErrataController::class, 'create']);
 //     Route::post('eventos/{evento}/errata', [ErrataController::class, 'store']);
-//     Route::get('dashboard', [DashboardController::class, 'index']);       // permission:dashboards.ver (Administrativo|Administrador de sistema)
 //     Route::get('reportes', [ReporteController::class, 'index']);          // permission:reportes.exportar (Administrativo|Administrador de sistema)
 //     Route::post('reportes/exportar', [ReporteController::class, 'exportar']);
 // });
