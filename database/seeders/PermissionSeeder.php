@@ -39,12 +39,24 @@ class PermissionSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        // permisos por rol, invirtiendo la matriz.
+        $porRol = [];
+
         foreach (self::MATRIZ as $permiso => $roles) {
             Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
 
             foreach ($roles as $rol) {
-                Role::where('name', $rol)->first()?->givePermissionTo($permiso);
+                $porRol[$rol][] = $permiso;
             }
         }
+
+        // sync y no give: la matriz es la fuente de verdad, así que volver a
+        // correr el seeder también QUITA lo que un rol no debería tener. Con
+        // givePermissionTo un permiso mal asignado quedaba pegado para siempre.
+        foreach ($porRol as $rol => $permisos) {
+            Role::where('name', $rol)->first()?->syncPermissions($permisos);
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }
