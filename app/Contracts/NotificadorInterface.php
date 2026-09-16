@@ -15,7 +15,7 @@ interface NotificadorInterface
 {
     /**
      * @param  array  $destinatarios  Contactos del grupo interesado.
-     * @param  string $mensaje        Cuerpo a enviar.
+     * @param  string  $mensaje  Cuerpo a enviar.
      */
     public function notificar(array $destinatarios, string $mensaje): void;
 }

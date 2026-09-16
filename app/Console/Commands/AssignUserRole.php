@@ -32,7 +32,7 @@ class AssignUserRole extends Command
         $role = $this->argument('role');
 
         if (! in_array($role, RoleSeeder::ROLES, true)) {
-            $this->error("Rol inválido: '{$role}'. Debe ser uno de: " . implode(', ', RoleSeeder::ROLES));
+            $this->error("Rol inválido: '{$role}'. Debe ser uno de: ".implode(', ', RoleSeeder::ROLES));
 
             return self::FAILURE;
         }

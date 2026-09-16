@@ -12,8 +12,8 @@ namespace App\Contracts;
 interface ExportadorInterface
 {
     /**
-     * @param  iterable $datos  Colección/consulta a serializar.
-     * @return string           Ruta o contenido del archivo generado.
+     * @param  iterable  $datos  Colección/consulta a serializar.
+     * @return string Ruta o contenido del archivo generado.
      */
     public function exportar(iterable $datos): string;
 }

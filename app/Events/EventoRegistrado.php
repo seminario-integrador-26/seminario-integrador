@@ -19,6 +19,5 @@ class EventoRegistrado
 
     public function __construct(
         public readonly Evento $evento,
-    ) {
-    }
+    ) {}
 }

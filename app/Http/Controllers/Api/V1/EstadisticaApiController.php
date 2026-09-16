@@ -12,8 +12,7 @@ class EstadisticaApiController extends Controller
 {
     public function __construct(
         private EstadisticaService $estadisticas,
-    ) {
-    }
+    ) {}
 
     // TODO: mensual(int $anio, int $mes)  -> JSON
     // TODO: anual(int $anio)               -> JSON

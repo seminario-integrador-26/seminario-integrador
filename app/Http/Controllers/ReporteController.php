@@ -13,8 +13,7 @@ class ReporteController extends Controller
 {
     public function __construct(
         private ExportacionService $exportacion,
-    ) {
-    }
+    ) {}
 
     // TODO: index()  -> Inertia::render('Reportes/Index', [...])
     // TODO: exportar(Request $request) -> $this->exportacion->exportar($formato, $datos)

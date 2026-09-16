@@ -11,8 +11,7 @@ class ErrataController extends Controller
 {
     public function __construct(
         private ErrataService $erratas,
-    ) {
-    }
+    ) {}
 
     // TODO: create(Evento $evento) -> Inertia::render('Errata/Create', [...])
     // TODO: store(StoreErrataRequest $request, Evento $evento) -> $this->erratas->registrar(...)

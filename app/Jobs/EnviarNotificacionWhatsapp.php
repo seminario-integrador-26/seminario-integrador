@@ -25,8 +25,7 @@ class EnviarNotificacionWhatsapp implements ShouldQueue
     public function __construct(
         private array $destinatarios,
         private string $mensaje,
-    ) {
-    }
+    ) {}
 
     public function handle(NotificadorInterface $notificador): void
     {

@@ -17,8 +17,8 @@ class ExportadorFactory
     public function crear(string $formato): ExportadorInterface
     {
         return match ($formato) {
-            'xlsx' => new XlsxExportador(),
-            'pdf'  => new PdfExportador(),
+            'xlsx' => new XlsxExportador,
+            'pdf' => new PdfExportador,
             default => throw new InvalidArgumentException("Formato no soportado: {$formato}"),
         };
     }

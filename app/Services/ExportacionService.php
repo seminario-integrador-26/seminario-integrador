@@ -15,8 +15,7 @@ class ExportacionService
 {
     public function __construct(
         private ExportadorFactory $factory,
-    ) {
-    }
+    ) {}
 
     // TODO: exportar(string $formato, iterable $datos): string
     //   $exportador = $this->factory->crear($formato);

@@ -15,7 +15,7 @@ class NotificadorFactory
     public function crear(string $canal = 'whatsapp'): NotificadorInterface
     {
         return match ($canal) {
-            'whatsapp' => new WhatsappNotificador(),
+            'whatsapp' => new WhatsappNotificador,
             // 'email' => new EmailNotificador(),  // TODO a futuro
             default => throw new InvalidArgumentException("Canal no soportado: {$canal}"),
         };
