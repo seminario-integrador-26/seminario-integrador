@@ -10,7 +10,9 @@ use App\Services\Auth\AuditoriaAccesoService;
 use App\Services\UsuarioService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,13 +34,14 @@ class UsuarioController extends Controller
             'name' => $u->name,
             'username' => $u->username,
             'email' => $u->email,
-            'rol' => $u->roles->first()?->name,
+            'roles' => $u->roles->pluck('name'),
             'created_at' => $u->created_at?->format('d/m/Y'),
         ]);
 
         return Inertia::render('Usuarios/Index', [
             'usuarios' => $usuarios,
             'authUserId' => Auth::id(),
+            'roles' => RoleSeeder::ROLES,
         ]);
     }
 
@@ -57,7 +60,7 @@ class UsuarioController extends Controller
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_ALTA_USUARIO,
             $request->user(),
-            "Alta de usuario {$data['email']} con rol {$data['rol']}.",
+            "Alta de usuario {$data['email']} con rol(es) ".implode(', ', $data['roles']).'.',
         );
 
         return redirect()->route('usuarios.index')
@@ -72,7 +75,7 @@ class UsuarioController extends Controller
                 'name' => $usuario->name,
                 'username' => $usuario->username,
                 'email' => $usuario->email,
-                'rol' => $usuario->roles->first()?->name,
+                'roles' => $usuario->roles->pluck('name'),
             ],
             'roles' => RoleSeeder::ROLES,
             // Entre Administradores de sistema no se blanquean la clave:
@@ -85,9 +88,9 @@ class UsuarioController extends Controller
     {
         $data = $request->validated();
 
-        // Evita que un Administrador de sistema se quite a sí mismo el rol (auto-bloqueo).
-        if ($usuario->id === Auth::id() && $data['rol'] !== 'Administrador de sistema') {
-            return back()->with('error', 'No podés cambiar tu propio rol de Administrador de sistema.');
+        // Evita que un Administrador de sistema se quite a sí mismo ese rol (auto-bloqueo).
+        if ($usuario->id === Auth::id() && ! in_array('Administrador de sistema', $data['roles'], true)) {
+            return back()->with('error', 'No podés quitarte a vos mismo el rol de Administrador de sistema.');
         }
 
         // Entre Administradores de sistema no se blanquean la clave: esa cuenta
@@ -101,11 +104,38 @@ class UsuarioController extends Controller
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_MOD_USUARIO,
             $request->user(),
-            "Modificación de usuario {$data['email']} (rol {$data['rol']}).",
+            "Modificación de usuario {$data['email']} (rol(es) ".implode(', ', $data['roles']).').',
         );
 
         return redirect()->route('usuarios.index')
             ->with('success', 'Usuario actualizado correctamente.');
+    }
+
+    /**
+     * Designación rápida de roles desde el listado (sin abrir el formulario).
+     */
+    public function cambiarRoles(Request $request, User $usuario): RedirectResponse
+    {
+        $data = $request->validate([
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string', Rule::in(RoleSeeder::ROLES)],
+        ]);
+
+        // Mismo auto-bloqueo que en update(): un Administrador de sistema no
+        // puede quitarse a sí mismo ese rol.
+        if ($usuario->id === Auth::id() && ! in_array('Administrador de sistema', $data['roles'], true)) {
+            return back()->with('error', 'No podés quitarte a vos mismo el rol de Administrador de sistema.');
+        }
+
+        $this->usuarios->cambiarRoles($usuario, $data['roles']);
+
+        $this->auditoria->registrarAccion(
+            AuditoriaAcceso::EVENTO_MOD_USUARIO,
+            $request->user(),
+            "Roles de {$usuario->email} actualizados a ".implode(', ', $data['roles']).'.',
+        );
+
+        return back()->with('success', "Roles de {$usuario->name} actualizados.");
     }
 
     public function destroy(User $usuario): RedirectResponse

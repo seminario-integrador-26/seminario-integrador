@@ -6,10 +6,6 @@ import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 
-const selectClass =
-    'mt-1 block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs '
-    + 'text-white focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan';
-
 export default function Edit({ usuario, roles, puedeResetPassword }) {
     const { data, setData, put, processing, errors } = useForm({
         name: usuario.name,
@@ -17,8 +13,17 @@ export default function Edit({ usuario, roles, puedeResetPassword }) {
         email: usuario.email,
         password: '',
         password_confirmation: '',
-        rol: usuario.rol ?? roles[0] ?? '',
+        roles: usuario.roles ?? [],
     });
+
+    const toggleRol = (rol) => {
+        setData(
+            'roles',
+            data.roles.includes(rol)
+                ? data.roles.filter((r) => r !== rol)
+                : [...data.roles, rol],
+        );
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -92,20 +97,29 @@ export default function Edit({ usuario, roles, puedeResetPassword }) {
                         </div>
 
                         <div>
-                            <InputLabel htmlFor="rol" value="Rol" />
-                            <select
-                                id="rol"
-                                className={selectClass}
-                                value={data.rol}
-                                onChange={(e) => setData('rol', e.target.value)}
-                            >
+                            <InputLabel value="Roles" />
+                            <div className="mt-2 space-y-2">
                                 {roles.map((r) => (
-                                    <option key={r} value={r}>
-                                        {r}
-                                    </option>
+                                    <label
+                                        key={r}
+                                        className="flex cursor-pointer items-center gap-2 text-sm text-atalaya-text-muted"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={data.roles.includes(r)}
+                                            onChange={() => toggleRol(r)}
+                                            className="rounded-none border-atalaya-border bg-atalaya-canvas text-atalaya-cyan focus:ring-atalaya-cyan"
+                                        />
+                                        <span className="font-mono text-xs">
+                                            {r}
+                                        </span>
+                                    </label>
                                 ))}
-                            </select>
-                            <InputError className="mt-2" message={errors.rol} />
+                            </div>
+                            <InputError
+                                className="mt-2"
+                                message={errors.roles}
+                            />
                         </div>
 
                         {puedeResetPassword ? (

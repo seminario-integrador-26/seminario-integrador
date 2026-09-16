@@ -88,7 +88,7 @@ class BitacoraTest extends TestCase
                 'email' => 'nuevo@example.com',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
-                'rol' => 'Supervisor',
+                'roles' => ['Supervisor'],
             ])
             ->assertSessionHasNoErrors();
 

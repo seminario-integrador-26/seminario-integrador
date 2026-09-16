@@ -61,7 +61,8 @@ class AssignUserRole extends Command
             $this->info("Usuario creado: {$email} (usuario: {$username})");
         }
 
-        // syncRoles deja al usuario SOLO con este rol (un rol por usuario).
+        // Un usuario puede tener varios roles; este comando los REEMPLAZA por
+        // el indicado. Para sumar sin quitar, gestioná roles desde la UI.
         $user->syncRoles([$role]);
 
         $this->info("Rol '{$role}' asignado a {$email}.");

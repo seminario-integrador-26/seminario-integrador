@@ -75,7 +75,7 @@ class GestionUsuariosTest extends TestCase
                 'email' => $supervisor->email,
                 'password' => 'nueva-clave-123',
                 'password_confirmation' => 'nueva-clave-123',
-                'rol' => 'Supervisor',
+                'roles' => ['Supervisor'],
             ])
             ->assertSessionHasNoErrors();
 
@@ -96,7 +96,7 @@ class GestionUsuariosTest extends TestCase
                 'email' => $otro->email,
                 'password' => 'intento-de-blanqueo',
                 'password_confirmation' => 'intento-de-blanqueo',
-                'rol' => 'Administrador de sistema',
+                'roles' => ['Administrador de sistema'],
             ])
             ->assertSessionHas('error');
 

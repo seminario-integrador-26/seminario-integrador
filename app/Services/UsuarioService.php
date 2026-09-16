@@ -25,9 +25,9 @@ class UsuarioService
     }
 
     /**
-     * Crea un usuario y le asigna un rol.
+     * Crea un usuario y le asigna uno o varios roles.
      *
-     * @param  array{name: string, username: string, email: string, password: string, rol: string}  $data
+     * @param  array{name: string, username: string, email: string, password: string, roles: list<string>}  $data
      */
     public function crear(array $data): User
     {
@@ -38,15 +38,15 @@ class UsuarioService
             'password' => Hash::make($data['password']),
         ]);
 
-        $user->syncRoles([$data['rol']]);
+        $user->syncRoles($data['roles']);
 
         return $user;
     }
 
     /**
-     * Actualiza datos del usuario y su rol. La password es opcional.
+     * Actualiza datos del usuario y sus roles. La password es opcional.
      *
-     * @param  array{name: string, username: string, email: string, rol: string, password?: string|null}  $data
+     * @param  array{name: string, username: string, email: string, roles: list<string>, password?: string|null}  $data
      */
     public function actualizar(User $user, array $data): User
     {
@@ -59,7 +59,19 @@ class UsuarioService
         }
 
         $user->save();
-        $user->syncRoles([$data['rol']]);
+        $user->syncRoles($data['roles']);
+
+        return $user;
+    }
+
+    /**
+     * Reemplaza el set de roles del usuario (designación rápida desde el listado).
+     *
+     * @param  list<string>  $roles
+     */
+    public function cambiarRoles(User $user, array $roles): User
+    {
+        $user->syncRoles($roles);
 
         return $user;
     }

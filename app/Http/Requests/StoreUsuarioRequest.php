@@ -25,7 +25,9 @@ class StoreUsuarioRequest extends FormRequest
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9._-]+$/', 'unique:users,username'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'rol' => ['required', 'string', Rule::in(RoleSeeder::ROLES)],
+            // Un usuario puede tener varios roles (unión de permisos).
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string', Rule::in(RoleSeeder::ROLES)],
         ];
     }
 }

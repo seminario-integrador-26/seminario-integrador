@@ -28,7 +28,9 @@ class UpdateUsuarioRequest extends FormRequest
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuarioId)],
             // Password opcional: solo se cambia si se completa.
             'password' => ['nullable', 'confirmed', Password::defaults()],
-            'rol' => ['required', 'string', Rule::in(RoleSeeder::ROLES)],
+            // Un usuario puede tener varios roles (unión de permisos).
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string', Rule::in(RoleSeeder::ROLES)],
         ];
     }
 }

@@ -33,6 +33,10 @@ class AuditoriaAcceso extends Model
 
     public const EVENTO_BAJA_USUARIO = 'usuario_eliminado';
 
+    public const EVENTO_ALTA_PERMISO = 'permiso_creado';
+
+    public const EVENTO_MOD_PERMISOS = 'permisos_actualizados';
+
     /**
      * Etiquetas legibles para la UI.
      *
@@ -47,6 +51,8 @@ class AuditoriaAcceso extends Model
         self::EVENTO_ALTA_USUARIO => 'Usuario creado',
         self::EVENTO_MOD_USUARIO => 'Usuario actualizado',
         self::EVENTO_BAJA_USUARIO => 'Usuario eliminado',
+        self::EVENTO_ALTA_PERMISO => 'Permiso creado',
+        self::EVENTO_MOD_PERMISOS => 'Permisos de rol actualizados',
     ];
 
     protected $table = 'auditoria_accesos';
