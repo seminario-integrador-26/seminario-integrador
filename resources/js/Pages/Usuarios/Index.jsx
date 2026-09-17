@@ -24,23 +24,6 @@ export default function Index({ usuarios, authUserId, roles }) {
         });
     };
 
-    // Alterna un rol del usuario (un usuario puede tener varios). No permite
-    // quedar sin ningún rol; el auto-bloqueo del admin lo valida el backend.
-    const toggleRol = (usuario, rol) => {
-        const tiene = usuario.roles.includes(rol);
-        const roles = tiene
-            ? usuario.roles.filter((r) => r !== rol)
-            : [...usuario.roles, rol];
-
-        if (roles.length === 0) return;
-
-        router.patch(
-            route('usuarios.roles', usuario.id),
-            { roles },
-            { preserveScroll: true },
-        );
-    };
-
     return (
         <AuthenticatedLayout
             header={
@@ -76,7 +59,7 @@ export default function Index({ usuarios, authUserId, roles }) {
                                 href={route('usuarios.auditoria')}
                                 className="text-sm font-medium text-atalaya-cyan hover:text-white"
                             >
-                                Ver bitácora de auditoría →
+                                Ver logs de auditoría →
                             </Link>
                         </div>
                         <PrimaryButton
@@ -140,47 +123,23 @@ export default function Index({ usuarios, authUserId, roles }) {
                                             {u.email}
                                         </td>
                                         <td className="px-6 py-4 text-sm">
+                                            {/* Solo los roles asignados; se editan desde el formulario. */}
                                             <div className="flex flex-wrap gap-1">
-                                                {roles.map((r) => {
-                                                    const activo =
-                                                        u.roles.includes(r);
-                                                    // Un admin no puede quitarse
-                                                    // a sí mismo ese rol.
-                                                    const bloqueado =
-                                                        u.id === authUserId &&
-                                                        r ===
-                                                            'Administrador de sistema';
-                                                    return (
-                                                        <button
+                                                {roles
+                                                    .filter((r) =>
+                                                        u.roles.includes(r),
+                                                    )
+                                                    .map((r) => (
+                                                        <span
                                                             key={r}
-                                                            type="button"
-                                                            disabled={bloqueado}
-                                                            onClick={() =>
-                                                                toggleRol(u, r)
-                                                            }
-                                                            title={
-                                                                bloqueado
-                                                                    ? 'No podés quitarte tu propio rol de Administrador de sistema'
-                                                                    : activo
-                                                                      ? `Quitar ${r}`
-                                                                      : `Asignar ${r}`
-                                                            }
                                                             className={
-                                                                'inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4 transition-colors ' +
-                                                                (activo
-                                                                    ? rolBadge[
-                                                                          r
-                                                                      ]
-                                                                    : 'border-atalaya-border bg-atalaya-canvas text-atalaya-text-dim hover:text-atalaya-text-muted') +
-                                                                (bloqueado
-                                                                    ? ' cursor-not-allowed opacity-80'
-                                                                    : ' cursor-pointer')
+                                                                'inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4 ' +
+                                                                rolBadge[r]
                                                             }
                                                         >
                                                             {r}
-                                                        </button>
-                                                    );
-                                                })}
+                                                        </span>
+                                                    ))}
                                             </div>
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm text-atalaya-text-dim">

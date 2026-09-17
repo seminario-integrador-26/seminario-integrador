@@ -181,7 +181,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             <Dropdown.Link
                                                 href={route('usuarios.auditoria')}
                                             >
-                                                Bitácora
+                                                Logs
                                             </Dropdown.Link>
                                         )}
                                         {esAdminSistema && (
@@ -311,7 +311,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <ResponsiveNavLink
                                     href={route('usuarios.auditoria')}
                                 >
-                                    Bitácora
+                                    Logs
                                 </ResponsiveNavLink>
                             )}
                             <ResponsiveNavLink

@@ -19,11 +19,11 @@ export default function Auditoria({ registros }) {
         <AuthenticatedLayout
             header={
                 <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                    Bitácora de auditoría
+                    Logs de auditoría
                 </h2>
             }
         >
-            <Head title="Bitácora de auditoría" />
+            <Head title="Logs de auditoría" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
