@@ -34,6 +34,9 @@ RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-p
 FROM php:8.4-fpm-alpine AS app
 WORKDIR /var/www
 
+# Binario de composer (para el dump-autoload optimizado de más abajo).
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
 # Extensiones PHP con el helper de mlocati (resuelve deps del sistema solo).
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions \
