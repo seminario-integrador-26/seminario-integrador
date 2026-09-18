@@ -1,0 +1,98 @@
+# Stack de producción del Seminario Integrador.
+# Convive con otros proyectos del server: solo "web" publica un puerto, y lo
+# hace SOLO en 127.0.0.1 (loopback) para que el nginx del host haga de proxy.
+# Postgres NO expone puerto: vive dentro de la red interna de este compose.
+#
+# Uso:
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# El nombre de proyecto "seminario" prefija redes y volúmenes
+# (seminario_pgdata, seminario_storage...) evitando choques.
+name: seminario
+
+services:
+  app:
+    build:
+      context: .
+      target: app
+    image: seminario-app:latest
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - storage:/var/www/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  web:
+    build:
+      context: .
+      target: web
+    image: seminario-web:latest
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      # Solo loopback: el nginx del host proxea aquí. No queda expuesto a internet.
+      - "127.0.0.1:8080:80"
+    networks:
+      - internal
+
+  queue:
+    image: seminario-app:latest
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    env_file: .env
+    volumes:
+      - storage:/var/www/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - internal
+
+  scheduler:
+    image: seminario-app:latest
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    env_file: .env
+    volumes:
+      - storage:/var/www/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  storage:
+
+networks:
+  internal:
+    driver: bridge

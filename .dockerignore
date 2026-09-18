@@ -1,0 +1,36 @@
+# Dependencias que se instalan dentro de la imagen
+/node_modules
+/vendor
+
+# Build local de Vite (se genera dentro de la imagen)
+/public/build
+/public/hot
+
+# Entornos y secretos (el .env de prod se coloca en el server, NO en la imagen)
+.env
+.env.*
+!.env.production.example
+
+# Datos locales / SQLite / logs
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+database/*.sqlite
+
+# Git y herramientas
+.git
+.gitignore
+.github
+.idea
+.vscode
+*.md
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Tests y coverage (no hacen falta en runtime de prod)
+/tests
+phpunit.xml
+.phpunit.result.cache

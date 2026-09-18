@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Detrás del nginx del host (reverse proxy): confiar en los headers
+        // X-Forwarded-* para detectar HTTPS y generar URLs/cookies correctas.
+        // La app solo es accesible por el proxy (127.0.0.1), por eso '*'.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
