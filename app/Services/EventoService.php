@@ -37,8 +37,14 @@ class EventoService
     public function registrar(array $datos, User $autor): Evento
     {
         $evento = DB::transaction(function () use ($datos, $autor) {
-            // Regla de negocio 5: evento ligado unívocamente al turno abierto.
-            $turno = Turno::abierto()->latest('id')->lockForUpdate()->first()
+            // Regla de negocio 5 + US-025: el evento se liga al turno abierto DEL
+            // supervisor que lo carga. Si no tiene uno abierto (o lo cerró), no
+            // se puede registrar.
+            $turno = Turno::abierto()
+                ->deSupervisor($autor->id)
+                ->latest('id')
+                ->lockForUpdate()
+                ->first()
                 ?? throw new SinTurnoActivoException;
 
             $puntoMonitoreoId = $datos['punto_monitoreo_id'] ?? null;
@@ -78,9 +84,9 @@ class EventoService
             ->get(['id', 'codigo', 'nombre', 'jurisdiccion', 'latitud', 'longitud']);
     }
 
-    public function turnoActivo(): ?Turno
+    public function turnoActivoDe(User $supervisor): ?Turno
     {
-        return Turno::activo()?->load('supervisor:id,name');
+        return Turno::activoDe($supervisor->id)?->load('supervisor:id,name');
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,13 @@ Route::middleware(['auth', 'permission:usuarios.gestionar'])->group(function () 
 */
 Route::middleware(['auth', 'role:Supervisor'])->group(function () {
     Route::resource('eventos', EventoController::class)->only(['create', 'store']);
+
+    // US-025: apertura, cierre y consulta de turnos de guardia.
+    // TODO: confirmar con el equipo si Administrativo/Admin de sistema también
+    // consultan el historial (hoy 'turnos.index' es sólo del Supervisor).
+    Route::get('turnos', [TurnoController::class, 'index'])->name('turnos.index');
+    Route::post('turnos', [TurnoController::class, 'store'])->name('turnos.store');
+    Route::patch('turnos/{turno}/cerrar', [TurnoController::class, 'cerrar'])->name('turnos.cerrar');
 });
 
 /*

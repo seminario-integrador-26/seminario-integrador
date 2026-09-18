@@ -11,10 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Turno de guardia. Campos: supervisor_id, fecha, hora_inicio, hora_fin.
+ * Turno de guardia. Campos: supervisor_id, fecha, hora_inicio, hora_fin,
+ * personal_presente (lista de nombres), fecha_fin y novedades_pendientes.
  * Abierto mientras hora_fin es null.
  */
-#[Fillable(['supervisor_id', 'fecha', 'hora_inicio', 'hora_fin'])]
+#[Fillable([
+    'supervisor_id', 'fecha', 'hora_inicio', 'hora_fin',
+    'personal_presente', 'fecha_fin', 'novedades_pendientes',
+])]
 class Turno extends Model
 {
     /** @use HasFactory<TurnoFactory> */
@@ -26,6 +30,8 @@ class Turno extends Model
     {
         return [
             'fecha' => 'date',
+            'fecha_fin' => 'date',
+            'personal_presente' => 'array',
         ];
     }
 
@@ -34,15 +40,32 @@ class Turno extends Model
         $query->whereNull('hora_fin');
     }
 
+    public function scopeDeSupervisor(Builder $query, int $supervisorId): void
+    {
+        $query->where('supervisor_id', $supervisorId);
+    }
+
+    public function estaAbierto(): bool
+    {
+        return $this->hora_fin === null;
+    }
+
     /**
-     * Turno de guardia abierto al momento de la consulta.
-     *
-     * // TODO: confirmar con el equipo si puede haber más de un turno abierto
-     * // (p. ej. uno por Supervisor). Hoy se toma el último abierto, global.
+     * Último turno abierto, global. Sólo para el panorama del Dashboard (SOC).
+     * Para la lógica de negocio usar activoDe(): un turno activo por Supervisor
+     * (US-025).
      */
     public static function activo(): ?self
     {
         return static::abierto()->latest('id')->first();
+    }
+
+    /**
+     * US-025: turno de guardia abierto de un Supervisor (a lo sumo uno).
+     */
+    public static function activoDe(int $supervisorId): ?self
+    {
+        return static::abierto()->deSupervisor($supervisorId)->latest('id')->first();
     }
 
     public function supervisor(): BelongsTo

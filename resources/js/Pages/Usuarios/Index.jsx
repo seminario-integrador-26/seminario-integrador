@@ -1,9 +1,10 @@
 import DangerButton from '@/Components/DangerButton';
+import FlashMessages from '@/Components/FlashMessages';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 const rolBadge = {
@@ -14,7 +15,6 @@ const rolBadge = {
 };
 
 export default function Index({ usuarios, authUserId, roles }) {
-    const { flash } = usePage().props;
     const [porEliminar, setPorEliminar] = useState(null);
 
     const eliminar = () => {
@@ -36,16 +36,7 @@ export default function Index({ usuarios, authUserId, roles }) {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
-                    {flash?.success && (
-                        <div className="rounded-none bg-green-50 p-4 text-sm text-green-800">
-                            {flash.success}
-                        </div>
-                    )}
-                    {flash?.error && (
-                        <div className="rounded-none bg-red-50 p-4 text-sm text-red-800">
-                            {flash.error}
-                        </div>
-                    )}
+                    <FlashMessages />
 
                     <div className="flex items-center justify-between">
                         <div className="flex gap-4">

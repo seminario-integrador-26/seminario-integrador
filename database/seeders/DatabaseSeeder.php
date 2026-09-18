@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -39,12 +38,8 @@ class DatabaseSeeder extends Seeder
                 ->assignRole($role);
         }
 
-        // Turno abierto para poder registrar eventos en desarrollo
-        // (la apertura/cierre desde la UI es CU01, pendiente).
-        Turno::create([
-            'supervisor_id' => User::where('email', 'supervisor@example.com')->value('id'),
-            'fecha' => now()->toDateString(),
-            'hora_inicio' => now()->format('H:i:s'),
-        ]);
+        // El turno lo abre el Supervisor desde la UI (US-025): al entrar sin
+        // turno activo, el Dashboard le ofrece abrir uno. Por eso ya no se
+        // pre-crea acá.
     }
 }

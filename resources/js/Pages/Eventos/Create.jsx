@@ -1,3 +1,5 @@
+import Alert from '@/Components/Alert';
+import FlashMessages from '@/Components/FlashMessages';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import MapaPuntosMonitoreo from '@/Components/MapaPuntosMonitoreo';
@@ -5,7 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SelectorPuntoMonitoreo from '@/Components/SelectorPuntoMonitoreo';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 const campoClass =
     'mt-1 block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs '
@@ -25,8 +27,6 @@ export default function Create({
     jurisdicciones,
     turnoActivo,
 }) {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors, reset } = useForm({
         tipo_evento_id: '',
         fecha: hoy(),
@@ -69,31 +69,25 @@ export default function Create({
 
             <div className="py-12">
                 <div className="mx-auto max-w-3xl space-y-4 sm:px-6 lg:px-8">
-                    {flash?.success && (
-                        <div className="rounded-none bg-green-50 p-4 text-sm text-green-800">
-                            {flash.success}
-                        </div>
-                    )}
+                    <FlashMessages />
 
                     {turnoActivo ? (
-                        <div className="rounded-none bg-atalaya-cyan/20 p-4 text-sm text-atalaya-cyan">
+                        <Alert variant="info">
                             Turno #{turnoActivo.id} abierto el{' '}
                             {turnoActivo.fecha} a las {turnoActivo.hora_inicio}
                             {turnoActivo.supervisor &&
                                 ` por ${turnoActivo.supervisor}`}
                             . El evento quedará asociado a este turno.
-                        </div>
+                        </Alert>
                     ) : (
-                        <div className="rounded-none bg-red-50 p-4 text-sm text-red-800">
+                        <Alert variant="error">
                             No hay un turno de guardia abierto. Abrí un turno
                             antes de registrar eventos.
-                        </div>
+                        </Alert>
                     )}
 
                     {errors.turno && (
-                        <div className="rounded-none bg-red-50 p-4 text-sm text-red-800">
-                            {errors.turno}
-                        </div>
+                        <Alert variant="error">{errors.turno}</Alert>
                     )}
 
                     <form

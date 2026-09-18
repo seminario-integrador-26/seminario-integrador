@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use App\Services\TurnoService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,11 +41,32 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $user ? $user->getRoleNames() : [],
                 'permissions' => $user ? $user->getAllPermissions()->pluck('name') : [],
             ],
+            // US-025: turno de guardia abierto del Supervisor (o null), para que el
+            // modal del Dashboard y el nav reaccionen en cualquier pantalla.
+            'turnoSupervisor' => fn () => $user && $user->hasRole('Supervisor')
+                ? $this->turnoDelSupervisor($user)
+                : null,
             // Mensajes flash para feedback en la UI.
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
         ];
+    }
+
+    /**
+     * Turno activo del supervisor, aplanado para la UI, o null si no tiene uno.
+     *
+     * @return array{id: int, fecha: string, hora_inicio: string}|null
+     */
+    private function turnoDelSupervisor(User $user): ?array
+    {
+        $turno = app(TurnoService::class)->activoDe($user);
+
+        return $turno ? [
+            'id' => $turno->id,
+            'fecha' => $turno->fecha->format('d/m/Y'),
+            'hora_inicio' => substr((string) $turno->hora_inicio, 0, 5),
+        ] : null;
     }
 }

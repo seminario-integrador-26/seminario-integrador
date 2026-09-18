@@ -1,7 +1,11 @@
+import AbrirTurnoModal from '@/Components/AbrirTurnoModal';
 import TacticalMap, { colorDeCategoria } from '@/Components/TacticalMap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+
+// US-025: recuerda por sesión que el supervisor pospuso abrir turno.
+const CLAVE_POSPONER_TURNO = 'atalaya:turno-pospuesto';
 
 const TODAS = 'TODAS';
 
@@ -26,8 +30,23 @@ export default function Dashboard({
     puntosMonitoreo,
     resumenPuntos,
 }) {
+    const { auth, turnoSupervisor } = usePage().props;
+    const esSupervisor = (auth.roles ?? []).includes('Supervisor');
+
     const [filtro, setFiltro] = useState(TODAS);
     const [seleccionado, setSeleccionado] = useState(null);
+
+    // Modal de apertura de turno (US-025): sólo Supervisor sin turno activo y que
+    // no lo haya pospuesto en esta sesión.
+    const [pospuesto, setPospuesto] = useState(
+        () => sessionStorage.getItem(CLAVE_POSPONER_TURNO) === '1',
+    );
+    const mostrarModalTurno = esSupervisor && !turnoSupervisor && !pospuesto;
+
+    const posponerTurno = () => {
+        sessionStorage.setItem(CLAVE_POSPONER_TURNO, '1');
+        setPospuesto(true);
+    };
 
     const eventosFiltrados = useMemo(
         () =>
@@ -55,6 +74,11 @@ export default function Dashboard({
     return (
         <AuthenticatedLayout>
             <Head title="Panel" />
+
+            <AbrirTurnoModal
+                show={mostrarModalTurno}
+                onPosponer={posponerTurno}
+            />
 
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
                 {/* 1. Barra de telemetría */}
@@ -161,7 +185,7 @@ export default function Dashboard({
                                     [ Consultar eventos ]
                                 </Link>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {/* TODO: CU01 (apertura/cierre de turno) y exportadores PDF/A y .xlsx pendientes. */}
+                                    {/* TODO: exportadores PDF/A y .xlsx pendientes. */}
                                     <button
                                         type="button"
                                         disabled

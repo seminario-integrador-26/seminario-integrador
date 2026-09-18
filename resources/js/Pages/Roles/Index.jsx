@@ -1,9 +1,10 @@
+import FlashMessages from '@/Components/FlashMessages';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 function RolCard({ rol, permisosDisponibles, permisoIrrenunciable }) {
@@ -99,7 +100,6 @@ export default function Index({
     permisosDisponibles,
     permisoIrrenunciable,
 }) {
-    const { flash } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
     });
@@ -131,16 +131,7 @@ export default function Index({
                         ← Volver a usuarios
                     </Link>
 
-                    {flash?.success && (
-                        <div className="rounded-none bg-green-50 p-4 text-sm text-green-800">
-                            {flash.success}
-                        </div>
-                    )}
-                    {flash?.error && (
-                        <div className="rounded-none bg-red-50 p-4 text-sm text-red-800">
-                            {flash.error}
-                        </div>
-                    )}
+                    <FlashMessages />
 
                     <form
                         onSubmit={crearPermiso}

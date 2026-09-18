@@ -12,6 +12,7 @@ use App\Models\TipoEvento;
 use App\Services\Auth\AuditoriaAccesoService;
 use App\Services\EventoService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -60,9 +61,9 @@ class EventoController extends Controller
     /**
      * US-003: formulario de registro de evento (Supervisor).
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        $turno = $this->eventos->turnoActivo();
+        $turno = $this->eventos->turnoActivoDe($request->user());
 
         return Inertia::render('Eventos/Create', [
             'tipos' => $this->eventos->tiposEvento(),

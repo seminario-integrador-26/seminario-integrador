@@ -22,6 +22,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = page.props.auth.user;
     const roles = page.props.auth.roles ?? [];
     const permisos = page.props.auth.permissions ?? [];
+    const turnoSupervisor = page.props.turnoSupervisor;
 
     const esAdminSistema = roles.includes('Administrador de sistema');
     const esSupervisor = roles.includes('Supervisor');
@@ -99,6 +100,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                         Registrar
                                     </NavLink>
                                 )}
+                                {esSupervisor && (
+                                    <NavLink
+                                        href={route('turnos.index')}
+                                        active={route().current('turnos.index')}
+                                    >
+                                        Turnos
+                                    </NavLink>
+                                )}
                                 {esAdminSistema && (
                                     <NavLink
                                         href={route('usuarios.index')}
@@ -112,6 +121,30 @@ export default function AuthenticatedLayout({ header, children }) {
 
                         {/* Telemetría de sala */}
                         <div className="hidden items-center gap-4 font-mono text-xs xl:flex">
+                            {esSupervisor && (
+                                <Link
+                                    href={route('turnos.index')}
+                                    className={`flex items-center gap-2 border px-2.5 py-1 transition ${
+                                        turnoSupervisor
+                                            ? 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan'
+                                            : 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson'
+                                    }`}
+                                >
+                                    <span
+                                        className={`h-2 w-2 ${
+                                            turnoSupervisor
+                                                ? 'bg-atalaya-cyan'
+                                                : 'bg-atalaya-crimson'
+                                        }`}
+                                    ></span>
+                                    <span className="text-[11px] uppercase tracking-wider">
+                                        {turnoSupervisor
+                                            ? `Turno #${turnoSupervisor.id} · ${turnoSupervisor.hora_inicio}`
+                                            : 'Sin turno'}
+                                    </span>
+                                </Link>
+                            )}
+
                             <div className="flex items-center gap-2 border border-atalaya-border bg-atalaya-canvas px-2.5 py-1">
                                 <span className="h-2 w-2 bg-atalaya-cyan"></span>
                                 <span className="text-[11px] uppercase tracking-wider text-atalaya-text-muted">
@@ -274,6 +307,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 active={route().current('eventos.create')}
                             >
                                 Registrar evento
+                            </ResponsiveNavLink>
+                        )}
+                        {esSupervisor && (
+                            <ResponsiveNavLink
+                                href={route('turnos.index')}
+                                active={route().current('turnos.index')}
+                            >
+                                Turnos
                             </ResponsiveNavLink>
                         )}
                         {esAdminSistema && (

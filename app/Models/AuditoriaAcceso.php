@@ -37,6 +37,10 @@ class AuditoriaAcceso extends Model
 
     public const EVENTO_MOD_PERMISOS = 'permisos_actualizados';
 
+    public const EVENTO_TURNO_APERTURA = 'turno_abierto';
+
+    public const EVENTO_TURNO_CIERRE = 'turno_cerrado';
+
     /**
      * Etiquetas legibles para la UI.
      *
@@ -53,6 +57,8 @@ class AuditoriaAcceso extends Model
         self::EVENTO_BAJA_USUARIO => 'Usuario eliminado',
         self::EVENTO_ALTA_PERMISO => 'Permiso creado',
         self::EVENTO_MOD_PERMISOS => 'Permisos de rol actualizados',
+        self::EVENTO_TURNO_APERTURA => 'Turno abierto',
+        self::EVENTO_TURNO_CIERRE => 'Turno cerrado',
     ];
 
     protected $table = 'auditoria_accesos';
