@@ -18,8 +18,9 @@ services:
       target: app
     image: seminario-app:latest
     restart: unless-stopped
-    env_file: .env
     volumes:
+      # .env como archivo real: Laravel lo lee y artisan (key:generate) lo escribe.
+      - ./.env:/var/www/.env
       - storage:/var/www/storage
     depends_on:
       db:
@@ -45,8 +46,8 @@ services:
     image: seminario-app:latest
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
-    env_file: .env
     volumes:
+      - ./.env:/var/www/.env
       - storage:/var/www/storage
     depends_on:
       db:
@@ -63,8 +64,8 @@ services:
       - /bin/sh
       - -c
       - "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
-    env_file: .env
     volumes:
+      - ./.env:/var/www/.env
       - storage:/var/www/storage
     depends_on:
       db:
