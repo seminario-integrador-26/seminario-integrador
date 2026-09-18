@@ -24,7 +24,9 @@ FROM composer:2 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
 # Sin scripts todavía: artisan aún no tiene el código completo copiado.
-RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-progress
+# --ignore-platform-reqs: este stage (composer:2) no trae las extensiones PHP;
+# las instala el stage "app". Acá solo bajamos dependencias según el lock.
+RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
 
 # ---------------------------------------------------------------------------
 # Stage 3 — Imagen de la app (PHP-FPM 8.4)
