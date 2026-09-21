@@ -33,6 +33,29 @@ function CentrarEn({ punto }) {
 }
 
 /**
+ * Recalcula el tamaño del mapa tras el montaje y ante cualquier resize: sin
+ * esto Leaflet dibuja las teselas antes de que el contenedor tenga su tamaño
+ * final y quedan grises/desalineadas hasta un zoom/resize.
+ */
+function AjustarTamano() {
+    const map = useMap();
+
+    useEffect(() => {
+        const reajustar = () => map.invalidateSize();
+        const t = setTimeout(reajustar, 100);
+        const observer = new ResizeObserver(reajustar);
+        observer.observe(map.getContainer());
+
+        return () => {
+            clearTimeout(t);
+            observer.disconnect();
+        };
+    }, [map]);
+
+    return null;
+}
+
+/**
  * Mapa Leaflet + OpenStreetMap con los Puntos de Monitoreo.
  * Click en un punto -> onSelect(id). Los PM sin coordenadas no se dibujan.
  */
@@ -92,6 +115,7 @@ export default function MapaPuntosMonitoreo({
                 );
             })}
 
+            <AjustarTamano />
             <CentrarEn punto={seleccionado} />
         </MapContainer>
     );

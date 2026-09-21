@@ -31,7 +31,9 @@ export default function Modal({
             <Dialog
                 as="div"
                 id="modal"
-                className="fixed inset-0 z-50 flex transform items-center overflow-y-auto px-4 py-6 transition-all sm:px-0"
+                // z alto: Leaflet asigna z-index internos de hasta 1000 (controles/
+                // panes); con z-50 el mapa se pintaba por encima del modal.
+                className="fixed inset-0 z-[1100] flex transform items-center overflow-y-auto px-4 py-6 transition-all sm:px-0"
                 onClose={close}
             >
                 <TransitionChild

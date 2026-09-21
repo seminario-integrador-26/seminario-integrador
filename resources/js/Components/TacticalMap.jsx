@@ -1,6 +1,36 @@
 import { useEffect, useState } from 'react';
-import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import {
+    Circle,
+    MapContainer,
+    Marker,
+    Popup,
+    TileLayer,
+    useMap,
+} from 'react-leaflet';
 import L from 'leaflet';
+
+/**
+ * Recalcula el tamaño del mapa tras el montaje y ante cualquier resize del
+ * contenedor. Sin esto, Leaflet calcula las teselas antes de que el contenedor
+ * flex tenga su tamaño final y quedan grises/desalineadas hasta un zoom/resize.
+ */
+function AjustarTamano() {
+    const map = useMap();
+
+    useEffect(() => {
+        const reajustar = () => map.invalidateSize();
+        const t = setTimeout(reajustar, 100);
+        const observer = new ResizeObserver(reajustar);
+        observer.observe(map.getContainer());
+
+        return () => {
+            clearTimeout(t);
+            observer.disconnect();
+        };
+    }, [map]);
+
+    return null;
+}
 
 /**
  * Visor cartográfico táctico del dashboard: eventos georreferenciados sobre los
@@ -110,6 +140,8 @@ export default function TacticalMap({
                 }}
                 zoomControl={false}
             >
+                <AjustarTamano />
+
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
