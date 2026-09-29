@@ -57,7 +57,9 @@ class LoginRequest extends FormRequest
             throw $this->cuentaBloqueada($bloqueo->segundosRestantes($user));
         }
 
-        if (! Auth::attempt($this->only('username', 'password'), $this->boolean('remember'))) {
+        // US-001: sin "recordarme". El cookie de remember restauraría la sesión
+        // y anularía la expiración por 30 min de inactividad.
+        if (! Auth::attempt($this->only('username', 'password'))) {
             RateLimiter::hit($this->throttleKey());
 
             if ($user !== null && $bloqueo->registrarFallo($user)) {

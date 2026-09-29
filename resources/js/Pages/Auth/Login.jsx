@@ -1,4 +1,3 @@
-import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -11,7 +10,6 @@ export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         username: '',
         password: '',
-        remember: false,
     });
 
     const submit = (e) => {
@@ -75,20 +73,7 @@ export default function Login({ status, canResetPassword }) {
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="flex items-center justify-between pt-1 font-mono text-xs">
-                    <label className="flex cursor-pointer items-center text-atalaya-text-muted">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                        />
-                        <span className="ms-2 text-[11px] text-atalaya-text-muted">
-                            Recordar terminal
-                        </span>
-                    </label>
-
+                <div className="flex items-center justify-end pt-1 font-mono text-xs">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
