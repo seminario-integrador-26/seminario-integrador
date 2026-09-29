@@ -1,4 +1,5 @@
 import AbrirTurnoModal from '@/Components/AbrirTurnoModal';
+import BuscadorPuntoMapa from '@/Components/BuscadorPuntoMapa';
 import TacticalMap, { colorDeCategoria } from '@/Components/TacticalMap';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -48,13 +49,42 @@ export default function Dashboard({
         setPospuesto(true);
     };
 
-    const eventosFiltrados = useMemo(
+    const [filtroTipo, setFiltroTipo] = useState('');
+    // PM elegido en el buscador; `n` fuerza re-enfocar aunque sea el mismo PM.
+    const [enfoque, setEnfoque] = useState(null);
+
+    const eventosDeCategoria = useMemo(
         () =>
             filtro === TODAS
                 ? eventos
                 : eventos.filter((ev) => ev.categoria === filtro),
         [eventos, filtro],
     );
+
+    // Tipos presentes en el feed (dentro de la categoría elegida), con conteo.
+    const tiposDelFeed = useMemo(() => {
+        const conteo = {};
+        for (const ev of eventosDeCategoria) {
+            conteo[ev.tipo] = (conteo[ev.tipo] ?? 0) + 1;
+        }
+        return Object.entries(conteo).sort(([a], [b]) => a.localeCompare(b));
+    }, [eventosDeCategoria]);
+
+    const eventosFiltrados = useMemo(
+        () =>
+            filtroTipo
+                ? eventosDeCategoria.filter((ev) => ev.tipo === filtroTipo)
+                : eventosDeCategoria,
+        [eventosDeCategoria, filtroTipo],
+    );
+
+    const cambiarCategoria = (categoria) => {
+        setFiltro(categoria);
+        setFiltroTipo('');
+    };
+
+    const enfocarPunto = (punto) =>
+        setEnfoque((actual) => ({ punto, n: (actual?.n ?? 0) + 1 }));
 
     // Sólo los eventos con punto de monitoreo se pueden dibujar (RN-03).
     const eventosGeorreferenciados = useMemo(
@@ -81,129 +111,100 @@ export default function Dashboard({
             />
 
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
-                {/* 1. Barra de telemetría */}
+                {/* 1. Barra de telemetría (compacta: el protagonista es el mapa) */}
                 <section className="border-b border-atalaya-border bg-atalaya-surface">
-                    <div className="swiss-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="swiss-grid grid-cols-2 lg:grid-cols-4">
                         {/* Eventos del turno */}
-                        <div className="swiss-panel flex flex-col justify-between p-4">
-                            <div className="flex items-center justify-between font-mono text-xs uppercase text-atalaya-text-muted">
-                                <span>
-                                    [{' '}
-                                    {turno
-                                        ? 'Eventos en turno'
-                                        : 'Últimos eventos'}{' '}
-                                    ]
-                                </span>
-                                <span className="text-[10px] text-atalaya-cyan">
-                                    En vivo
-                                </span>
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-baseline gap-3">
-                                <span className="font-mono text-3xl font-black tracking-tight text-white">
-                                    {eventos.length}
-                                </span>
-                                <div className="flex flex-wrap items-center gap-2 font-mono text-[10px]">
-                                    <span className="font-bold text-atalaya-crimson">
-                                        ● {conteoPorCategoria['Seguridad Pública'] ?? 0}{' '}
-                                        SEG
+                        <div className="swiss-panel flex items-center gap-3 px-4 py-2">
+                            <span className="font-mono text-xl font-black leading-none text-white">
+                                {eventos.length}
+                            </span>
+                            <div className="min-w-0 font-mono">
+                                <div className="truncate text-[10px] uppercase text-atalaya-text-muted">
+                                    {turno ? 'Eventos en turno' : 'Últimos eventos'}{' '}
+                                    <span className="text-atalaya-cyan">· En vivo</span>
+                                </div>
+                                <div className="flex flex-wrap gap-x-2 text-[10px] font-bold">
+                                    <span className="text-atalaya-crimson">
+                                        ● {conteoPorCategoria['Seguridad Pública'] ?? 0} SEG
                                     </span>
-                                    <span className="font-bold text-atalaya-amber">
-                                        ● {conteoPorCategoria['Convivencia Urbana'] ?? 0}{' '}
-                                        CONV
+                                    <span className="text-atalaya-amber">
+                                        ● {conteoPorCategoria['Convivencia Urbana'] ?? 0} CONV
                                     </span>
-                                    <span className="font-bold text-atalaya-orange">
+                                    <span className="text-atalaya-orange">
                                         ● {conteoPorCategoria['Prevención'] ?? 0} PREV
                                     </span>
+                                    <span className="font-normal text-atalaya-text-dim">
+                                        {eventos.length - cuantificables} INF
+                                    </span>
                                 </div>
-                            </div>
-                            <div className="mt-1 font-mono text-[10px] text-atalaya-text-dim">
-                                {cuantificables} cuantificables ·{' '}
-                                {eventos.length - cuantificables} informativos
                             </div>
                         </div>
 
                         {/* Red de monitoreo */}
-                        <div className="swiss-panel flex flex-col justify-between p-4">
-                            <div className="flex items-center justify-between font-mono text-xs uppercase text-atalaya-text-muted">
-                                <span>[ Puntos de monitoreo ]</span>
-                            </div>
-                            <div className="mt-2 flex items-baseline gap-2">
-                                <span className="font-mono text-3xl font-black tracking-tight text-white">
-                                    {resumenPuntos.total}
-                                </span>
-                                <span className="font-mono text-xs text-atalaya-cyan">
-                                    {Object.entries(
-                                        resumenPuntos.por_jurisdiccion,
-                                    )
+                        <div className="swiss-panel flex items-center gap-3 px-4 py-2">
+                            <span className="font-mono text-xl font-black leading-none text-white">
+                                {resumenPuntos.total}
+                            </span>
+                            <div className="min-w-0 font-mono">
+                                <div className="text-[10px] uppercase text-atalaya-text-muted">
+                                    Puntos de monitoreo
+                                </div>
+                                <div className="truncate text-[10px] text-atalaya-cyan">
+                                    {Object.entries(resumenPuntos.por_jurisdiccion)
                                         .map(([j, n]) => `${n} ${j}`)
                                         .join(' · ')}
-                                </span>
+                                </div>
                             </div>
                             {/* TODO: el modelo no releva estado operativo de cámara (en línea / mantenimiento). */}
                         </div>
 
                         {/* Turno vigente */}
-                        <div className="swiss-panel flex flex-col justify-between p-4">
-                            <div className="flex items-center justify-between font-mono text-xs uppercase text-atalaya-text-muted">
-                                <span>[ Guardia vigente ]</span>
+                        <div className="swiss-panel flex min-w-0 flex-col justify-center px-4 py-2 font-mono">
+                            <div className="flex items-center justify-between text-[10px] uppercase text-atalaya-text-muted">
+                                <span>Guardia vigente</span>
                                 {turno ? (
-                                    <span className="text-[10px] font-bold text-atalaya-orange">
+                                    <span className="font-bold text-atalaya-orange">
                                         Turno #{turno.id}
                                     </span>
                                 ) : (
-                                    <span className="text-[10px] font-bold text-atalaya-crimson">
+                                    <span className="font-bold text-atalaya-crimson">
                                         Sin turno
                                     </span>
                                 )}
                             </div>
-                            {turno ? (
-                                <div className="mt-2 flex flex-col">
-                                    <span className="font-mono text-sm font-bold uppercase tracking-wider text-white">
-                                        Desde {turno.hora_inicio} ·{' '}
-                                        {turno.fecha}
-                                    </span>
-                                    <span className="font-mono text-[11px] text-atalaya-text-muted">
-                                        {turno.supervisor ?? 'Sin supervisor'} ·{' '}
-                                        {turno.transcurrido} transcurridos
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="mt-2 font-mono text-[11px] leading-relaxed text-atalaya-text-muted">
-                                    No hay turno de guardia abierto. No se pueden
-                                    registrar eventos hasta abrir uno (RN-05).
-                                </div>
-                            )}
+                            <div className="truncate text-[11px] text-white">
+                                {turno
+                                    ? `Desde ${turno.hora_inicio} · ${turno.supervisor ?? 'Sin supervisor'} · ${turno.transcurrido}`
+                                    : 'Sin turno abierto: no se registran eventos (RN-05).'}
+                            </div>
                         </div>
 
                         {/* Acciones */}
-                        <div className="swiss-panel flex items-center justify-between gap-2 p-4">
-                            <div className="flex w-full flex-col gap-2 font-mono text-xs">
-                                <Link
-                                    href={route('eventos.index')}
-                                    className="w-full border border-atalaya-border bg-atalaya-elevated px-3 py-1.5 text-center font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-border"
-                                >
-                                    [ Consultar eventos ]
-                                </Link>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {/* TODO: exportadores PDF/A y .xlsx pendientes. */}
-                                    <button
-                                        type="button"
-                                        disabled
-                                        title="Pendiente: reporte de turno en PDF/A"
-                                        className="cursor-not-allowed border border-atalaya-border bg-atalaya-canvas px-2 py-1 text-center text-[10px] uppercase text-atalaya-text-dim opacity-60"
-                                    >
-                                        PDF/A turno
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled
-                                        title="Pendiente: exportación .xlsx de datos abiertos"
-                                        className="cursor-not-allowed border border-atalaya-border bg-atalaya-canvas px-2 py-1 text-center text-[10px] uppercase text-atalaya-text-dim opacity-60"
-                                    >
-                                        Datos .xlsx
-                                    </button>
-                                </div>
-                            </div>
+                        <div className="swiss-panel flex items-center gap-2 px-4 py-2 font-mono text-[10px]">
+                            <Link
+                                href={route('eventos.index')}
+                                className="flex-1 border border-atalaya-border bg-atalaya-elevated px-2 py-1 text-center font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-border"
+                            >
+                                Consultar
+                            </Link>
+                            {/* TODO: exportadores PDF/A y .xlsx pendientes. */}
+                            <button
+                                type="button"
+                                disabled
+                                title="Pendiente: reporte de turno en PDF/A"
+                                className="cursor-not-allowed border border-atalaya-border bg-atalaya-canvas px-2 py-1 uppercase text-atalaya-text-dim opacity-60"
+                            >
+                                PDF/A
+                            </button>
+                            <button
+                                type="button"
+                                disabled
+                                title="Pendiente: exportación .xlsx de datos abiertos"
+                                className="cursor-not-allowed border border-atalaya-border bg-atalaya-canvas px-2 py-1 uppercase text-atalaya-text-dim opacity-60"
+                            >
+                                .xlsx
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -224,7 +225,7 @@ export default function Dashboard({
 
                             <div className="flex flex-wrap items-center gap-1 font-mono text-[10px]">
                                 <button
-                                    onClick={() => setFiltro(TODAS)}
+                                    onClick={() => cambiarCategoria(TODAS)}
                                     className={`border px-2 py-1 uppercase transition ${
                                         filtro === TODAS
                                             ? 'border-atalaya-cyan bg-atalaya-cyan/20 text-white'
@@ -240,7 +241,9 @@ export default function Dashboard({
                                     return (
                                         <button
                                             key={categoria}
-                                            onClick={() => setFiltro(categoria)}
+                                            onClick={() =>
+                                                cambiarCategoria(categoria)
+                                            }
                                             style={
                                                 activo
                                                     ? {
@@ -269,7 +272,16 @@ export default function Dashboard({
                                 puntosMonitoreo={puntosMonitoreo}
                                 eventoSeleccionado={seleccionado}
                                 onSeleccionarEvento={setSeleccionado}
+                                enfoque={enfoque}
+                                puedeRegistrar={esSupervisor}
                             />
+
+                            <div className="absolute left-4 top-4 z-[1000] w-72 max-w-[calc(100%-2rem)]">
+                                <BuscadorPuntoMapa
+                                    puntos={puntosMonitoreo}
+                                    onSeleccionar={enfocarPunto}
+                                />
+                            </div>
 
                             <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] space-y-1 border border-atalaya-border bg-atalaya-surface/90 p-3 font-mono text-[10px] backdrop-blur-sm">
                                 <div className="mb-1 font-bold tracking-wider text-white">
@@ -305,20 +317,48 @@ export default function Dashboard({
 
                     {/* Feed de eventos */}
                     <div className="swiss-panel flex flex-col border-t border-atalaya-border lg:col-span-5 lg:border-t-0 xl:col-span-4">
-                        <div className="flex items-center justify-between border-b border-atalaya-border bg-atalaya-surface px-4 py-2.5">
-                            <span className="font-mono text-xs font-bold uppercase tracking-widest text-white">
-                                + Feed de eventos registrados
-                            </span>
-                            <span className="font-mono text-[10px] text-atalaya-cyan">
-                                Inmutables (RN-01)
-                            </span>
+                        <div className="space-y-2 border-b border-atalaya-border bg-atalaya-surface px-4 py-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono text-xs font-bold uppercase tracking-widest text-white">
+                                    + Feed de eventos registrados
+                                </span>
+                                {esSupervisor ? (
+                                    <Link
+                                        href={route('eventos.create')}
+                                        className="shrink-0 border border-atalaya-cyan bg-atalaya-cyan/10 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-cyan/25"
+                                    >
+                                        [ + Registrar ]
+                                    </Link>
+                                ) : (
+                                    <span className="font-mono text-[10px] text-atalaya-cyan">
+                                        Inmutables (RN-01)
+                                    </span>
+                                )}
+                            </div>
+                            <select
+                                aria-label="Filtrar por tipo de evento"
+                                value={filtroTipo}
+                                onChange={(e) => setFiltroTipo(e.target.value)}
+                                className="block w-full rounded-none border-atalaya-border bg-atalaya-canvas py-1 font-mono text-[11px] text-white focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan"
+                            >
+                                <option value="">
+                                    Todos los tipos ({eventosDeCategoria.length})
+                                </option>
+                                {tiposDelFeed.map(([tipo, n]) => (
+                                    <option key={tipo} value={tipo}>
+                                        {tipo} ({n})
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="max-h-[580px] flex-1 divide-y divide-atalaya-border overflow-y-auto">
                             {eventosFiltrados.length === 0 && (
                                 <div className="p-6 text-center font-mono text-xs text-atalaya-text-muted">
                                     Sin eventos registrados
-                                    {filtro !== TODAS && ' para este filtro'}.
+                                    {(filtro !== TODAS || filtroTipo) &&
+                                        ' para este filtro'}
+                                    .
                                 </div>
                             )}
 

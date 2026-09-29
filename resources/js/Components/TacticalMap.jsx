@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Link } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 import {
     Circle,
     MapContainer,
@@ -28,6 +29,28 @@ function AjustarTamano() {
             observer.disconnect();
         };
     }, [map]);
+
+    return null;
+}
+
+/**
+ * Centra el mapa en el PM elegido desde el buscador y abre su popup.
+ * `enfoque.n` cambia en cada búsqueda para poder re-enfocar el mismo PM.
+ */
+function EnfocarPunto({ enfoque, marcadores }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!enfoque) {
+            return;
+        }
+
+        const { punto } = enfoque;
+        map.flyTo([punto.latitud, punto.longitud], 17, { duration: 0.8 });
+        map.once('moveend', () =>
+            marcadores.current[punto.id]?.openPopup(),
+        );
+    }, [enfoque, map, marcadores]);
 
     return null;
 }
@@ -113,8 +136,11 @@ export default function TacticalMap({
     puntosMonitoreo = [],
     eventoSeleccionado = null,
     onSeleccionarEvento = () => {},
+    enfoque = null,
+    puedeRegistrar = false,
 }) {
     const [montado, setMontado] = useState(false);
+    const marcadores = useRef({});
 
     useEffect(() => {
         setMontado(true);
@@ -141,6 +167,7 @@ export default function TacticalMap({
                 zoomControl={false}
             >
                 <AjustarTamano />
+                <EnfocarPunto enfoque={enfoque} marcadores={marcadores} />
 
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -154,6 +181,9 @@ export default function TacticalMap({
                         key={`pm-${pm.id}`}
                         position={[pm.latitud, pm.longitud]}
                         icon={iconoCamara()}
+                        ref={(m) => {
+                            marcadores.current[pm.id] = m;
+                        }}
                     >
                         <Popup>
                             <div className="p-1 font-mono text-xs">
@@ -167,6 +197,16 @@ export default function TacticalMap({
                                 <div className="text-[10px] uppercase text-atalaya-text-dim">
                                     Jurisdicción: {pm.jurisdiccion}
                                 </div>
+                                {puedeRegistrar && (
+                                    <Link
+                                        href={route('eventos.create', {
+                                            punto_monitoreo_id: pm.id,
+                                        })}
+                                        className="mt-2 block border border-atalaya-cyan bg-atalaya-cyan/10 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider !text-atalaya-cyan transition hover:bg-atalaya-cyan/25"
+                                    >
+                                        [ + Registrar evento aquí ]
+                                    </Link>
+                                )}
                             </div>
                         </Popup>
                     </Marker>

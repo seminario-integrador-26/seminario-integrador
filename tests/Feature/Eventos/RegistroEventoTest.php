@@ -76,6 +76,20 @@ class RegistroEventoTest extends TestCase
                 ->where('turnoActivo.id', $this->turno->id));
     }
 
+    public function test_el_formulario_precarga_el_punto_de_monitoreo_elegido_en_el_mapa(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.create', ['punto_monitoreo_id' => $this->punto->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('puntoInicial', $this->punto->id));
+
+        // Un PM inexistente se ignora.
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.create', ['punto_monitoreo_id' => 99999]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('puntoInicial', null));
+    }
+
     public function test_solo_el_supervisor_puede_registrar_eventos(): void
     {
         foreach (['Administrativo', 'Administrador de sistema'] as $rol) {

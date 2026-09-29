@@ -24,6 +24,7 @@ export default function Create({
     tipos,
     categorias,
     puntos,
+    puntoInicial = null,
     jurisdicciones,
     turnoActivo,
 }) {
@@ -31,7 +32,8 @@ export default function Create({
         tipo_evento_id: '',
         fecha: hoy(),
         hora: '',
-        punto_monitoreo_id: null,
+        // Precargado cuando se llega desde un PM del mapa del panel.
+        punto_monitoreo_id: puntoInicial,
         timestamp_video: '',
         descripcion: '',
     });

@@ -64,11 +64,17 @@ class EventoController extends Controller
     public function create(Request $request): Response
     {
         $turno = $this->eventos->turnoActivoDe($request->user());
+        $puntos = $this->eventos->puntosMonitoreo();
+
+        // Registro desde un PM del mapa: ?punto_monitoreo_id=X precarga la ubicación.
+        // Un id inexistente se ignora (el form arranca sin PM).
+        $puntoInicial = $puntos->firstWhere('id', $request->integer('punto_monitoreo_id'))?->id;
 
         return Inertia::render('Eventos/Create', [
             'tipos' => $this->eventos->tiposEvento(),
             'categorias' => TipoEvento::CATEGORIAS,
-            'puntos' => $this->eventos->puntosMonitoreo(),
+            'puntos' => $puntos,
+            'puntoInicial' => $puntoInicial,
             'jurisdicciones' => PuntoMonitoreo::JURISDICCIONES,
             'turnoActivo' => $turno ? [
                 'id' => $turno->id,
