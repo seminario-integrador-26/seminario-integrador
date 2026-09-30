@@ -1,0 +1,1 @@
+Atalaya: el libro de guardia del Centro de Monitoreo de Villa María, ahora digital. Mapa con 394 puntos de monitoreo, eventos clasificados e inmutables, turnos y roles. UTN FRVM · Laravel + Inertia/React + Leaflet.

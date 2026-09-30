@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atalaya · Prototipos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  fontFamily: { sans: ['Inter','system-ui','sans-serif'], mono: ['JetBrains Mono','ui-monospace','monospace'] },
+  colors: { atalaya: {
+    canvas:'#031427', surface:'#0B1C30', elevated:'#0F2847', border:'#1E3A5F',
+    cyan:'#00D2FF', 'blue-ops':'#0284C7', sky:'#38BDF8', orange:'#F97316', amber:'#F59E0B', crimson:'#EF4444',
+    muted:'#94A3B8', dim:'#64748B' } } } } };
+</script>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#031427; }
+  .grid-1px { display:grid; gap:1px; background:#1E3A5F; }
+  .panel { background:#0B1C30; }
+  .field { display:block; width:100%; margin-top:4px; background:#031427; border:1px solid #1E3A5F; color:#fff; font:12px 'JetBrains Mono',monospace; padding:8px 10px; outline:none; }
+  .field:focus { border-color:#00D2FF; box-shadow:0 0 0 1px #00D2FF; }
+  .lbl { font:700 11px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; color:#94A3B8; }
+  .btn { font:700 11px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.1em; padding:9px 16px; border:1px solid #00D2FF; background:rgba(0,210,255,.12); color:#00D2FF; cursor:pointer; }
+  .btn:hover { background:rgba(0,210,255,.25); }
+  .btn-ghost { font:700 11px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.1em; padding:9px 16px; border:1px solid #1E3A5F; color:#94A3B8; background:transparent; cursor:pointer; }
+  .th { padding:10px 16px; text-align:left; font:700 10px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.1em; color:#94A3B8; background:#031427; }
+  .td { padding:12px 16px; font:12px 'JetBrains Mono',monospace; color:#CBD5E1; border-top:1px solid #1E3A5F; vertical-align:top; }
+  .badge { display:inline-block; border:1px solid; padding:2px 6px; font:700 9px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.05em; }
+  .b-seg { color:#EF4444; border-color:#EF4444; background:rgba(239,68,68,.1); }
+  .b-conv { color:#F59E0B; border-color:#F59E0B; background:rgba(245,158,11,.1); }
+  .b-prev { color:#F97316; border-color:#F97316; background:rgba(249,115,22,.1); }
+  .b-inf { color:#00D2FF; border-color:#00D2FF; background:rgba(0,210,255,.1); }
+  .navlink { font:600 12px 'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.08em; color:#94A3B8; padding:8px 12px; border-bottom:2px solid transparent; cursor:pointer; background:none; }
+  .navlink.on { color:#fff; border-color:#00D2FF; }
+  .screen { display:none; } .screen.on { display:block; }
+  .mapa .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(1.05) saturate(.55); }
+  .leaflet-container { background:#031427; font-family:'JetBrains Mono',monospace; }
+  .proto-bar button { font:600 11px 'JetBrains Mono',monospace; color:#94A3B8; padding:6px 10px; border:1px solid #1E3A5F; background:#0B1C30; white-space:nowrap; cursor:pointer; }
+  .proto-bar button.on { color:#031427; background:#00D2FF; border-color:#00D2FF; }
+  .feed-item { cursor:pointer; } .feed-item:hover { background:rgba(3,20,39,.5); }
+  .feed-item.on { background:rgba(15,40,71,.7); box-shadow: inset 2px 0 0 #00D2FF; }
+  .perm { display:flex; align-items:center; gap:8px; font:12px 'JetBrains Mono',monospace; color:#CBD5E1; padding:3px 0; }
+  .perm input { accent-color:#00D2FF; }
+</style>
+</head>
+<body class="min-h-screen font-sans text-white">
+
+<!-- Barra de prototipo: salta entre pantallas (no forma parte del producto) -->
+<div class="proto-bar sticky top-0 z-[2000] flex items-center gap-2 overflow-x-auto border-b border-atalaya-border bg-[#020d1a] px-4 py-2">
+  <span class="mr-2 shrink-0 font-mono text-[10px] uppercase tracking-widest text-atalaya-dim">Prototipo ▸</span>
+  <button data-go="login">01 Login</button>
+  <button data-go="panel">02 Panel</button>
+  <button data-go="registrar">03 Registrar evento</button>
+  <button data-go="eventos">04 Consulta</button>
+  <button data-go="turnos">05 Turnos</button>
+  <button data-go="usuarios">06 Usuarios</button>
+  <button data-go="roles">07 Roles y permisos</button>
+  <button data-go="logs">08 Auditoría</button>
+</div>
+
+<!-- ============ 01 LOGIN ============ -->
+<section id="s-login" class="screen">
+  <div class="flex min-h-[calc(100vh-45px)] flex-col items-center justify-center px-4 py-12">
+    <img src="assets/logo.png" alt="Atalaya" class="h-24 w-24 drop-shadow-[0_0_14px_rgba(0,210,255,.35)]" />
+    <div class="mt-3 font-mono text-2xl font-extrabold tracking-[.3em]">ATALAYA</div>
+    <div class="whitespace-nowrap font-mono text-[10px] uppercase tracking-wider text-atalaya-muted">Centro de Monitoreo Urbano · Villa María</div>
+    <form class="mt-8 w-full max-w-sm space-y-4 border border-atalaya-border bg-atalaya-surface p-6" onsubmit="event.preventDefault();go('panel')">
+      <div class="flex items-center justify-between">
+        <span class="font-mono text-xs font-bold uppercase tracking-widest">Iniciar sesión</span>
+        <span class="font-mono text-[10px] text-atalaya-cyan">● Sesión segura</span>
+      </div>
+      <div><label class="lbl">Usuario</label><input class="field" value="supervisor.demo" /></div>
+      <div><label class="lbl">Contraseña</label><input class="field" type="password" value="********" /></div>
+      <div class="flex items-center justify-between pt-2">
+        <a class="font-mono text-[11px] text-atalaya-muted underline">¿Olvidaste tu contraseña?</a>
+        <button class="btn">Ingresar</button>
+      </div>
+    </form>
+    <p class="mt-6 font-mono text-[10px] uppercase tracking-wider text-atalaya-dim">Sistema restringido · Acceso exclusivo personal autorizado</p>
+  </div>
+</section>
+
+<!-- ============ APP (layout autenticado) ============ -->
+<div id="app" class="hidden">
+  <nav class="sticky top-[45px] z-[1500] border-b border-atalaya-border bg-atalaya-surface">
+    <div class="flex h-16 items-center justify-between gap-4 px-6">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3">
+          <img src="assets/logo.png" class="h-10 w-10" alt="" />
+          <div>
+            <div class="flex items-center gap-2"><span class="font-mono text-base font-extrabold tracking-widest">ATALAYA</span>
+              <span class="border border-atalaya-border bg-atalaya-canvas px-1.5 py-0.5 font-mono text-[10px] uppercase text-atalaya-cyan">SOC v1.0</span></div>
+            <div class="whitespace-nowrap font-mono text-[10px] uppercase tracking-wider text-atalaya-muted">Centro de Monitoreo Urbano · Villa María</div>
+          </div>
+        </div>
+        <div class="hidden h-8 w-px bg-atalaya-border lg:block"></div>
+        <div class="hidden items-center md:flex">
+          <button class="navlink" data-go="panel">Panel</button>
+          <button class="navlink" data-go="eventos">Eventos</button>
+          <button class="navlink" data-go="registrar">Registrar</button>
+          <button class="navlink" data-go="turnos">Turnos</button>
+          <button class="navlink" data-go="usuarios">Usuarios</button>
+        </div>
+      </div>
+      <div class="hidden items-center gap-3 whitespace-nowrap font-mono text-xs xl:flex">
+        <span id="chip-turno" class="flex items-center gap-2 border border-atalaya-cyan bg-atalaya-cyan/10 px-2.5 py-1 text-[11px] uppercase tracking-wider text-atalaya-cyan"><span class="h-2 w-2 bg-atalaya-cyan"></span>Turno #42 · 07:00</span>
+        <span class="flex items-center gap-2 border border-atalaya-border bg-atalaya-canvas px-2.5 py-1 text-[11px] uppercase text-atalaya-muted"><span class="h-2 w-2 bg-atalaya-cyan"></span>Sistema: <b class="text-white">En línea</b></span>
+        <span class="border border-atalaya-border bg-atalaya-canvas px-2.5 py-1 font-semibold text-atalaya-cyan"><span class="mr-1.5 text-atalaya-dim">UTC-3</span><span id="reloj">00:00:00</span></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="rol-badge" class="border border-atalaya-orange bg-atalaya-orange/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-atalaya-orange">Supervisor</span>
+        <span id="user-chip" class="whitespace-nowrap border border-atalaya-border bg-atalaya-canvas px-3 py-1.5 font-mono text-xs">L. Fernández ▾</span>
+      </div>
+    </div>
+  </nav>
+  <div id="page-header" class="hidden border-b border-atalaya-border bg-atalaya-surface/50 px-8 py-3"><h2 class="font-mono text-sm font-bold uppercase tracking-widest"></h2></div>
+
+  <!-- ============ 02 PANEL ============ -->
+  <section id="s-panel" class="screen">
+    <div class="grid-1px grid-cols-2 border-b border-atalaya-border lg:grid-cols-4">
+      <div class="panel flex items-center gap-3 px-4 py-2">
+        <span class="font-mono text-xl font-extrabold" id="kpi-total">9</span>
+        <div class="font-mono"><div class="text-[10px] uppercase text-atalaya-muted">Eventos en turno <span class="text-atalaya-cyan">· En vivo</span></div>
+          <div class="flex gap-2 text-[10px] font-bold"><span class="text-atalaya-crimson">● 3 SEG</span><span class="text-atalaya-amber">● 3 CONV</span><span class="text-atalaya-orange">● 2 PREV</span><span class="font-normal text-atalaya-dim">1 INF</span></div></div>
+      </div>
+      <div class="panel flex items-center gap-3 px-4 py-2">
+        <span class="font-mono text-xl font-extrabold">394</span>
+        <div class="font-mono"><div class="text-[10px] uppercase text-atalaya-muted">Puntos de monitoreo</div><div class="text-[10px] text-atalaya-cyan">235 municipal · 159 provincial</div></div>
+      </div>
+      <div class="panel flex flex-col justify-center px-4 py-2 font-mono">
+        <div class="flex justify-between text-[10px] uppercase text-atalaya-muted"><span>Guardia vigente</span><span class="font-bold text-atalaya-orange">Turno #42</span></div>
+        <div class="text-[11px]">Desde 07:00 · L. Fernández · 05h 12m</div>
+      </div>
+      <div class="panel flex items-center gap-2 px-4 py-2 font-mono text-[10px]">
+        <button data-go="eventos" class="flex-1 border border-atalaya-border bg-atalaya-elevated px-2 py-1 font-bold uppercase tracking-wider text-atalaya-cyan">Consultar</button>
+        <span class="border border-atalaya-border px-2 py-1 uppercase text-atalaya-dim opacity-60" title="Pendiente">PDF/A</span>
+        <span class="border border-atalaya-border px-2 py-1 uppercase text-atalaya-dim opacity-60" title="Pendiente">.xlsx</span>
+      </div>
+    </div>
+    <div class="grid-1px grid-cols-1 lg:grid-cols-12" style="min-height:calc(100vh - 170px)">
+      <div class="panel relative flex flex-col lg:col-span-8">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-atalaya-border px-4 py-2.5">
+          <div class="flex items-center gap-3"><span class="font-mono text-xs font-bold uppercase tracking-widest">+ Situación geoespacial</span><span class="font-mono text-[10px] text-atalaya-dim">[ Villa María ]</span></div>
+          <div id="filtros-cat" class="flex flex-wrap gap-1 font-mono text-[10px]"></div>
+        </div>
+        <div class="relative flex-1" style="min-height:520px">
+          <div id="map" class="mapa absolute inset-0"></div>
+          <div class="absolute left-4 top-4 z-[1000] w-72">
+            <input class="field !mt-0 bg-atalaya-surface/95" placeholder="Buscar punto de monitoreo… (ej. PM-M-014)" />
+          </div>
+          <div class="pointer-events-none absolute bottom-4 left-4 z-[1000] space-y-1 border border-atalaya-border bg-atalaya-surface/90 p-3 font-mono text-[10px]">
+            <div class="mb-1 font-bold tracking-wider">[ Leyenda ]</div>
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 border border-atalaya-crimson bg-atalaya-crimson/50"></span><span class="text-atalaya-muted">Seguridad Pública</span></div>
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 border border-atalaya-amber bg-atalaya-amber/50"></span><span class="text-atalaya-muted">Convivencia Urbana</span></div>
+            <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 border border-atalaya-orange bg-atalaya-orange/50"></span><span class="text-atalaya-muted">Prevención</span></div>
+            <div class="flex items-center gap-2"><span class="h-2 w-2 bg-atalaya-cyan"></span><span class="text-atalaya-muted">Punto de monitoreo</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel flex flex-col lg:col-span-4">
+        <div class="space-y-2 border-b border-atalaya-border px-4 py-2.5">
+          <div class="flex items-center justify-between"><span class="font-mono text-xs font-bold uppercase tracking-widest">+ Feed de eventos registrados</span>
+            <button data-go="registrar" class="border border-atalaya-cyan bg-atalaya-cyan/10 px-2 py-1 font-mono text-[10px] font-bold uppercase text-atalaya-cyan">[ + Registrar ]</button></div>
+        </div>
+        <div id="feed" class="flex-1 overflow-y-auto" style="max-height:560px"></div>
+        <div id="detalle" class="hidden border-t border-atalaya-border p-4 font-mono text-xs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 REGISTRAR ============ -->
+  <section id="s-registrar" class="screen">
+    <div class="mx-auto max-w-3xl space-y-4 px-6 py-10">
+      <div class="border border-atalaya-cyan/40 bg-atalaya-cyan/10 px-4 py-3 font-mono text-xs text-atalaya-cyan">Turno #42 abierto el 30/09/2026 a las 07:00 por L. Fernández. El evento quedará asociado a este turno.</div>
+      <div id="ok-registro" class="hidden border border-emerald-500/50 bg-emerald-500/10 px-4 py-3 font-mono text-xs text-emerald-400">✓ Evento AT-2026-0138 registrado en el Turno #42. Es inmutable: cualquier corrección se hace con fe de errata.</div>
+      <form class="space-y-6 border border-atalaya-border bg-atalaya-surface p-6" onsubmit="event.preventDefault();registrar()">
+        <div><label class="lbl">Tipo de evento <span class="text-atalaya-crimson">*</span></label>
+          <select id="f-tipo" class="field">
+            <option value="">Seleccioná un tipo…</option>
+            <optgroup label="Prevención"><option>Persona en actitud sospechosa</option></optgroup>
+            <optgroup label="Convivencia Urbana"><option>Ruidos molestos</option><option>Disturbios en vía pública</option></optgroup>
+            <optgroup label="Seguridad Pública"><option selected>Accidente de tránsito</option><option>Robo / hurto</option></optgroup>
+            <optgroup label="Informativo"><option>Falla de cámara</option><option>Novedad de guardia</option></optgroup>
+          </select></div>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div><label class="lbl">Fecha del hecho <span class="text-atalaya-crimson">*</span></label><input class="field" type="date" value="2026-09-30" /></div>
+          <div><label class="lbl">Horario del hecho <span class="text-atalaya-crimson">*</span></label><input class="field" type="time" step="1" value="12:08:41" /></div>
+        </div>
+        <div><label class="lbl">Punto de monitoreo <span class="text-atalaya-crimson">*</span></label>
+          <input class="field" value="PM-M-014 · Bv. España y Av. Sabattini (municipal)" />
+          <div id="map2" class="mapa mt-3 h-72 w-full border border-atalaya-border"></div></div>
+        <div><label class="lbl">Timestamp del video (hh:mm:ss) <span class="text-atalaya-crimson">*</span></label><input class="field" type="time" step="1" value="12:07:55" /></div>
+        <div><label class="lbl">Descripción</label><textarea class="field" rows="3">Colisión entre auto y moto en la intersección. Se observa conductor de la moto en el suelo.</textarea></div>
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-atalaya-dim"><span class="text-atalaya-crimson">*</span> Obligatorio. El evento no se puede editar una vez registrado.</p>
+          <button class="btn">Registrar evento</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ 04 CONSULTA ============ -->
+  <section id="s-eventos" class="screen">
+    <div class="mx-auto max-w-7xl space-y-4 px-6 py-10">
+      <div class="grid grid-cols-1 gap-4 border border-atalaya-border bg-atalaya-surface p-6 md:grid-cols-3 lg:grid-cols-6">
+        <div class="lg:col-span-2"><label class="lbl">Tipo</label><select class="field"><option>Todos</option></select></div>
+        <div><label class="lbl">Categoría</label><select class="field"><option>Todas</option><option>Seguridad Pública</option></select></div>
+        <div class="lg:col-span-3"><label class="lbl">Punto de monitoreo</label><select class="field"><option>Todos</option></select></div>
+        <div><label class="lbl">Desde</label><input class="field" type="date" value="2026-09-01" /></div>
+        <div><label class="lbl">Hasta</label><input class="field" type="date" value="2026-09-30" /></div>
+        <div class="flex items-end justify-end gap-3 md:col-span-3 lg:col-span-4"><button class="btn-ghost">Limpiar</button><button class="btn">Buscar</button></div>
+      </div>
+      <p class="text-sm text-atalaya-muted">9 eventos encontrados.</p>
+      <div class="overflow-x-auto border border-atalaya-border bg-atalaya-surface">
+        <table class="min-w-full"><thead><tr><th class="th">#</th><th class="th">Fecha / hora</th><th class="th">Tipo</th><th class="th">Ubicación</th><th class="th">Descripción</th><th class="th">Registrado por</th></tr></thead>
+        <tbody id="tabla-eventos"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 TURNOS ============ -->
+  <section id="s-turnos" class="screen">
+    <div class="mx-auto max-w-6xl space-y-6 px-6 py-10">
+      <form class="border border-atalaya-cyan/40 bg-atalaya-cyan/10 p-6" onsubmit="event.preventDefault()">
+        <div class="flex items-center justify-between"><h3 class="font-mono text-xs font-bold uppercase tracking-widest text-atalaya-cyan">Turno #42 abierto</h3><span class="font-mono text-[11px] text-atalaya-muted">Desde 07:00 · 30/09/2026</span></div>
+        <div class="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]"><span class="border border-atalaya-border bg-atalaya-canvas px-2 py-0.5">L. Fernández</span><span class="border border-atalaya-border bg-atalaya-canvas px-2 py-0.5">M. Rossi</span><span class="border border-atalaya-border bg-atalaya-canvas px-2 py-0.5">J. Paz</span></div>
+        <div class="mt-4"><label class="lbl">Novedades pendientes <span class="font-normal normal-case text-atalaya-dim">(opcional)</span></label><textarea class="field" rows="3" placeholder="Novedades a dejar asentadas para el próximo turno…"></textarea></div>
+        <div class="mt-4 flex justify-end"><button class="btn">Cerrar turno</button></div>
+      </form>
+      <div class="border border-atalaya-border bg-atalaya-surface">
+        <div class="border-b border-atalaya-border px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest">Historial de turnos</div>
+        <div class="overflow-x-auto"><table class="min-w-full"><thead><tr><th class="th">#</th><th class="th">Fecha</th><th class="th">Supervisor</th><th class="th">Inicio</th><th class="th">Fin</th><th class="th">Personal</th><th class="th">Eventos</th><th class="th">Estado</th></tr></thead>
+        <tbody id="tabla-turnos"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 USUARIOS ============ -->
+  <section id="s-usuarios" class="screen">
+    <div class="mx-auto max-w-7xl space-y-4 px-6 py-10">
+      <div class="flex justify-end"><button class="btn">Nuevo usuario</button></div>
+      <div class="overflow-x-auto border border-atalaya-border bg-atalaya-surface">
+        <table class="min-w-full"><thead><tr><th class="th">Nombre</th><th class="th">Usuario</th><th class="th">Email</th><th class="th">Rol</th><th class="th">Alta</th><th class="th text-right">Acciones</th></tr></thead>
+        <tbody id="tabla-usuarios"></tbody></table>
+      </div>
+      <p class="font-mono text-[11px] text-atalaya-dim">Login por nombre de usuario. El Administrador de sistema blanquea la clave de los demás roles; entre Administradores de sistema no.</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 ROLES ============ -->
+  <section id="s-roles" class="screen">
+    <div class="mx-auto max-w-7xl space-y-6 px-6 py-10">
+      <div id="roles-grid" class="grid gap-4 md:grid-cols-3"></div>
+      <div class="flex items-end gap-3 border border-atalaya-border bg-atalaya-surface p-6">
+        <div class="flex-1"><label class="lbl">Nuevo permiso</label><input class="field" placeholder="ej. estadisticas.exportar" /></div><button class="btn">Crear permiso</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 LOGS ============ -->
+  <section id="s-logs" class="screen">
+    <div class="mx-auto max-w-7xl space-y-4 px-6 py-10">
+      <p class="text-sm text-atalaya-muted">Movimientos de los usuarios en el sistema: quién, con qué rol, desde qué IP y qué acción realizó.</p>
+      <div class="overflow-x-auto border border-atalaya-border bg-atalaya-surface">
+        <table class="min-w-full"><thead><tr><th class="th">Fecha y hora</th><th class="th">Usuario</th><th class="th">Rol</th><th class="th">Acción</th><th class="th">IP</th><th class="th">Detalle</th></tr></thead>
+        <tbody id="tabla-logs"></tbody></table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Datos ficticios de demostración (nombres, PMs y hechos inventados).
+const CAT = { seg:['Seguridad Pública','b-seg','#EF4444'], conv:['Convivencia Urbana','b-conv','#F59E0B'], prev:['Prevención','b-prev','#F97316'], inf:['Informativo','b-inf','#00D2FF'] };
+const EVENTOS = [
+  {c:'AT-2026-0137', cat:'seg',  tipo:'Accidente de tránsito', desc:'Colisión auto–moto. Se solicita SAME.', pm:'PM-M-014 · Bv. España y Av. Sabattini', h:'12:08', ll:[-32.4101,-63.2398]},
+  {c:'AT-2026-0136', cat:'conv', tipo:'Disturbios en vía pública', desc:'Grupo de personas discutiendo en la vereda.', pm:'PM-M-087 · Plaza Centenario', h:'11:47', ll:[-32.4066,-63.2440]},
+  {c:'AT-2026-0135', cat:'prev', tipo:'Persona en actitud sospechosa', desc:'Individuo merodeando vehículos estacionados.', pm:'PM-P-021 · Costanera y Mendoza', h:'11:15', ll:[-32.4162,-63.2361]},
+  {c:'AT-2026-0134', cat:'seg',  tipo:'Robo / hurto', desc:'Arrebato de celular a transeúnte.', pm:'PM-M-102 · Bv. Vélez Sarsfield', h:'10:52', ll:[-32.4030,-63.2475]},
+  {c:'AT-2026-0133', cat:'inf',  tipo:'Novedad de guardia', desc:'Relevo de operador en consola 3.', pm:null, h:'10:30', ll:null},
+  {c:'AT-2026-0132', cat:'conv', tipo:'Ruidos molestos', desc:'Música a alto volumen en local comercial.', pm:'PM-M-155 · Barrio Rivadavia', h:'09:58', ll:[-32.4225,-63.2290]},
+  {c:'AT-2026-0131', cat:'seg',  tipo:'Accidente de tránsito', desc:'Choque leve, sin heridos.', pm:'PM-P-064 · RN158 y Av. Perón', h:'09:12', ll:[-32.4188,-63.2215]},
+  {c:'AT-2026-0130', cat:'prev', tipo:'Persona en actitud sospechosa', desc:'Merodeo en ingreso a escuela.', pm:'PM-M-033 · Barrio Belgrano', h:'08:40', ll:[-32.3985,-63.2502]},
+  {c:'AT-2026-0129', cat:'conv', tipo:'Disturbios en vía pública', desc:'Discusión entre conductores.', pm:'PM-M-061 · Av. Sarmiento', h:'07:35', ll:[-32.4135,-63.2330]},
+];
+const $ = (s) => document.querySelector(s);
+let filtro = 'todas', map, map2, markers = [], sel = null;
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  $('#s-' + id).classList.add('on');
+  $('#app').classList.toggle('hidden', id === 'login');
+  document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === id));
+  const titulos = { registrar:'Registrar evento', eventos:'Eventos', turnos:'Turnos de guardia', usuarios:'Usuarios', roles:'Roles y permisos', logs:'Logs de auditoría' };
+  $('#page-header').classList.toggle('hidden', !titulos[id]);
+  $('#page-header h2').textContent = titulos[id] || '';
+  const admin = ['usuarios','roles','logs'].includes(id);
+  const rb = $('#rol-badge');
+  rb.textContent = admin ? 'Administrador de sistema' : 'Supervisor';
+  $('#chip-turno').style.display = admin ? 'none' : '';
+  $('#user-chip').textContent = admin ? 'M. Vera ▾' : 'L. Fernández ▾';
+  rb.className = 'whitespace-nowrap border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest ' + (admin ? 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan' : 'border-atalaya-orange bg-atalaya-orange/10 text-atalaya-orange');
+  try { history.replaceState(null, '', '#' + id); } catch (e) {}
+  window.scrollTo(0, 0);
+  if (id === 'panel') initMap(); if (id === 'registrar') initMap2();
+}
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+
+function icon(color, cam) {
+  return L.divIcon({ className:'', iconSize: cam ? [14,14] : [22,22], iconAnchor: cam ? [7,7] : [11,11],
+    html: cam ? `<div style="width:14px;height:14px;background:#031427;border:1.5px solid #00D2FF;display:flex;align-items:center;justify-content:center"><div style="width:5px;height:5px;background:#00D2FF"></div></div>`
+              : `<div style="width:22px;height:22px;border-radius:50%;background:#031427;border:2px solid ${color};box-shadow:0 0 10px ${color}88;display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:${color}"></div></div>` });
+}
+function pms() { // puntos de monitoreo pseudoaleatorios, deterministas
+  let s = 7, r = () => (s = (s * 9301 + 49297) % 233280) / 233280, out = [];
+  for (let i = 0; i < 60; i++) out.push([-32.423 + r() * .04, -63.285 + r() * .075]);
+  return out;
+}
+// Base cartográfica: imagen local de Villa María (teselas OSM pre-descargadas y oscurecidas).
+// Abierto como file:// el navegador no envía Referer y OSM bloquea las teselas en vivo.
+const BOUNDS = [[-32.42634, -63.29224], [-32.37996, -63.20435]];
+function baseMap(m) {
+  L.imageOverlay('assets/map-dark.jpg', BOUNDS, { attribution: '&copy; OpenStreetMap' }).addTo(m);
+  m.setMaxBounds(BOUNDS); m.options.minZoom = 15; m.options.maxZoom = 17;
+}
+function initMap() {
+  if (map) { map.invalidateSize(); return; }
+  map = L.map('map', { zoomControl:false }).setView([-32.4095, -63.2403], 15);
+  baseMap(map);
+  pms().forEach(ll => L.marker(ll, { icon: icon(0, true) }).addTo(map));
+  renderPanel();
+}
+function initMap2() {
+  if (map2) { map2.invalidateSize(); return; }
+  map2 = L.map('map2', { zoomControl:false }).setView([-32.4101, -63.2398], 15);
+  baseMap(map2);
+  pms().forEach(ll => L.marker(ll, { icon: icon(0, true) }).addTo(map2));
+  L.marker([-32.4101, -63.2398], { icon: icon('#00D2FF') }).addTo(map2);
+}
+function renderPanel() {
+  const cats = ['seg','conv','prev'];
+  $('#filtros-cat').innerHTML = [`<button data-f="todas" class="border px-2 py-1 uppercase ${filtro==='todas'?'border-atalaya-cyan bg-atalaya-cyan/20 text-white':'border-atalaya-border text-atalaya-muted'}">Todos (${EVENTOS.length})</button>`]
+    .concat(cats.map(k => { const on = filtro === k, n = EVENTOS.filter(e => e.cat === k).length;
+      return `<button data-f="${k}" class="border px-2 py-1 uppercase ${on ? 'text-white' : 'border-atalaya-border text-atalaya-muted'}" style="${on ? `border-color:${CAT[k][2]};background:${CAT[k][2]}33` : ''}">● ${CAT[k][0]} (${n})</button>`; })).join('');
+  document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filtro = b.dataset.f; renderPanel(); });
+  const lista = EVENTOS.filter(e => filtro === 'todas' || e.cat === filtro);
+  $('#feed').innerHTML = lista.map(e => `
+    <div class="feed-item border-b border-atalaya-border p-3.5 font-mono ${sel === e.c ? 'on' : ''}" data-ev="${e.c}">
+      <div class="mb-1.5 flex items-center justify-between"><span class="text-xs font-bold tracking-wider">${e.c}</span><span class="badge ${CAT[e.cat][1]}">${CAT[e.cat][0]}</span></div>
+      <div class="mb-1 font-sans text-xs font-medium">${e.tipo}</div>
+      <div class="font-sans text-[11px] text-atalaya-muted">${e.desc}</div>
+      <div class="mt-2 flex justify-between text-[11px] text-atalaya-muted"><span class="truncate">${e.pm ?? 'Sin ubicación'}</span><span class="text-atalaya-dim">${e.h}</span></div>
+    </div>`).join('');
+  document.querySelectorAll('[data-ev]').forEach(d => d.onclick = () => seleccionar(d.dataset.ev));
+  markers.forEach(m => m.remove());
+  markers = lista.filter(e => e.ll).map(e => L.marker(e.ll, { icon: icon(CAT[e.cat][2]) }).on('click', () => seleccionar(e.c)).addTo(map));
+}
+function seleccionar(c) {
+  sel = c; const e = EVENTOS.find(x => x.c === c); renderPanel();
+  if (e.ll) map.flyTo(e.ll, 16, { duration: .6 });
+  const d = $('#detalle'); d.classList.remove('hidden');
+  d.innerHTML = `<div class="mb-2 flex items-center justify-between border-b border-atalaya-border pb-2"><b>Detalle: ${e.c}</b><span class="border border-atalaya-border px-2.5 py-1 text-[10px] font-bold uppercase text-atalaya-dim opacity-60">[ + Fe de errata ]</span></div>
+    <div class="space-y-1.5 text-[11px]"><div><span class="text-atalaya-muted">TIPO: </span>${e.tipo}</div><div><span class="text-atalaya-muted">UBICACIÓN: </span>${e.pm ?? 'No requiere ubicación'}</div>
+    ${e.ll ? `<div><span class="text-atalaya-muted">COORD: </span><span class="text-atalaya-cyan">${e.ll[0].toFixed(4)}, ${e.ll[1].toFixed(4)}</span></div>` : ''}
+    <div><span class="text-atalaya-muted">REGISTRADO: </span>30/09/2026 ${e.h} · L. Fernández · turno #42</div></div>`;
+}
+function registrar() {
+  $('#ok-registro').classList.remove('hidden');
+  if (!EVENTOS.find(e => e.c === 'AT-2026-0138')) {
+    EVENTOS.unshift({c:'AT-2026-0138', cat:'seg', tipo:'Accidente de tránsito', desc:'Colisión entre auto y moto en la intersección.', pm:'PM-M-014 · Bv. España y Av. Sabattini', h:'12:08', ll:[-32.4109,-63.2385]});
+    $('#kpi-total').textContent = EVENTOS.length; renderTablas(); if (map) renderPanel();
+  }
+  window.scrollTo(0, 0);
+}
+function renderTablas() {
+  $('#tabla-eventos').innerHTML = EVENTOS.map((e, i) => `<tr><td class="td text-atalaya-dim">${e.c.slice(-4)}</td><td class="td whitespace-nowrap text-white">30/09/2026<div class="text-[11px] text-atalaya-dim">${e.h}</div></td>
+    <td class="td"><div class="font-sans font-medium text-white">${e.tipo}</div><span class="badge ${CAT[e.cat][1]} mt-1">${CAT[e.cat][0]}</span></td>
+    <td class="td">${e.pm ?? '—'}</td><td class="td max-w-md font-sans text-atalaya-muted">${e.desc}</td><td class="td whitespace-nowrap">L. Fernández</td></tr>`).join('');
+  const T = [[42,'30/09/2026','L. Fernández','07:00','—','L. Fernández, M. Rossi, J. Paz',EVENTOS.length,1],[41,'29/09/2026','A. Quiroga','23:00','07:00 (30/09/2026)','A. Quiroga, S. Ledesma',6,0],[40,'29/09/2026','C. Benítez','15:00','23:00','C. Benítez, R. Vera, P. Sosa',14,0],[39,'29/09/2026','L. Fernández','07:00','15:00','L. Fernández, M. Rossi',11,0]];
+  $('#tabla-turnos').innerHTML = T.map(t => `<tr><td class="td text-atalaya-dim">${t[0]}</td><td class="td whitespace-nowrap text-white">${t[1]}</td><td class="td text-white">${t[2]}</td><td class="td">${t[3]}</td><td class="td whitespace-nowrap">${t[4]}</td><td class="td">${t[5]}</td><td class="td">${t[6]}</td>
+    <td class="td">${t[7] ? '<span class="badge b-inf">Abierto</span>' : '<span class="badge" style="color:#64748B;border-color:#1E3A5F">Cerrado</span>'}</td></tr>`).join('');
+  const U = [['Laura Fernández','lfernandez','l.fernandez@example.org','Supervisor'],['Andrés Quiroga','aquiroga','a.quiroga@example.org','Supervisor'],['Sofía Ledesma','sledesma','s.ledesma@example.org','Administrativo'],['Martín Vera','mvera','m.vera@example.org','Administrador de sistema']];
+  const rc = r => r === 'Supervisor' ? 'b-prev' : r === 'Administrativo' ? '' : 'b-inf';
+  $('#tabla-usuarios').innerHTML = U.map(u => `<tr><td class="td font-sans text-white">${u[0]}</td><td class="td">${u[1]}</td><td class="td">${u[2]}</td>
+    <td class="td"><span class="badge ${rc(u[3])}" style="${rc(u[3]) ? '' : 'color:#94A3B8;border-color:#94A3B8'}">${u[3]}</span></td><td class="td">12/09/2026</td>
+    <td class="td text-right whitespace-nowrap"><span class="text-atalaya-cyan">Editar</span> · <span class="${u[3]==='Administrador de sistema'?'text-atalaya-dim line-through':'text-atalaya-amber'}">Blanquear clave</span> · <span class="text-atalaya-crimson">Eliminar</span></td></tr>`).join('');
+  const P = ['eventos.registrar','eventos.consultar','erratas.crear','turnos.gestionar','estadisticas.ver','dashboards.ver','reportes.exportar','usuarios.gestionar'];
+  const R = { 'Supervisor':['eventos.registrar','eventos.consultar','erratas.crear','turnos.gestionar'], 'Administrativo':['eventos.consultar','estadisticas.ver','dashboards.ver','reportes.exportar'], 'Administrador de sistema':['eventos.consultar','estadisticas.ver','dashboards.ver','reportes.exportar','usuarios.gestionar'] };
+  $('#roles-grid').innerHTML = Object.entries(R).map(([r, ps]) => `<div class="border border-atalaya-border bg-atalaya-surface p-6"><h3 class="text-lg font-semibold">${r}</h3>
+    <p class="mt-1 text-xs uppercase tracking-wider text-atalaya-dim">${ps.length} permiso(s)</p><ul class="mt-3">${P.map(p => `<li><label class="perm"><input type="checkbox" ${ps.includes(p)?'checked':''} ${r==='Administrador de sistema'&&p==='usuarios.gestionar'?'disabled':''}/> ${p}</label></li>`).join('')}</ul>
+    <button class="btn mt-4 w-full">Guardar</button></div>`).join('');
+  const LG = [['30/09/2026 12:08:52','lfernandez','Supervisor','Evento registrado','10.0.2.14','AT-2026-0137'],['30/09/2026 07:00:12','lfernandez','Supervisor','Turno abierto','10.0.2.14','Turno #42'],['30/09/2026 06:59:40','lfernandez','Supervisor','Inicio de sesión','10.0.2.14','—'],['30/09/2026 06:58:03','aquiroga','Supervisor','Intento fallido','10.0.2.21','Contraseña incorrecta'],['29/09/2026 18:20:44','mvera','Administrador de sistema','Permisos actualizados','10.0.1.5','Administrativo'],['29/09/2026 18:11:09','mvera','Administrador de sistema','Usuario creado','10.0.1.5','sledesma']];
+  $('#tabla-logs').innerHTML = LG.map(l => `<tr>${l.map((c, i) => `<td class="td ${i===3?(c==='Intento fallido'?'text-atalaya-crimson':'text-white'):''}">${c}</td>`).join('')}</tr>`).join('');
+}
+setInterval(() => { $('#reloj').textContent = new Date().toLocaleTimeString('es-AR', { hour12:false }); }, 1000);
+renderTablas();
+go((location.hash || '#login').slice(1) in { login:1, panel:1, registrar:1, eventos:1, turnos:1, usuarios:1, roles:1, logs:1 } ? location.hash.slice(1) || 'login' : 'login');
+</script>
+</body>
+</html>
