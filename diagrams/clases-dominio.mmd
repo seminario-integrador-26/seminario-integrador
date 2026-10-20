@@ -1,0 +1,222 @@
+%% Diagrama de clases (Mermaid) — Sistema de Videovigilancia
+%% Centro de Monitoreo Villa María (UTN FRVM — Seminario Integrador)
+%% Fuente: app/Models (relaciones Eloquent reales) y database/migrations.
+%% Visualizar en https://mermaid.live o con: mmdc -i clases-dominio.mmd -o clases-dominio.png
+classDiagram
+    direction LR
+
+    %% ==================== Autenticación y usuarios ====================
+    class User {
+        +bigint id
+        +string name
+        +string username «unique»
+        +string email «unique»
+        +datetime email_verified_at
+        +string password «hashed»
+        +int intentos_fallidos
+        +datetime bloqueado_hasta
+        +eventos() HasMany
+        +turnos() HasMany
+        +hasRole(rol) bool
+    }
+    note for User "Roles (spatie/laravel-permission):\nSupervisor · Administrativo ·\nAdministrador de sistema.\nLogin por username (US-001)."
+
+    class AuditoriaAcceso {
+        +bigint id
+        +bigint user_id
+        +string email
+        +string rol
+        +string evento
+        +string descripcion
+        +string ip_address
+        +string user_agent
+        +datetime created_at
+        +user() BelongsTo
+    }
+    note for AuditoriaAcceso "Bitácora INMUTABLE (sin updated_at):\nun registro por acción\n(login, bloqueo, errata, exportación...)."
+
+    %% ==================== Núcleo del dominio ====================
+    class Evento {
+        +bigint id
+        +bigint tipo_evento_id
+        +bigint punto_monitoreo_id «nullable»
+        +bigint turno_id
+        +bigint usuario_id
+        +datetime fecha_hora
+        +string timestamp_video
+        +string descripcion
+        +datetime created_at
+        +vigentes() Builder$
+        +valoresVigentes() array
+        +tipoEvento() BelongsTo
+        +puntoMonitoreo() BelongsTo
+        +turno() BelongsTo
+        +usuario() BelongsTo
+        +notificaciones() HasMany
+        +erratas() HasMany
+    }
+    note for Evento "INMUTABLE tras su creación:\nno se edita ni se elimina;\ntoda corrección va por Errata.\nLectura de valores corregidos:\nEvento::vigentes() (vista eventos_vigentes)."
+
+    class Errata {
+        +bigint id
+        +bigint evento_id
+        +bigint usuario_id
+        +string campo_corregido
+        +string valor_anterior
+        +string valor_nuevo
+        +string motivo
+        +datetime created_at
+        +evento() BelongsTo
+        +autor() BelongsTo
+    }
+    note for Errata "«Fe de errata»: único mecanismo\nde corrección. También inmutable."
+
+    class Turno {
+        +bigint id
+        +bigint supervisor_id
+        +date fecha
+        +time hora_inicio
+        +time hora_fin «nullable»
+        +json personal_presente
+        +date fecha_fin «nullable»
+        +text novedades_pendientes
+        +abierto() scope$
+        +activo() Turno?$
+        +activoDe(id) Turno?$
+        +estaAbierto() bool
+        +supervisor() BelongsTo
+        +eventos() HasMany
+    }
+    note for Turno "Turno de guardia. Abierto mientras\nhora_fin es null. Todo evento se\nasocia al turno abierto al cargarlo."
+
+    %% ==================== Catálogos de clasificación ====================
+    class GrupoEvento {
+        +bigint id
+        +string codigo «unique»
+        +string nombre
+        +string descripcion
+        +opciones() array$
+        +tiposEvento() HasMany
+    }
+    note for GrupoEvento "Policía · Seguridad Ciudadana ·\nOficios Recepcionados."
+
+    class TipoEvento {
+        +bigint id
+        +bigint grupo_evento_id
+        +string nombre
+        +string descripcion
+        +bool requiere_ubicacion
+        +bool es_cuantificable
+        +bool notifica
+        +grupoEvento() BelongsTo
+        +eventos() HasMany
+        +gruposInteresados() BelongsToMany
+    }
+    note for TipoEvento "requiere_ubicacion=false → el evento\npuede no tener PuntoMonitoreo.\nes_cuantificable=false → fuera de\nestadísticas. notifica se deriva de\ntener grupos asignados (US-028)."
+
+    %% ==================== Ubicación ====================
+    class PuntoMonitoreo {
+        +bigint id
+        +string codigo
+        +string nombre
+        +bigint tipo_punto_monitoreo_id
+        +bigint barrio_id «nullable»
+        +bigint cuadrante_id «nullable»
+        +string descripcion
+        +float latitud
+        +float longitud
+        +paraMapa() Collection$
+        +tipoPuntoMonitoreo() BelongsTo
+        +barrio() BelongsTo
+        +cuadrante() BelongsTo
+        +eventos() HasMany
+    }
+    note for PuntoMonitoreo "Cámara o alarma. lat/long alimentan\nLeaflet + OpenStreetMap."
+
+    class TipoPuntoMonitoreo {
+        +bigint id
+        +string codigo
+        +string nombre
+        +string descripcion
+        +opciones() array$
+        +puntosMonitoreo() HasMany
+    }
+    note for TipoPuntoMonitoreo "Municipal · Provincial ·\nAlarma comunitaria."
+
+    class Barrio {
+        +bigint id
+        +string nombre
+        +puntosMonitoreo() HasMany
+    }
+
+    class Cuadrante {
+        +bigint id
+        +string nombre
+        +puntosMonitoreo() HasMany
+    }
+
+    %% ==================== Notificación ====================
+    class GrupoInteresado {
+        +bigint id
+        +string nombre
+        +string identificador_whatsapp
+        +string telegram_chat_id
+        +destinatarios(canal) array
+        +tiposEvento() BelongsToMany
+        +contactos() HasMany
+        +notificaciones() HasMany
+    }
+    note for GrupoInteresado "Destinatarios de notificaciones\n(ej. Guardia Local, Policía)."
+
+    class Contacto {
+        +bigint id
+        +bigint grupo_interesado_id
+        +string nombre
+        +string numero_whatsapp
+        +grupoInteresado() BelongsTo
+    }
+
+    class Notificacion {
+        +bigint id
+        +bigint evento_id
+        +bigint grupo_interesado_id
+        +string canal
+        +string mensaje
+        +string estado
+        +int intentos
+        +string error
+        +datetime enviada_at
+        +evento() BelongsTo
+        +grupoInteresado() BelongsTo
+    }
+    note for Notificacion "estado: pendiente | enviada | fallida.\nPermite reenvío manual (US-006/007)."
+
+    class Parametro {
+        +string clave «PK»
+        +int valor
+        +valor(clave) int$
+        +vigentes() array$
+    }
+    note for Parametro "Configuración del sistema (US-029):\nsesión, intentos de login, bloqueo,\nreintentos de notificación..."
+
+    %% ==================== Relaciones ====================
+    User "1" --> "0..*" AuditoriaAcceso : registra >
+    User "1 (Supervisor)" --> "0..*" Evento : autor >
+    User "1 (Supervisor)" --> "0..*" Turno : abre/cierra >
+    User "1" --> "0..*" Errata : autor >
+
+    Turno "1" --> "0..*" Evento : contiene >
+    Evento "1" --> "0..*" Errata : corrige (fe de errata) >
+
+    GrupoEvento "1" --> "0..*" TipoEvento : clasifica >
+    TipoEvento "1" --> "0..*" Evento : tipifica >
+    TipoEvento "0..*" -- "0..*" GrupoInteresado : notifica a\n(grupo_interesado_tipo_evento)
+
+    PuntoMonitoreo "0..1" --> "0..*" Evento : ubicación condicional >
+    TipoPuntoMonitoreo "1" --> "0..*" PuntoMonitoreo
+    Barrio "1" --> "0..*" PuntoMonitoreo
+    Cuadrante "1" --> "0..*" PuntoMonitoreo
+
+    GrupoInteresado "1" --> "0..*" Contacto : agrupa >
+    Evento "1" --> "0..*" Notificacion : dispara >
+    GrupoInteresado "1" --> "0..*" Notificacion : destinatario >
