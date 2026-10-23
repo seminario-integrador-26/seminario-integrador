@@ -407,6 +407,7 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                         <InputLabel htmlFor="tipo_evento_id" value="Tipo" />
                         <Select
                             id="tipo_evento_id"
+                            buscable
                             className="mt-1"
                             value={filtros.tipo_evento_id ?? ''}
                             onChange={(e) => filtrar({ tipo_evento_id: e.target.value || undefined })}

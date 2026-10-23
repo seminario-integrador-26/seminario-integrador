@@ -137,6 +137,7 @@ export default function Create({
                                 </InputLabel>
                                 <Select
                                     id="tipo_evento_id"
+                                    buscable
                                     className="mt-1"
                                     value={data.tipo_evento_id}
                                     onChange={(e) =>

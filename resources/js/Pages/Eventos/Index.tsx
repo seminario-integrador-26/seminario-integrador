@@ -298,6 +298,7 @@ export default function Index({
                                 <InputLabel htmlFor="tipo_evento_id" value="Tipo" />
                                 <Select
                                     id="tipo_evento_id"
+                                    buscable
                                     className="mt-1"
                                     value={form.tipo_evento_id}
                                     onChange={cambiar('tipo_evento_id')}

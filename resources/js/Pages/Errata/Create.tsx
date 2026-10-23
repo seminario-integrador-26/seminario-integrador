@@ -147,6 +147,7 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                                 </InputLabel>
                                 <Select
                                     id="tipo_evento_id"
+                                    buscable
                                     className="mt-1"
                                     value={data.tipo_evento_id}
                                     onChange={(e) => setData('tipo_evento_id', e.target.value)}

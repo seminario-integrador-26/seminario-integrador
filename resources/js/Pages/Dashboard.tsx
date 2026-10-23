@@ -336,6 +336,7 @@ export default function Dashboard({
                             </div>
                             <Select
                                 aria-label="Filtrar por tipo de evento"
+                                buscable
                                 value={filtroTipo}
                                 onChange={(e) => setFiltroTipo(e.target.value)}
                             >
