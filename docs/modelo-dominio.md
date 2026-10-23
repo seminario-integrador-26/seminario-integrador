@@ -29,7 +29,7 @@ esta tabla deja registradas las diferencias.
 | `TipoEvento.notifica` (bool) | `TipoEvento` N:M `GrupoInteresado` | Se notifica si el tipo tiene grupos asociados (US-006/US-028). |
 | — | `TipoEvento.requiere_ubicacion`, `es_cuantificable` | Reglas 3 y 4 de CLAUDE.md. Faltan en el diagrama. |
 | `Interesado` (sin atributos ni relaciones) | `GrupoInteresado` 1:N `Contacto` | Destinatarios de WhatsApp. |
-| `Turno.nombre` | `Turno.fecha`, `fecha_fin`, `personal_presente`, `novedades_pendientes`, `supervisor_id` | US-025. |
+| `Turno` | — (eventos internos Apertura de turno / Cierre de turno) | Rediseño 2026-10-23: sin tabla de turnos (`docs/rediseno-libro-guardia.md`). |
 | `Usuario.telefono` | — | No se pide en el backlog. |
 | `Auditoria` (sin atributos) | `AuditoriaAcceso` (usuario, rol, acción, detalle, IP, fecha) | US-026. |
 | — | `Errata` | Regla de negocio 1: falta en el diagrama. |
@@ -39,11 +39,10 @@ esta tabla deja registradas las diferencias.
 
 | Entidad | Campos | Notas |
 |---|---|---|
-| **Evento** | tipo_evento_id, punto_monitoreo_id (nullable), turno_id, usuario_id, fecha_hora, timestamp_video (hh:mm:ss, nullable), descripcion, created_at | **Inmutable** (sin updated_at; el modelo bloquea update/delete). Ligado al turno activo (RN5). Sin derivación. `timestamp_video` obligatorio con PM y no posterior al hecho; descripción obligatoria (US-003/US-005). |
+| **Evento** | tipo_evento_id, punto_monitoreo_id (nullable), usuario_id, fecha_hora, timestamp_video (hh:mm:ss, nullable), descripcion, created_at | **Inmutable** (sin updated_at; el modelo bloquea update/delete). Sin derivación. Abrir y cerrar el turno también son eventos (grupo Internos). `timestamp_video` obligatorio con PM y no posterior al hecho; descripción obligatoria (US-003/US-005). |
 | **Errata** | evento_id, campo_corregido, valor_anterior, valor_nuevo, motivo, usuario_id, created_at | Tabla separada, inmutable. Único mecanismo de corrección: una fila por campo corregido. |
 | **TipoEvento** | nombre, categoria, requiere_ubicacion (bool), es_cuantificable (bool) | Flags independientes. N:M con GrupoInteresado. |
 | **PuntoMonitoreo** | codigo (único), nombre, jurisdiccion (`municipal` \| `provincial`), zona (nullable), latitud, longitud (nullable) | 394 PM: 235 municipales + 159 provinciales. Coordenadas dentro de Villa María. Se cargan desde Puntos → Importación masiva (US-024). |
-| **Turno** | supervisor_id, fecha, hora_inicio, hora_fin, fecha_fin, personal_presente, novedades_pendientes | Lo abre y cierra un Supervisor (US-025). Abierto mientras `hora_fin` es null. |
 | **GrupoInteresado** | nombre, identificador_whatsapp (nullable) | N:M con TipoEvento; 1:N con Contacto. |
 | **Contacto** | nombre, numero_whatsapp, grupo_interesado_id | |
 | **Notificacion** | evento_id, grupo_interesado_id, canal, mensaje, estado, intentos, error, enviada_at | Un envío por evento y grupo: pendiente / enviada / fallida (US-006/US-007). |
@@ -52,11 +51,10 @@ esta tabla deja registradas las diferencias.
 
 ## Relaciones
 
-- Evento **N:1** TipoEvento, PuntoMonitoreo (nullable), Turno, Usuario.
+- Evento **N:1** TipoEvento, PuntoMonitoreo (nullable), Usuario.
 - Evento **1:N** Errata, Notificacion.
 - TipoEvento **N:M** GrupoInteresado (tabla pivote `grupo_interesado_tipo_evento`).
 - GrupoInteresado **1:N** Contacto, Notificacion.
-- Turno **N:1** Usuario (supervisor).
 - AuditoriaAcceso **N:1** Usuario (nullable: el email puede no existir).
 
 ## Categorías (TipoEvento.categoria)
@@ -65,7 +63,7 @@ Valor persistido → etiqueta (`TipoEvento::CATEGORIAS`):
 `prevencion` → Prevención · `convivencia_urbana` → Convivencia Urbana ·
 `seguridad_publica` → Seguridad Pública · `informativo` → Informativo
 
-Tablas: `tipos_evento`, `puntos_monitoreo`, `turnos`, `eventos`, `erratas`,
+Tablas: `grupos_evento`, `tipos_evento`, `puntos_monitoreo`, `eventos`, `erratas`,
 `grupos_interesados`, `contactos`, `grupo_interesado_tipo_evento`,
 `notificaciones`, `auditoria_accesos`.
 
@@ -80,7 +78,8 @@ Tablas: `tipos_evento`, `puntos_monitoreo`, `turnos`, `eventos`, `erratas`,
    estadísticas.
 3. Las correcciones **siempre** vía Errata; el Evento original nunca se
    sobreescribe.
-4. Todo Evento se asocia al **Turno activo** al momento de la carga
-   (`turno_id` obligatorio; no hay eventos sin turno).
+4. El turno vigente es la última **Apertura de turno** sin un **Cierre de
+   turno** posterior; se puede registrar sin turno vigente. El Libro de
+   guardia en PDF va de una Apertura al Cierre siguiente.
 
 <!-- TODO: tipos de dato exactos e índices -->

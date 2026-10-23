@@ -79,9 +79,9 @@ MAIL_SCHEME=            # en lugar de MAIL_ENCRYPTION
 
 - [ ] `deploy.sh` terminó con `Ghostscript ... (PDF/A OK)` y `/login -> HTTP 200`.
 - [ ] Login con el Administrador de sistema.
-- [ ] Como Supervisor: abrir turno, registrar un evento de un tipo con grupo
+- [ ] Como Supervisor: registrar una Apertura de turno, registrar un evento de un tipo con grupo
       asociado → llega a Telegram y el detalle muestra la notificación enviada.
-- [ ] Cerrar el turno → Reportes → descargar el PDF del turno.
+- [ ] Registrar el Cierre de turno → Reportes → descargar el Libro de guardia en PDF.
 - [ ] Eventos → exportar `.xlsx`; Análisis y Mapa cargan.
 - [ ] API: `curl -H "Authorization: Bearer <token>" https://atalayavm.duckdns.org/api/v1/eventos`.
 

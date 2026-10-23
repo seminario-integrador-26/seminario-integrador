@@ -12,7 +12,7 @@ el Supervisor (fecha y horario del hecho) ya estaba en hora local y **no** se to
 | Tabla | Columnas | Por qué |
 |---|---|---|
 | todas | `created_at`, `updated_at` | las pone Laravel con `now()` |
-| `turnos` | `fecha` + `hora_inicio`, `fecha_fin` + `hora_fin` | apertura/cierre con `Carbon::now()` (TurnoService) |
+| `turnos` | `fecha` + `hora_inicio`, `fecha_fin` + `hora_fin` | apertura/cierre con `Carbon::now()` (TurnoService). La tabla se eliminó el 2026-10-23: omitir sus `UPDATE` si ya se migró. |
 | `notificaciones` | `enviada_at` | `now()` al enviar |
 | `eventos` | **NO** tocar `fecha_hora` ni `timestamp_video` | los carga el Supervisor en hora local |
 

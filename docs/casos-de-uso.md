@@ -5,12 +5,14 @@
 
 ## CU01 — Abrir / cerrar turno de guardia (Supervisor)
 - **Actor:** Supervisor.
-- **Flujo:** al iniciar la guardia abre el turno (fecha, hora inicio); al
-  finalizar lo cierra (hora fin). Los eventos del turno se asocian al turno abierto.
+- **Flujo:** al iniciar la guardia registra el evento interno **Apertura de
+  turno** (personal presente en la descripción); al finalizar, **Cierre de
+  turno** (novedades pendientes). Rediseño 2026-10-23: no hay tabla de turnos
+  y los eventos no se asocian a un turno (`docs/rediseno-libro-guardia.md`).
 
 ## CU02 — Registrar evento (Supervisor)
 - **Actor:** Supervisor.
-- **Precondición:** autenticado con rol Supervisor y con un turno abierto.
+- **Precondición:** autenticado con rol Supervisor (no hace falta un turno abierto).
 - **Flujo principal:** carga tipo, fecha/horario, ubicación (si el tipo la
   requiere), descripción; el sistema guarda el evento (inmutable), lo asocia al
   turno activo y dispara la notificación por WhatsApp al grupo correspondiente.

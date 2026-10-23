@@ -12,8 +12,9 @@
   se corrigen con un registro de errata separado.
 - **RF3** — Clasificación obligatoria en al menos un eje: Prevención,
   Convivencia Urbana o Seguridad Pública (más los Informativos, no cuantificables).
-- **RF4** — Gestión de turnos de guardia (Supervisor): abrir y cerrar el turno;
-  todo evento queda asociado unívocamente al turno activo.
+- **RF4** — Gestión de turnos de guardia (Supervisor): abrir y cerrar el turno
+  registrando los eventos internos Apertura de turno / Cierre de turno
+  (rediseño 2026-10-23, `docs/rediseno-libro-guardia.md`).
 - **RF5** — Consulta (Administrativo / Administrador de sistema): búsquedas/filtros por tipo,
   fecha, horario, ubicación. La gestión de usuarios y de tipos/categorías de
   evento es exclusiva del **Administrador de sistema** (el Administrativo es solo lectura).

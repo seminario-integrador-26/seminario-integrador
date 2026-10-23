@@ -118,7 +118,7 @@ php artisan migrate:fresh --seed
 php artisan db:seed --class=EventoDemoSeeder
 ```
 
-El turno de hoy no se crea: lo abre el Supervisor desde el Panel.
+El turno de hoy no se crea: lo abre el Supervisor registrando una Apertura de turno.
 
 ## 7. Compilar / servir el frontend (Vite)
 
@@ -176,7 +176,7 @@ Por defecto `NOTIFICADOR_CANAL=log`: las notificaciones se escriben en
    sembrados).
 6. **Reiniciar la cola** (cortar y volver a correr `composer run dev`, o
    `php artisan queue:restart`): el worker no relee el `.env` solo.
-7. **Probar:** como `supervisor`, abrí turno y registrá un evento de uno de
+7. **Probar:** como `supervisor`, registrá una Apertura de turno y un evento de uno de
    esos tipos. Llega en segundos; en el detalle del evento se ve el estado de
    la notificación. Si falla, reintenta 3 veces y después aparece el botón
    **Reenviar**.

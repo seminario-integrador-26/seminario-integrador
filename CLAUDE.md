@@ -17,8 +17,9 @@ Roles vía `spatie/laravel-permission` — **solo estos tres**:
 
 - **Supervisor** — registra eventos (tipo, fecha, horario, ubicación si
   corresponde; evento **inmutable**); genera la **fe de errata**; abre y cierra
-  los **turnos de guardia**. Al registrar un evento se dispara la notificación
-  automática por WhatsApp al grupo según clasificación.
+  el **turno de guardia** registrando los eventos internos Apertura de turno /
+  Cierre de turno. Al registrar un evento se dispara la notificación
+  automática (Telegram o WhatsApp) según la matriz de Notificaciones.
 - **Administrativo** — **solo visualización**: consulta registros,
   búsquedas/filtros, estadísticas y dashboards, y exporta a `.xlsx` y PDF.
   **No** administra usuarios ni tipos de evento.
@@ -48,8 +49,12 @@ por email vía el flujo estándar de reseteo).
 4. Hay tipos **no cuantificables** que no entran en estadísticas
    (`TipoEvento.es_cuantificable`). Independiente del punto 3.
    // TODO: confirmar con el equipo cuáles; hoy la planilla real los cuenta a todos.
-5. **Evento ↔ turno activo.** Todo evento queda asociado unívocamente al turno
-   de guardia abierto al momento de la carga.
+5. **Libro de guardia sin turnos.** No hay tabla de turnos: el turno se abre y
+   se cierra registrando un evento interno (Apertura de turno / Cierre de
+   turno, grupo Internos) y se puede registrar sin una apertura vigente. El
+   turno vigente es la última Apertura sin Cierre posterior
+   (`LibroGuardiaService`). Cada fe de errata deja además una constancia
+   (evento interno Errata) en el libro. Ver `docs/rediseno-libro-guardia.md`.
 6. **Sin derivación ni seguimiento.** El sistema registra, clasifica, localiza,
    notifica y consulta; **no** deriva al área ni hace seguimiento posterior del
    evento (eso queda fuera de alcance por decisión del dominio final).
@@ -99,7 +104,7 @@ auth por token) · Leaflet + OpenStreetMap (react-leaflet) · **PostgreSQL** ·
 Laravel Queues (driver database) + Supervisor · notificaciones por **Telegram Bot
 API** (gratuita; canal por defecto en producción) o WhatsApp Cloud API de Meta
 (no Twilio), elegible con `NOTIFICADOR_CANAL` · maatwebsite/laravel-excel (export `.xlsx` UTF-8) ·
-barryvdh/laravel-dompdf (reporte de turno) · Recharts ·
+barryvdh/laravel-dompdf (Libro de guardia) · Recharts ·
 spatie/laravel-permission (roles **Supervisor, Administrativo, Administrador de sistema** —
 solo esos).
 
@@ -107,7 +112,7 @@ solo esos).
 
 - **Alta disponibilidad / Zero Downtime** — el centro de monitoreo no frena.
   Migraciones y mantenimientos sin baja de servicio, o protocolo de contingencia.
-- **PDF/A** — el reporte de turno (Libro de Guardia digital) se exporta bajo el
+- **PDF/A** — el Libro de guardia digital (de una Apertura al Cierre de turno) se exporta bajo el
   estándar PDF/A (ISO de archivado a largo plazo): dompdf genera el PDF y
   **Ghostscript** lo convierte a PDF/A-2b (`ConversorPdfAInterface`,
   `config/reportes.php`). // TODO: validar una muestra real con veraPDF.
@@ -116,7 +121,7 @@ solo esos).
 ## Modelo de dominio
 
 Ver `docs/modelo-dominio.md`. Entidades: Evento, Errata, TipoEvento,
-PuntoMonitoreo, Turno, GrupoInteresado, Contacto, Usuario (rol Supervisor,
+PuntoMonitoreo, GrupoEvento, GrupoInteresado, Contacto, Usuario (rol Supervisor,
 Administrativo o Administrador de sistema).
 
 ## Estado actual del repo

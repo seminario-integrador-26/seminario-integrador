@@ -81,9 +81,9 @@ Leyenda: ✅ hecho · 🟡 parcial · ⬜ no empezado (solo stubs o nada)
 | 007 | Reintentos WhatsApp | ✅ | 1 + 3 reintentos c/30 s, fallida → auditoría + alerta al Supervisor, botón Reenviar en Eventos |
 | 008 | Búsqueda con filtros | ✅ | categorías = grupos de evento (múltiple), tipo, PM, tipo de PM (municipal/provincial/alarma), barrio, cuadrante (si hay cargados), fechas, franja horaria (cruza medianoche), texto; AND; se aplican solos; "Limpiar filtros" |
 | 009 | Tabla de resultados | ✅ | orden asc/desc por #, fecha, tipo, PM y autor; total; paginación 20; click → detalle |
-| 010 | Detalle de evento | ✅ | vista dedicada `eventos/{id}` con PM (municipal/provincial), timestamp, autor, turno, notificaciones e indicador sin ubicación |
+| 010 | Detalle de evento | ✅ | vista dedicada `eventos/{id}` con PM (municipal/provincial), timestamp, autor, notificaciones e indicador sin ubicación |
 | 011 | Filtro informativos | ✅ | filtro "Mostrar" en Eventos: solo con ubicación, solo sin ubicación, solo informativos o excluir informativos; se combina con los demás filtros y aplica también a la exportación; columna Observación en el Excel |
-| 012 | PDF por turno | ✅ | sección Reportes: turnos cerrados → PDF con encabezado, eventos en orden, resumen por tipo, pie con generador y nº de página; auditado. Falta: logo oficial (`public/images/logo-municipalidad.png`) y validar con veraPDF el PDF/A-2b (Ghostscript) |
+| 012 | PDF por turno | ✅ | sección Reportes: Aperturas de turno con Cierre (rediseño 2026-10-23) → PDF de la Apertura al Cierre siguiente, con encabezado, eventos en orden, resumen por tipo, pie con generador y nº de página; auditado. Falta: logo oficial (`public/images/logo-municipalidad.png`) y validar con veraPDF el PDF/A-2b (Ghostscript) |
 | 013 | Export Excel | ✅ | botón en Eventos: todos los registros filtrados, DD/MM/AAAA, columna Observación (informativo / sin ubicación), `Eventos_CMU_[desde]_[hasta].xlsx` o `.xls` (dos botones; .xls hasta 65.535 eventos), confirmación, auditado |
 | 014 | Estadísticas mensuales/anuales | ✅ | mes o año; total, por grupo de evento, por tipo, por tipo de PM (RN11), top 10 PMs, evolución semanal/mensual; tablas + gráficos. Informativos (no cuantificables) fuera del total, informados aparte — confirmar vs doc |
 | 015 | Dashboard KPIs | ✅ | sección Análisis: eventos del mes y del año con variación % vs. mismo tramo anterior, % por categoría del período, últimos 6 meses por categoría (pequeños múltiplos), período elegible |
@@ -96,16 +96,16 @@ Leyenda: ✅ hecho · 🟡 parcial · ⬜ no empezado (solo stubs o nada)
 | 022 | Refresco automático | ✅ | cada 60 s (solo los datos, sin recargar la página; se pausa con la pestaña oculta), "Actualizado hh:mm:ss", indicador de carga, "Actualizar ahora" y mensaje de error |
 | 023 | Config Google Maps | — | no aplica (OSM) |
 | 024 | Carga de coordenadas PMs | ✅ | sección Puntos (Admin de sistema): ABM con tipo (municipal/provincial/alarma), barrio, cuadrante y descripción, coordenadas con clic en el mapa y validadas dentro de Villa María, importación CSV/XLSX todo-o-nada (mismo formato que database/data/puntos_monitoreo.csv) con errores por fila, plantilla, mapa por tipo, auditado. Listado oficial (498 PMs del mapa VVU) cargado por PuntoMonitoreoSeeder |
-| 025 | Apertura/cierre de turno | ✅ | |
+| 025 | Apertura/cierre de turno | ✅ | rediseño 2026-10-23: son eventos internos (Apertura de turno / Cierre de turno) cargados desde Registrar evento; sin tabla `turnos`, sin tarjeta automática ni un turno por Supervisor; el Supervisor ve todo el libro (`docs/rediseno-libro-guardia.md`) |
 | 026 | Log de auditoría | ✅ | login/logout, eventos, erratas, turnos, roles, reportes, exportaciones, fallos de notificación. Retención de 2 años: no se borra nada (no hay purga) |
 | 027 | Consulta de log | ✅ | filtros por usuario, acción, fechas y objeto afectado (ID de evento exacto o código de PM), orden por columna, export a Excel, acceso auditado (1 registro cada 10 min por usuario) |
 | 028 | Config notificaciones | ✅ | sección Administración → Notificaciones (permiso `notificaciones.configurar`): ABM de grupos (identificador de grupo de WhatsApp o contactos individuales), matriz tipo de evento × grupo con aviso de tipos que no se notifican, rige desde el próximo evento, auditado con altas/bajas. La "fuerza de respuesta" es el propio grupo destinatario. Un grupo con notificaciones enviadas no se elimina |
 | 029 | Parámetros del sistema | ✅ | Administración → Parámetros (permiso `parametros.configurar`): sesión, intentos de login, minutos de bloqueo, refresco de dashboards, reintentos e intervalo de WhatsApp; defaults de fábrica sin cargar nada (tabla `parametros`), rangos validados, "Restablecer valores por defecto", auditado con valor anterior → nuevo. `NOTIFICADOR_REINTENTOS`/`NOTIFICADOR_INTERVALO_REINTENTO` del `.env` ya no se usan |
 
-Fuera del backlog pero en CLAUDE.md: **fe de errata** ✅ (Supervisor, sobre eventos de cualquier turno — se llega por número desde Eventos —, una errata por campo con
+Fuera del backlog pero en CLAUDE.md: **fe de errata** ✅ (Supervisor, sobre cualquier evento; deja una constancia Errata en el libro de guardia; una errata por campo con
 motivo, detalle con valores vigentes + historial, auditada; consulta, estadísticas,
 análisis, panel, mapa, Excel y API leen los valores vigentes desde la vista
-`eventos_vigentes` (`Evento::vigentes()`); el PDF por turno sigue con el original) y **API
+`eventos_vigentes` (`Evento::vigentes()`), también el Libro de guardia en PDF) y **API
 pública `/api/v1`** ✅ (Sanctum, solo lectura, eventos + estadísticas, sin datos
 personales; ver `docs/api.md`).
 
@@ -295,6 +295,10 @@ Prioridad: Media · Actor: Administrador
 Como Usuario Administrador,
 quiero generar un reporte en formato PDF de un turno de trabajo específico,
 para tener un documento formal de los eventos ocurridos durante ese turno.
+
+> **Rediseño 2026-10-23:** se elige una Apertura de turno y el PDF incluye
+> todo lo registrado hasta el Cierre de turno siguiente
+> (`docs/rediseno-libro-guardia.md`).
 
 Criterios de aceptación:
 - El sistema debe permitir seleccionar el turno específico basado en los horarios de cierre de turno registrados
@@ -523,6 +527,11 @@ Prioridad: Alta · Actor: Administrador del Sistema
 Como Usuario Supervisor,
 quiero registrar formalmente la apertura y cierre de mi turno de trabajo,
 para delimitar el período de eventos que me corresponde y permitir la generación de reportes por turno.
+
+> **Rediseño 2026-10-23:** apertura y cierre son eventos internos (Apertura de
+> turno / Cierre de turno) que se cargan desde Registrar evento y se notifican;
+> no hay tabla de turnos, no se pregunta al iniciar sesión, se puede registrar
+> sin turno abierto y el historial es el propio libro (`docs/rediseno-libro-guardia.md`).
 
 Criterios de aceptación:
 - Al iniciar sesión, el sistema debe preguntar si desea abrir un nuevo turno
