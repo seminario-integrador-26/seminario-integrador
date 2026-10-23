@@ -1,4 +1,3 @@
-import AbrirTurnoModal from '@/Components/AbrirTurnoModal';
 import BuscadorPuntoMapa from '@/Components/BuscadorPuntoMapa';
 import TacticalMap, { colorDeCategoria, type Enfoque, type EventoGeorreferenciado } from '@/Components/TacticalMap';
 import Select from '@/Components/Select';
@@ -7,8 +6,9 @@ import type { EventoPanel, PageProps, PuntoMapa } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
-/** Turno abierto (DashboardService::turnoVigente). */
+/** Turno abierto (DashboardService::turnoVigente): última Apertura de turno sin Cierre. */
 interface TurnoVigente {
+    /** Número del evento Apertura de turno. */
     id: number;
     /** dd/mm/aaaa */
     fecha: string;
@@ -28,9 +28,6 @@ interface Props {
     /** por_tipo: código de TipoPuntoMonitoreo => cantidad. */
     resumenPuntos: { total: number; por_tipo: Record<string, number> };
 }
-
-// US-025: recuerda por sesión que el supervisor pospuso abrir turno.
-const CLAVE_POSPONER_TURNO = 'atalaya:turno-pospuesto';
 
 const TODAS = 'TODAS';
 
@@ -53,25 +50,13 @@ export default function Dashboard({
     puntosMonitoreo,
     resumenPuntos,
 }: Props) {
-    const { auth, turnoSupervisor } = usePage<PageProps>().props;
+    const { auth } = usePage<PageProps>().props;
     const esSupervisor = (auth.roles ?? []).includes('Supervisor');
     const puedeCorregir = auth.permissions.includes('erratas.crear');
     const puedeExportar = auth.permissions.includes('reportes.exportar');
 
     const [filtro, setFiltro] = useState(TODAS);
     const [seleccionado, setSeleccionado] = useState<EventoPanel | null>(null);
-
-    // Modal de apertura de turno (US-025): sólo Supervisor sin turno activo y que
-    // no lo haya pospuesto en esta sesión.
-    const [pospuesto, setPospuesto] = useState(
-        () => sessionStorage.getItem(CLAVE_POSPONER_TURNO) === '1',
-    );
-    const mostrarModalTurno = esSupervisor && !turnoSupervisor && !pospuesto;
-
-    const posponerTurno = () => {
-        sessionStorage.setItem(CLAVE_POSPONER_TURNO, '1');
-        setPospuesto(true);
-    };
 
     const [filtroTipo, setFiltroTipo] = useState('');
     // PM elegido en el buscador; `n` fuerza re-enfocar aunque sea el mismo PM.
@@ -130,11 +115,6 @@ export default function Dashboard({
         <AuthenticatedLayout>
             <Head title="Panel" />
 
-            <AbrirTurnoModal
-                show={mostrarModalTurno}
-                onPosponer={posponerTurno}
-            />
-
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
                 {/* 1. Barra de telemetría (compacta: el protagonista es el mapa) */}
                 <section className="border-b border-atalaya-border bg-atalaya-surface">
@@ -192,7 +172,7 @@ export default function Dashboard({
                                 <span>Guardia vigente</span>
                                 {turno ? (
                                     <span className="font-bold text-atalaya-orange">
-                                        Turno #{turno.id}
+                                        Apertura #{turno.id}
                                     </span>
                                 ) : (
                                     <span className="font-bold text-atalaya-crimson">
@@ -203,7 +183,7 @@ export default function Dashboard({
                             <div className="truncate text-[11px] text-white">
                                 {turno
                                     ? `Desde ${turno.hora_inicio} · ${turno.supervisor ?? 'Sin supervisor'} · ${turno.transcurrido}`
-                                    : 'Sin turno abierto: no se registran eventos (RN-05).'}
+                                    : 'Sin Apertura de turno vigente.'}
                             </div>
                         </div>
 
@@ -215,7 +195,7 @@ export default function Dashboard({
                             >
                                 Consultar
                             </Link>
-                            {/* Reporte PDF de turno (US-012); el Excel se exporta desde Consultar (US-013). */}
+                            {/* Libro de guardia en PDF (US-012); el Excel se exporta desde Consultar (US-013). */}
                             {puedeExportar && (
                                 <Link
                                     href={route('reportes.index')}
@@ -497,8 +477,7 @@ export default function Dashboard({
                                         <span className="text-white">
                                             {seleccionado.fecha}{' '}
                                             {seleccionado.hora} ·{' '}
-                                            {seleccionado.autor ?? 'N/D'} · turno
-                                            #{seleccionado.turno_id}
+                                            {seleccionado.autor ?? 'N/D'}
                                         </span>
                                     </div>
                                 </div>

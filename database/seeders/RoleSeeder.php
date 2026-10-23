@@ -8,7 +8,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Roles del sistema (spatie/laravel-permission). SÓLO estos tres:
- *   - Supervisor:    registra eventos, fe de errata, abre/cierra turnos.
+ *   - Supervisor:    registra eventos (incluida la apertura y el cierre de turno) y fe de errata.
  *   - Administrativo: SOLO visualización — consulta eventos, estadísticas,
  *                     dashboards y exporta (.xlsx/PDF). No gestiona usuarios ni tipos.
  *   - Administrador de sistema:    todo lo del Administrativo + gestiona usuarios y tipos de evento.

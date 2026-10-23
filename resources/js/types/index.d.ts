@@ -13,15 +13,6 @@ export interface User {
     email_verified_at: string | null;
 }
 
-/** Turno abierto del Supervisor (HandleInertiaRequests::turnoDelSupervisor). */
-export interface TurnoSupervisor {
-    id: number;
-    /** dd/mm/aaaa */
-    fecha: string;
-    /** hh:mm */
-    hora_inicio: string;
-}
-
 /** Props que Inertia comparte con todas las páginas (HandleInertiaRequests::share). */
 export interface SharedProps {
     auth: {
@@ -29,7 +20,6 @@ export interface SharedProps {
         roles: Rol[];
         permissions: string[];
     };
-    turnoSupervisor: TurnoSupervisor | null;
     notificacionesFallidas: number;
     flash: {
         success: string | null;
@@ -80,7 +70,6 @@ export interface EventoPanel {
     timestamp_video: string | null;
     descripcion: string | null;
     autor: string | null;
-    turno_id: number;
 }
 
 /** codigo => nombre (GrupoEvento::opciones, TipoPuntoMonitoreo::opciones). */

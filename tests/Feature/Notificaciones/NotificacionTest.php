@@ -12,7 +12,6 @@ use App\Models\GrupoInteresado;
 use App\Models\Notificacion;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use App\Services\NotificacionService;
 use App\Services\Notificadores\LogNotificador;
@@ -69,7 +68,6 @@ class NotificacionTest extends TestCase
     {
         return Evento::factory()->create([
             'tipo_evento_id' => $this->tipo->id,
-            'turno_id' => Turno::factory()->create(['supervisor_id' => $this->supervisor->id])->id,
             'usuario_id' => $this->supervisor->id,
             'fecha_hora' => '2026-10-14 14:30:15',
             'descripcion' => 'Música a alto volumen en la vereda.',

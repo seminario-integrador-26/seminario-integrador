@@ -16,13 +16,12 @@ use LogicException;
  * sin edición ni borrado; toda corrección va por Errata.
  *
  * Campos: tipo_evento_id, punto_monitoreo_id (nullable, ver requiere_ubicacion),
- * turno_id, usuario_id (Supervisor autor), fecha_hora (del hecho),
+ * usuario_id (Supervisor autor), fecha_hora (del hecho),
  * timestamp_video (hh:mm:ss, obligatorio con PM), descripcion, created_at.
  */
 #[Fillable([
     'tipo_evento_id',
     'punto_monitoreo_id',
-    'turno_id',
     'usuario_id',
     'fecha_hora',
     'timestamp_video',
@@ -78,11 +77,6 @@ class Evento extends Model
     public function puntoMonitoreo(): BelongsTo
     {
         return $this->belongsTo(PuntoMonitoreo::class);
-    }
-
-    public function turno(): BelongsTo
-    {
-        return $this->belongsTo(Turno::class);
     }
 
     public function usuario(): BelongsTo

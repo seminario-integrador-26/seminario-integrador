@@ -18,12 +18,12 @@ class DashboardController extends Controller
      */
     public function index(): Response
     {
-        $turno = $this->dashboard->turnoVigente();
-        $eventos = $this->dashboard->eventosDelTurno($turno['id'] ?? null);
+        $apertura = $this->dashboard->aperturaVigente();
+        $eventos = $this->dashboard->eventosDelTurno($apertura);
         $puntos = $this->dashboard->puntosMonitoreo();
 
         return Inertia::render('Dashboard', [
-            'turno' => $turno,
+            'turno' => $this->dashboard->turnoVigente($apertura),
             'eventos' => $eventos,
             'conteoPorCategoria' => $this->dashboard->conteoPorCategoria($eventos),
             'puntosMonitoreo' => $puntos,

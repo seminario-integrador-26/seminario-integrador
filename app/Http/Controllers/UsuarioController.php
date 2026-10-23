@@ -122,9 +122,9 @@ class UsuarioController extends Controller
             return back()->with('error', 'No podés eliminar tu propia cuenta.');
         }
 
-        // Los eventos son inmutables y referencian a su autor y turno: no se puede borrar.
-        if ($usuario->eventos()->exists() || $usuario->turnos()->exists()) {
-            return back()->with('error', 'No se puede eliminar un usuario con eventos o turnos registrados.');
+        // Los eventos son inmutables y referencian a su autor: no se puede borrar.
+        if ($usuario->eventos()->exists()) {
+            return back()->with('error', 'No se puede eliminar un usuario con eventos registrados.');
         }
 
         $emailEliminado = $usuario->email;

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Evento;
 use App\Models\GrupoEvento;
 use App\Models\PuntoMonitoreo;
-use App\Models\Turno;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -24,48 +23,51 @@ class DashboardService
      */
     private const EVENTOS_SIN_TURNO = 20;
 
+    public function __construct(private readonly LibroGuardiaService $libro) {}
+
     /**
-     * Turno de guardia vigente con su supervisor, o null si no hay ninguno abierto.
+     * Turno vigente: la última Apertura de turno sin Cierre posterior.
+     */
+    public function aperturaVigente(): ?Evento
+    {
+        return $this->libro->aperturaVigente()?->load('usuario:id,name');
+    }
+
+    /**
+     * Turno vigente aplanado para la UI; `id` es el número del evento de apertura.
      *
      * @return array{id: int, fecha: string, hora_inicio: string, supervisor: ?string, transcurrido: string}|null
      */
-    public function turnoVigente(): ?array
+    public function turnoVigente(?Evento $apertura): ?array
     {
-        $turno = Turno::activo()?->load('supervisor:id,name');
-
-        if (! $turno) {
+        if (! $apertura) {
             return null;
         }
 
         return [
-            'id' => $turno->id,
-            'fecha' => $turno->fecha->format('d/m/Y'),
-            'hora_inicio' => substr($turno->hora_inicio, 0, 5),
-            'supervisor' => $turno->supervisor?->name,
-            'transcurrido' => $this->transcurrido($turno),
+            'id' => $apertura->id,
+            'fecha' => $apertura->fecha_hora->format('d/m/Y'),
+            'hora_inicio' => $apertura->fecha_hora->format('H:i'),
+            'supervisor' => $apertura->usuario?->name,
+            'transcurrido' => $this->transcurrido($apertura),
         ];
     }
 
     /**
-     * Eventos del turno vigente (o los últimos registrados si no hay turno abierto),
-     * del más reciente al más antiguo, ya aplanados para la UI.
+     * Eventos desde la apertura vigente (o los últimos registrados si no hay
+     * turno abierto), del más reciente al más antiguo, ya aplanados para la UI.
      *
      * @return array<int, array<string, mixed>>
      */
-    public function eventosDelTurno(?int $turnoId): array
+    public function eventosDelTurno(?Evento $apertura): array
     {
-        return Evento::vigentes()
+        return ($apertura ? $this->libro->eventosDe($apertura) : Evento::vigentes()->limit(self::EVENTOS_SIN_TURNO))
             ->with([
                 'tipoEvento:id,nombre,grupo_evento_id,es_cuantificable',
                 'tipoEvento.grupoEvento:id,nombre',
                 'puntoMonitoreo:id,codigo,nombre,latitud,longitud',
                 'usuario:id,name',
             ])
-            ->when(
-                $turnoId,
-                fn ($q) => $q->where('turno_id', $turnoId),
-                fn ($q) => $q->limit(self::EVENTOS_SIN_TURNO),
-            )
             ->orderByDesc('fecha_hora')
             ->orderByDesc('id')
             ->get()
@@ -86,7 +88,6 @@ class DashboardService
                 'timestamp_video' => $e->timestamp_video,
                 'descripcion' => $e->descripcion,
                 'autor' => $e->usuario?->name,
-                'turno_id' => $e->turno_id,
             ])
             ->all();
     }
@@ -145,10 +146,9 @@ class DashboardService
     /**
      * Tiempo transcurrido desde la apertura del turno, en formato "04h 12m".
      */
-    private function transcurrido(Turno $turno): string
+    private function transcurrido(Evento $apertura): string
     {
-        $inicio = Carbon::parse("{$turno->fecha->format('Y-m-d')} {$turno->hora_inicio}");
-        $minutos = max(0, (int) $inicio->diffInMinutes(now()));
+        $minutos = max(0, (int) $apertura->fecha_hora->diffInMinutes(now()));
 
         return sprintf('%02dh %02dm', intdiv($minutos, 60), $minutos % 60);
     }

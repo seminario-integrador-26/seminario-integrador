@@ -285,7 +285,7 @@ export default function TacticalMap({
                                             LUGAR: {ev.ubicacion}
                                         </div>
                                         <div className="text-[10px] text-atalaya-text-dim">
-                                            HORA: {ev.hora} · TURNO #{ev.turno_id}
+                                            HORA: {ev.hora}
                                         </div>
                                     </div>
                                 </Popup>

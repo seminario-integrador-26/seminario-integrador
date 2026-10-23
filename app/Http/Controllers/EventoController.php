@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\SinTurnoActivoException;
 use App\Http\Requests\BuscarEventosRequest;
 use App\Http\Requests\StoreEventoRequest;
 use App\Models\AuditoriaAcceso;
@@ -22,7 +21,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -57,7 +55,6 @@ class EventoController extends Controller
             'timestamp_video' => $e->timestamp_video,
             'descripcion' => $e->descripcion,
             'autor' => $e->usuario?->name,
-            'turno_id' => $e->turno_id,
             'notificaciones' => $this->notificaciones($e),
             'corregido' => $e->erratas_count > 0,
         ]);
@@ -71,10 +68,6 @@ class EventoController extends Controller
             'tiposPunto' => TipoPuntoMonitoreo::opciones(),
             'barrios' => Barrio::orderBy('nombre')->get(['id', 'nombre']),
             'cuadrantes' => Cuadrante::orderBy('nombre')->get(['id', 'nombre']),
-            // Supervisor: la consulta se limita a su turno abierto (null = ve todo).
-            'alcanceTurno' => $request->user()->can('eventos.consultar_historico')
-                ? null
-                : ['id' => $this->eventos->turnoActivoDe($request->user())?->id],
         ]);
     }
 
@@ -83,7 +76,6 @@ class EventoController extends Controller
      */
     public function create(Request $request): Response
     {
-        $turno = $this->eventos->turnoActivoDe($request->user());
         $puntos = $this->eventos->puntosMonitoreo();
 
         // Registro desde un PM del mapa: ?punto_monitoreo_id=X precarga la ubicación.
@@ -96,27 +88,17 @@ class EventoController extends Controller
             'puntos' => $puntos,
             'puntoInicial' => $puntoInicial,
             'tiposPunto' => TipoPuntoMonitoreo::opciones(),
-            'turnoActivo' => $turno ? [
-                'id' => $turno->id,
-                'fecha' => $turno->fecha->format('d/m/Y'),
-                'hora_inicio' => substr($turno->hora_inicio, 0, 5),
-                'supervisor' => $turno->supervisor?->name,
-            ] : null,
         ]);
     }
 
     public function store(StoreEventoRequest $request): RedirectResponse
     {
-        try {
-            $evento = $this->eventos->registrar($request->validated(), $request->user());
-        } catch (SinTurnoActivoException $e) {
-            throw ValidationException::withMessages(['turno' => $e->getMessage()]);
-        }
+        $evento = $this->eventos->registrar($request->validated(), $request->user());
 
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_REGISTRO_EVENTO,
             $request->user(),
-            "Evento #{$evento->id} registrado ({$evento->tipoEvento->nombre}) en el turno #{$evento->turno_id}.",
+            "Evento #{$evento->id} registrado ({$evento->tipoEvento->nombre}).",
         );
 
         return redirect()->route('eventos.create')
@@ -174,11 +156,6 @@ class EventoController extends Controller
                 ]),
                 'autor' => $evento->usuario?->name,
                 'registrado' => $evento->created_at?->format('d/m/Y H:i:s'),
-                'turno' => $evento->turno ? [
-                    'id' => $evento->turno->id,
-                    'fecha' => $evento->turno->fecha->format('d/m/Y'),
-                    'hora_inicio' => substr((string) $evento->turno->hora_inicio, 0, 5),
-                ] : null,
                 'notificaciones' => $this->notificaciones($evento),
             ],
         ]);

@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Evento;
+use App\Models\GrupoEvento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use App\Services\ErrataService;
 use Illuminate\Database\Seeder;
@@ -15,14 +15,15 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * SOLO DESARROLLO / DEMO: turnos cerrados y eventos de prueba de los últimos
- * 12 meses, para probar estadísticas, análisis, mapa, heatmap, Excel, PDF por
- * turno y API con datos. No está en DatabaseSeeder ni en deploy.sh.
+ * 12 meses, para probar estadísticas, análisis, mapa, heatmap, Excel, Libro de
+ * guardia en PDF y API con datos. No está en DatabaseSeeder ni en deploy.sh.
  *
  * Uso (después de `php artisan migrate:fresh --seed`):
  *   php artisan db:seed --class=EventoDemoSeeder
  *
- * - 3 turnos por día (06–14, 14–22, 22–06 que cruza la medianoche), todos
- *   cerrados: el turno de hoy lo abre el Supervisor desde la UI.
+ * - 3 turnos por día (06–14, 14–22, 22–06 que cruza la medianoche), cada uno
+ *   con su evento Apertura de turno y Cierre de turno; el turno de hoy lo
+ *   abre el Supervisor registrando la apertura.
  * - Más eventos de tarde/noche y en un puñado de PMs "calientes", para que el
  *   ranking, la franja horaria y el heatmap muestren algo.
  * - Los eventos se crean sin pasar por EventoService: no disparan
@@ -66,10 +67,15 @@ class EventoDemoSeeder extends Seeder
         }
 
         $supervisores = User::role('Supervisor')->get();
-        $tipos = TipoEvento::all();
+        $apertura = TipoEvento::interno(TipoEvento::APERTURA_TURNO);
+        $cierre = TipoEvento::interno(TipoEvento::CIERRE_TURNO);
+        // Al azar, solo los tipos que se cargan a mano durante la guardia.
+        $tipos = TipoEvento::whereDoesntHave('grupoEvento', fn ($q) => $q->where('codigo', GrupoEvento::INTERNOS))
+            ->orWhereNotIn('nombre', TipoEventoSeeder::INTERNOS_NO_CUANTIFICABLES)
+            ->get();
         $puntos = PuntoMonitoreo::pluck('id');
 
-        if ($supervisores->isEmpty() || $tipos->isEmpty() || $puntos->isEmpty()) {
+        if ($supervisores->isEmpty() || $tipos->isEmpty() || $puntos->isEmpty() || ! $apertura || ! $cierre) {
             $this->command?->error('Faltan supervisores, tipos de evento o PMs: corré primero `php artisan db:seed`.');
 
             return;
@@ -78,8 +84,9 @@ class EventoDemoSeeder extends Seeder
         // ~25 PMs concentran la mitad de los eventos con ubicación.
         $calientes = $puntos->shuffle()->take(25)->values();
 
-        DB::transaction(function () use ($supervisores, $tipos, $puntos, $calientes, $erratas) {
+        DB::transaction(function () use ($supervisores, $tipos, $puntos, $calientes, $erratas, $apertura, $cierre) {
             $total = 0;
+            $turnos = 0;
             $hoy = Carbon::today();
 
             for ($d = self::DIAS; $d >= 1; $d--) {
@@ -94,32 +101,45 @@ class EventoDemoSeeder extends Seeder
                     }
                     $supervisor = $supervisores[($d * 3 + $i) % $supervisores->count()];
 
-                    $turno = Turno::create([
-                        'supervisor_id' => $supervisor->id,
-                        'fecha' => $dia->toDateString(),
-                        'hora_inicio' => $inicio,
-                        'hora_fin' => $fin,
-                        'fecha_fin' => ($cruza ? $dia->copy()->addDay() : $dia)->toDateString(),
-                        'personal_presente' => ['Operador '.(($d + $i) % 6 + 1), 'Operador '.(($d + $i + 3) % 6 + 1)],
-                        'novedades_pendientes' => mt_rand(1, 10) === 1 ? 'Cámara con imagen intermitente; se avisó a mantenimiento.' : null,
-                    ]);
-
                     $desde = Carbon::parse("{$dia->toDateString()} {$inicio}");
+                    $hasta = Carbon::parse(($cruza ? $dia->copy()->addDay() : $dia)->toDateString()." {$fin}");
+
+                    $this->interno($apertura, $supervisor, $desde, 'Personal presente: Operador '
+                        .(($d + $i) % 6 + 1).', Operador '.(($d + $i + 3) % 6 + 1).'.');
+                    $turnos++;
+
                     $cantidad = $this->poisson(3 * $peso * $factorDia);
 
                     for ($n = 0; $n < $cantidad; $n++) {
-                        $evento = $this->crearEvento($turno, $supervisor, $tipos, $puntos, $calientes, $desde);
+                        $evento = $this->crearEvento($supervisor, $tipos, $puntos, $calientes, $desde);
                         $total++;
 
                         if (mt_rand(1, 50) === 1) {
                             $this->corregir($erratas, $evento, $tipos, $supervisor);
                         }
                     }
+
+                    $this->interno($cierre, $supervisor, $hasta->copy()->subSecond(), mt_rand(1, 10) === 1
+                        ? 'Novedades pendientes: cámara con imagen intermitente; se avisó a mantenimiento.'
+                        : 'Sin novedades pendientes.');
                 }
             }
 
-            $this->command?->info("Eventos de prueba: {$total} en ".Turno::count().' turnos cerrados.');
+            $this->command?->info("Eventos de prueba: {$total} en {$turnos} turnos cerrados.");
         });
+    }
+
+    /**
+     * Apertura o cierre de turno (evento interno, sin ubicación).
+     */
+    private function interno(int $tipoId, User $autor, Carbon $fechaHora, string $descripcion): void
+    {
+        Evento::create([
+            'tipo_evento_id' => $tipoId,
+            'usuario_id' => $autor->id,
+            'fecha_hora' => $fechaHora,
+            'descripcion' => $descripcion,
+        ]);
     }
 
     /**
@@ -127,7 +147,7 @@ class EventoDemoSeeder extends Seeder
      * @param  Collection<int, int>  $puntos
      * @param  Collection<int, int>  $calientes
      */
-    private function crearEvento(Turno $turno, User $autor, Collection $tipos, Collection $puntos, Collection $calientes, Carbon $desde): Evento
+    private function crearEvento(User $autor, Collection $tipos, Collection $puntos, Collection $calientes, Carbon $desde): Evento
     {
         $tipo = $tipos->random();
         // Dentro de las 8 h del turno, sesgado hacia la segunda mitad.
@@ -142,7 +162,6 @@ class EventoDemoSeeder extends Seeder
         return Evento::create([
             'tipo_evento_id' => $tipo->id,
             'punto_monitoreo_id' => $puntoId,
-            'turno_id' => $turno->id,
             'usuario_id' => $autor->id,
             'fecha_hora' => $fechaHora,
             'timestamp_video' => $puntoId ? $fechaHora->format('H:i:s') : null,

@@ -7,23 +7,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { Paginador } from '@/types';
 import { Head, router } from '@inertiajs/react';
 
-/** Turno cerrado (ReporteController::index). */
-interface TurnoCerrado {
+/** Apertura de turno y su cierre (LibroGuardiaService::aperturas). */
+interface Guardia {
+    /** Número del evento Apertura de turno. */
     id: number;
     /** dd/mm/aaaa */
     fecha: string;
     /** hh:mm */
     inicio: string;
-    fin: string;
+    /** null: todavía no se registró el Cierre de turno. */
+    fin: string | null;
     fecha_fin: string | null;
     supervisor: string | null;
-    eventos: number;
+    eventos: number | null;
 }
 
 /**
- * US-012: elegir un turno cerrado y descargar su reporte PDF.
+ * US-012: elegir una Apertura de turno y descargar el Libro de guardia en PDF,
+ * hasta el Cierre de turno siguiente.
  */
-export default function Index({ turnos, filtros }: { turnos: Paginador<TurnoCerrado>; filtros: { fecha: string | null } }) {
+export default function Index({ turnos, filtros }: { turnos: Paginador<Guardia>; filtros: { fecha: string | null } }) {
     const filtrarPorFecha = (fecha: string) =>
         router.get(
             route('reportes.index'),
@@ -35,7 +38,7 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<TurnoCerr
         <AuthenticatedLayout
             header={
                 <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                    Reportes de turno
+                    Libro de guardia
                 </h2>
             }
         >
@@ -62,14 +65,15 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<TurnoCerr
                             </SecondaryButton>
                         )}
                         <p className="ml-auto max-w-sm text-xs text-atalaya-text-dim">
-                            Solo se listan turnos cerrados. El PDF incluye
-                            exclusivamente los eventos de ese turno.
+                            Cada fila es una Apertura de turno. El PDF incluye
+                            todo lo registrado hasta el Cierre de turno
+                            siguiente; sin cierre, el turno sigue en curso.
                         </p>
                     </div>
 
                     <Tabla>
                         <Cabecera>
-                            <Encabezado>Turno</Encabezado>
+                            <Encabezado>Apertura</Encabezado>
                             <Encabezado>Fecha</Encabezado>
                             <Encabezado>Horario</Encabezado>
                             <Encabezado>Supervisor</Encabezado>
@@ -79,7 +83,7 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<TurnoCerr
                         <Cuerpo>
                             {turnos.data.length === 0 && (
                                 <FilaVacia columnas={6}>
-                                    No hay turnos cerrados{filtros.fecha ? ' en esa fecha' : ''}.
+                                    No hay aperturas de turno{filtros.fecha ? ' en esa fecha' : ''}.
                                 </FilaVacia>
                             )}
                             {turnos.data.map((t) => (
@@ -87,20 +91,22 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<TurnoCerr
                                     <Celda tono="tenue" mono>#{t.id}</Celda>
                                     <Celda tono="principal" mono nowrap>{t.fecha}</Celda>
                                     <Celda mono nowrap>
-                                        {t.inicio} – {t.fin}
+                                        {t.inicio} – {t.fin ?? 'en curso'}
                                         {t.fecha_fin && t.fecha_fin !== t.fecha && (
                                             <span className="ml-1 text-xs text-atalaya-text-dim">({t.fecha_fin})</span>
                                         )}
                                     </Celda>
                                     <Celda>{t.supervisor}</Celda>
-                                    <Celda alinear="derecha" mono>{t.eventos}</Celda>
+                                    <Celda alinear="derecha" mono>{t.eventos ?? '—'}</Celda>
                                     <CeldaAcciones>
-                                        <Accion
-                                            icono="descargar"
-                                            etiqueta={`Descargar el PDF del turno #${t.id}`}
-                                            href={route('reportes.turno.pdf', t.id)}
-                                            descarga
-                                        />
+                                        {t.fin && (
+                                            <Accion
+                                                icono="descargar"
+                                                etiqueta={`Descargar el Libro de guardia desde la apertura #${t.id}`}
+                                                href={route('reportes.guardia.pdf', t.id)}
+                                                descarga
+                                            />
+                                        )}
                                     </CeldaAcciones>
                                 </Fila>
                             ))}

@@ -6,11 +6,11 @@ use App\Models\AuditoriaAcceso;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use App\Services\ExportacionService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Database\Seeders\TipoEventoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -19,7 +19,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 /**
- * US-012 (PDF por turno) y US-013 (exportación de eventos a Excel).
+ * US-012 (Libro de guardia en PDF) y US-013 (exportación de eventos a Excel).
  */
 class ReportesTest extends TestCase
 {
@@ -29,25 +29,15 @@ class ReportesTest extends TestCase
 
     private User $supervisor;
 
-    private Turno $cerrado;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->seed([RoleSeeder::class, PermissionSeeder::class]);
+        $this->seed([RoleSeeder::class, PermissionSeeder::class, TipoEventoSeeder::class]);
         $this->travelTo(Carbon::parse('2026-10-15 12:00:00'));
 
         $this->administrativo = User::factory()->create(['name' => 'Laura Administrativa'])->assignRole('Administrativo');
         $this->supervisor = User::factory()->create(['name' => 'Ana Supervisora'])->assignRole('Supervisor');
-        $this->cerrado = Turno::factory()->create([
-            'supervisor_id' => $this->supervisor->id,
-            'fecha' => '2026-10-14',
-            'hora_inicio' => '06:00:00',
-            'hora_fin' => '14:00:00',
-            'fecha_fin' => '2026-10-14',
-            'novedades_pendientes' => 'Cámara 12 sin imagen.',
-        ]);
     }
 
     /**
@@ -56,37 +46,63 @@ class ReportesTest extends TestCase
     private function evento(array $atributos = []): Evento
     {
         return Evento::factory()->create([
-            'turno_id' => $this->cerrado->id,
             'usuario_id' => $this->supervisor->id,
             ...$atributos,
         ]);
     }
 
-    // --- US-012: PDF por turno ----------------------------------------------
+    // --- US-012: Libro de guardia en PDF ------------------------------------
 
-    public function test_lista_solo_los_turnos_cerrados(): void
+    private function interno(string $tipo, string $fechaHora, ?string $descripcion = null): Evento
     {
-        Turno::factory()->create(); // abierto
+        return $this->evento([
+            'tipo_evento_id' => TipoEvento::interno($tipo),
+            'fecha_hora' => $fechaHora,
+            'descripcion' => $descripcion,
+        ]);
+    }
+
+    /**
+     * Guardia del 14/10 de 06:00 a 14:00; devuelve la apertura.
+     */
+    private function guardiaCerrada(): Evento
+    {
+        $apertura = $this->interno(TipoEvento::APERTURA_TURNO, '2026-10-14 06:00:00', 'Personal presente: Juan y María.');
+        $this->interno(TipoEvento::CIERRE_TURNO, '2026-10-14 14:00:00', 'Novedades pendientes: Cámara 12 sin imagen.');
+
+        return $apertura;
+    }
+
+    public function test_lista_las_aperturas_con_su_cierre(): void
+    {
+        $cerrada = $this->guardiaCerrada();
+        $enCurso = $this->interno(TipoEvento::APERTURA_TURNO, '2026-10-15 06:00:00');
 
         $this->actingAs($this->administrativo)
             ->get(route('reportes.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Reportes/Index')
-                ->has('turnos.data', 1)
-                ->where('turnos.data.0.id', $this->cerrado->id)
-                ->where('turnos.data.0.supervisor', 'Ana Supervisora'));
+                ->has('turnos.data', 2)
+                ->where('turnos.data.0.id', $enCurso->id)
+                ->where('turnos.data.0.fin', null)
+                ->where('turnos.data.1.id', $cerrada->id)
+                ->where('turnos.data.1.inicio', '06:00')
+                ->where('turnos.data.1.fin', '14:00')
+                ->where('turnos.data.1.eventos', 2)
+                ->where('turnos.data.1.supervisor', 'Ana Supervisora'));
     }
 
-    public function test_descarga_el_pdf_del_turno_y_lo_audita(): void
+    public function test_descarga_el_pdf_de_la_guardia_y_lo_audita(): void
     {
+        $apertura = $this->guardiaCerrada();
         $this->evento(['fecha_hora' => '2026-10-14 09:15:00', 'descripcion' => 'Acción en la vía pública con ñandú']);
 
         $respuesta = $this->actingAs($this->administrativo)
-            ->get(route('reportes.turno.pdf', $this->cerrado))
+            ->get(route('reportes.guardia.pdf', $apertura->id))
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf')
-            ->assertDownload("Reporte_Turno_{$this->cerrado->id}_14-10-2026.pdf");
+            ->assertDownload("Libro_Guardia_{$apertura->id}_14-10-2026.pdf");
 
         $this->assertStringStartsWith('%PDF', $respuesta->getContent());
         $this->assertDatabaseHas('auditoria_accesos', [
@@ -95,12 +111,14 @@ class ReportesTest extends TestCase
         ]);
     }
 
-    public function test_el_pdf_incluye_exclusivamente_los_eventos_del_turno_en_orden(): void
+    public function test_el_pdf_va_de_la_apertura_al_cierre_siguiente_en_orden(): void
     {
+        $apertura = $this->guardiaCerrada();
         $tipo = TipoEvento::factory()->delGrupo('policia')->create(['nombre' => 'Robo']);
         $tarde = $this->evento(['tipo_evento_id' => $tipo->id, 'fecha_hora' => '2026-10-14 13:00:00']);
         $temprano = $this->evento(['tipo_evento_id' => $tipo->id, 'fecha_hora' => '2026-10-14 07:00:00']);
-        Evento::factory()->create(['fecha_hora' => '2026-10-14 10:00:00']); // de otro turno
+        $this->evento(['tipo_evento_id' => $tipo->id, 'fecha_hora' => '2026-10-14 05:00:00']); // antes de la apertura
+        $this->evento(['tipo_evento_id' => $tipo->id, 'fecha_hora' => '2026-10-14 15:00:00']); // después del cierre
 
         $datos = null;
         $exportacion = Mockery::mock(ExportacionService::class);
@@ -114,34 +132,62 @@ class ReportesTest extends TestCase
         $this->app->instance(ExportacionService::class, $exportacion);
 
         $this->actingAs($this->administrativo)
-            ->get(route('reportes.turno.pdf', $this->cerrado))
+            ->get(route('reportes.guardia.pdf', $apertura->id))
             ->assertOk();
 
         $this->assertSame('reportes.turno', $datos['vista']);
-        $this->assertSame([$temprano->id, $tarde->id], array_column($datos['eventos'], 'id'));
-        $this->assertSame([['tipo' => 'Robo', 'categoria' => 'Policía', 'cantidad' => 2]], $datos['resumen']);
+        $ids = array_column($datos['eventos'], 'id');
+        $this->assertSame($apertura->id, $ids[0]);
+        $this->assertSame([$temprano->id, $tarde->id], array_slice($ids, 1, 2));
+        $this->assertCount(4, $ids); // apertura, 2 robos, cierre
+        $this->assertContains(['tipo' => 'Robo', 'categoria' => 'Policía', 'cantidad' => 2], $datos['resumen']);
         $this->assertSame('14/10/2026', $datos['turno']['fecha']);
         $this->assertSame('06:00', $datos['turno']['inicio']);
         $this->assertSame('14:00', $datos['turno']['fin']);
         $this->assertSame('Ana Supervisora', $datos['turno']['supervisor']);
+        $this->assertSame('Personal presente: Juan y María.', $datos['turno']['apertura']);
+        $this->assertSame('Novedades pendientes: Cámara 12 sin imagen.', $datos['turno']['cierre']);
         $this->assertSame('Laura Administrativa', $datos['generado']['por']);
     }
 
-    public function test_no_genera_el_pdf_de_un_turno_abierto(): void
+    public function test_no_genera_el_pdf_de_un_turno_sin_cierre(): void
     {
-        $abierto = Turno::factory()->create();
+        $abierta = $this->interno(TipoEvento::APERTURA_TURNO, '2026-10-15 06:00:00');
 
         $this->actingAs($this->administrativo)
             ->from(route('reportes.index'))
-            ->get(route('reportes.turno.pdf', $abierto))
+            ->get(route('reportes.guardia.pdf', $abierta->id))
             ->assertRedirect(route('reportes.index'))
+            ->assertSessionHas('error');
+    }
+
+    public function test_un_cierre_despues_de_otra_apertura_no_cierra_la_anterior(): void
+    {
+        $olvidada = $this->interno(TipoEvento::APERTURA_TURNO, '2026-10-13 06:00:00');
+        $this->guardiaCerrada();
+
+        $this->actingAs($this->administrativo)
+            ->from(route('reportes.index'))
+            ->get(route('reportes.guardia.pdf', $olvidada->id))
+            ->assertSessionHas('error');
+    }
+
+    public function test_no_genera_el_pdf_desde_un_evento_que_no_es_apertura(): void
+    {
+        $robo = $this->evento(['fecha_hora' => '2026-10-14 09:00:00']);
+
+        $this->actingAs($this->administrativo)
+            ->from(route('reportes.index'))
+            ->get(route('reportes.guardia.pdf', $robo->id))
             ->assertSessionHas('error');
     }
 
     public function test_el_supervisor_no_accede_a_reportes(): void
     {
+        $apertura = $this->guardiaCerrada();
+
         $this->actingAs($this->supervisor)->get(route('reportes.index'))->assertForbidden();
-        $this->actingAs($this->supervisor)->get(route('reportes.turno.pdf', $this->cerrado))->assertForbidden();
+        $this->actingAs($this->supervisor)->get(route('reportes.guardia.pdf', $apertura->id))->assertForbidden();
         $this->actingAs($this->supervisor)->get(route('reportes.eventos.planilla', ['formato' => 'xlsx']))->assertForbidden();
     }
 
@@ -202,7 +248,7 @@ class ReportesTest extends TestCase
 
     public function test_exporta_todos_los_registros_sin_el_limite_de_la_paginacion(): void
     {
-        Evento::factory()->count(45)->create(['turno_id' => $this->cerrado->id]);
+        Evento::factory()->count(45)->create(['usuario_id' => $this->supervisor->id]);
 
         $respuesta = $this->actingAs($this->administrativo)
             ->get(route('reportes.eventos.planilla', ['formato' => 'xlsx']))

@@ -38,9 +38,5 @@ class DatabaseSeeder extends Seeder
                 ])
                 ->assignRole($role);
         }
-
-        // El turno lo abre el Supervisor desde la UI (US-025): al entrar sin
-        // turno activo, el Dashboard le ofrece abrir uno. Por eso ya no se
-        // pre-crea acá.
     }
 }

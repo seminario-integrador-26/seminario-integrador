@@ -7,7 +7,6 @@ use App\Models\Cuadrante;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -22,7 +21,7 @@ class ConsultaEventosTest extends TestCase
 {
     use RefreshDatabase;
 
-    private Turno $turno;
+    private User $supervisor;
 
     protected function setUp(): void
     {
@@ -30,8 +29,7 @@ class ConsultaEventosTest extends TestCase
 
         $this->seed([RoleSeeder::class, PermissionSeeder::class]);
 
-        $supervisor = User::factory()->create()->assignRole('Supervisor');
-        $this->turno = Turno::factory()->create(['supervisor_id' => $supervisor->id]);
+        $this->supervisor = User::factory()->create()->assignRole('Supervisor');
     }
 
     private function usuarioConRol(string $rol): User
@@ -45,8 +43,7 @@ class ConsultaEventosTest extends TestCase
     private function evento(array $atributos = []): Evento
     {
         return Evento::factory()->create([
-            'turno_id' => $this->turno->id,
-            'usuario_id' => $this->turno->supervisor_id,
+            'usuario_id' => $this->supervisor->id,
             ...$atributos,
         ]);
     }
@@ -63,7 +60,7 @@ class ConsultaEventosTest extends TestCase
                 ->component('Eventos/Index')
                 ->has('eventos.data', 2)
                 ->has('eventos.data.0', fn (Assert $e) => $e
-                    ->hasAll(['id', 'fecha_hora', 'tipo', 'categoria', 'informativo', 'punto', 'timestamp_video', 'descripcion', 'autor', 'turno_id', 'notificaciones', 'corregido'])));
+                    ->hasAll(['id', 'fecha_hora', 'tipo', 'categoria', 'informativo', 'punto', 'timestamp_video', 'descripcion', 'autor', 'notificaciones', 'corregido'])));
     }
 
     public function test_el_supervisor_tambien_consulta_eventos(): void
@@ -336,77 +333,30 @@ class ConsultaEventosTest extends TestCase
             ->assertSessionHasErrors('orden');
     }
 
-    // --- Alcance: el Supervisor solo ve su turno abierto ---------------------
+    // --- Alcance: todos ven el libro completo (2026-10-23) ------------------
 
-    public function test_el_supervisor_solo_ve_los_eventos_de_su_turno_abierto(): void
-    {
-        $supervisor = User::find($this->turno->supervisor_id);
-        $propio = $this->evento();
-
-        $turnoCerrado = Turno::factory()->create([
-            'supervisor_id' => $supervisor->id,
-            'hora_fin' => '14:00:00',
-            'fecha_fin' => now()->toDateString(),
-        ]);
-        $this->evento(['turno_id' => $turnoCerrado->id]);
-
-        $otroTurno = Turno::factory()->create();
-        $this->evento(['turno_id' => $otroTurno->id, 'usuario_id' => $otroTurno->supervisor_id]);
-
-        $this->actingAs($supervisor)
-            ->get(route('eventos.index'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('eventos.data', 1)
-                ->where('eventos.data.0.id', $propio->id)
-                ->where('alcanceTurno.id', $this->turno->id));
-    }
-
-    public function test_el_supervisor_sin_turno_abierto_no_ve_eventos(): void
+    public function test_todos_los_roles_ven_los_eventos_de_cualquier_supervisor(): void
     {
         $this->evento();
+        $otro = $this->usuarioConRol('Supervisor');
+        $this->evento(['usuario_id' => $otro->id]);
 
-        $this->actingAs($this->usuarioConRol('Supervisor'))
-            ->get(route('eventos.index'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('eventos.data', 0)
-                ->where('alcanceTurno.id', null));
-    }
-
-    public function test_administrativo_y_administrador_ven_el_historico_completo(): void
-    {
-        $this->evento();
-        $otroTurno = Turno::factory()->create();
-        $this->evento(['turno_id' => $otroTurno->id]);
-
-        foreach (['Administrativo', 'Administrador de sistema'] as $rol) {
+        foreach (['Supervisor', 'Administrativo', 'Administrador de sistema'] as $rol) {
             $this->actingAs($this->usuarioConRol($rol))
                 ->get(route('eventos.index'))
                 ->assertInertia(fn (Assert $page) => $page
                     ->has('eventos.data', 2)
-                    ->where('alcanceTurno', null));
+                    ->missing('alcanceTurno'));
         }
     }
 
-    /**
-     * El Supervisor corrige eventos de cualquier turno (decisión 2026-10-15),
-     * así que abre su detalle por número; el listado sigue limitado a su turno.
-     */
-    public function test_el_supervisor_abre_el_detalle_de_otro_turno_pero_no_lo_lista(): void
+    public function test_el_supervisor_abre_el_detalle_de_un_evento_ajeno(): void
     {
-        $supervisor = User::find($this->turno->supervisor_id);
-        $otroTurno = Turno::factory()->create();
-        $ajeno = $this->evento(['turno_id' => $otroTurno->id]);
-        $propio = $this->evento();
+        $ajeno = $this->evento(['usuario_id' => $this->usuarioConRol('Supervisor')->id]);
 
-        $this->actingAs($supervisor)
+        $this->actingAs($this->supervisor)
             ->get(route('eventos.show', $ajeno))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('puedeCorregir', true));
-
-        $this->actingAs($supervisor)
-            ->get(route('eventos.index'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('eventos.data', 1)
-                ->where('eventos.data.0.id', $propio->id));
     }
 }

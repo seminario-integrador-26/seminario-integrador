@@ -28,7 +28,6 @@ export default function AuthenticatedLayout({
     const user = page.props.auth.user as User;
     const roles = page.props.auth.roles ?? [];
     const permisos = page.props.auth.permissions ?? [];
-    const turnoSupervisor = page.props.turnoSupervisor;
     const notificacionesFallidas = page.props.notificacionesFallidas ?? 0;
 
     const esAdminSistema = roles.includes('Administrador de sistema');
@@ -51,7 +50,6 @@ export default function AuthenticatedLayout({
             items: [
                 puedeConsultarEventos && { etiqueta: 'Eventos', ruta: 'eventos.index', activo: actual('eventos.index', 'eventos.show', 'erratas.*') },
                 esSupervisor && { etiqueta: 'Registrar evento', ruta: 'eventos.create', activo: actual('eventos.create') },
-                esSupervisor && { etiqueta: 'Turnos', ruta: 'turnos.index', activo: actual('turnos.*') },
             ],
         },
         {
@@ -132,30 +130,6 @@ export default function AuthenticatedLayout({
 
                         {/* Telemetría de sala */}
                         <div className="hidden items-center gap-3 font-mono text-xs 2xl:flex">
-                            {esSupervisor && (
-                                <Link
-                                    href={route('turnos.index')}
-                                    className={`flex items-center gap-2 border px-2.5 py-1 transition ${
-                                        turnoSupervisor
-                                            ? 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan'
-                                            : 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson'
-                                    }`}
-                                >
-                                    <span
-                                        className={`h-2 w-2 ${
-                                            turnoSupervisor
-                                                ? 'bg-atalaya-cyan'
-                                                : 'bg-atalaya-crimson'
-                                        }`}
-                                    ></span>
-                                    <span className="text-[11px] uppercase tracking-wider">
-                                        {turnoSupervisor
-                                            ? `Turno #${turnoSupervisor.id} · ${turnoSupervisor.hora_inicio}`
-                                            : 'Sin turno'}
-                                    </span>
-                                </Link>
-                            )}
-
                             <div className="flex items-center gap-2 border border-atalaya-border bg-atalaya-canvas px-2.5 py-1">
                                 <span className="h-2 w-2 bg-atalaya-cyan"></span>
                                 <span className="text-[11px] uppercase tracking-wider text-atalaya-text-muted">

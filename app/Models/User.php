@@ -42,12 +42,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Evento::class, 'usuario_id');
     }
-
-    /**
-     * Turnos de guardia abiertos por el usuario (Supervisor).
-     */
-    public function turnos(): HasMany
-    {
-        return $this->hasMany(Turno::class, 'supervisor_id');
-    }
 }

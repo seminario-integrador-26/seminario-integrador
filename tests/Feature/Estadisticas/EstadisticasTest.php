@@ -5,7 +5,6 @@ namespace Tests\Feature\Estadisticas;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use App\Services\EstadisticaService;
 use Database\Seeders\PermissionSeeder;
@@ -22,7 +21,7 @@ class EstadisticasTest extends TestCase
 {
     use RefreshDatabase;
 
-    private Turno $turno;
+    private User $supervisor;
 
     private TipoEvento $robo;
 
@@ -41,7 +40,7 @@ class EstadisticasTest extends TestCase
         $this->seed([RoleSeeder::class, PermissionSeeder::class]);
         $this->travelTo(Carbon::parse('2026-10-15 12:00:00'));
 
-        $this->turno = Turno::factory()->create();
+        $this->supervisor = User::factory()->create();
         $this->robo = TipoEvento::factory()->delGrupo('policia')->create(['nombre' => 'Robo']);
         $this->ruidos = TipoEvento::factory()->delGrupo('guardia_local')->create(['nombre' => 'Ruidos']);
         $this->informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('internos')->create([
@@ -56,8 +55,7 @@ class EstadisticasTest extends TestCase
         return Evento::factory()->create([
             'tipo_evento_id' => $tipo->id,
             'punto_monitoreo_id' => $punto?->id,
-            'turno_id' => $this->turno->id,
-            'usuario_id' => $this->turno->supervisor_id,
+            'usuario_id' => $this->supervisor->id,
             'fecha_hora' => $fechaHora,
         ]);
     }

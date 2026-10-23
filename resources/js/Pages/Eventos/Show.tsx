@@ -44,7 +44,6 @@ interface EventoDetalle {
     erratas: ErrataDetalle[];
     autor: string | null;
     registrado: string | null;
-    turno: { id: number; fecha: string; hora_inicio: string } | null;
     notificaciones: Notificacion[];
 }
 
@@ -212,10 +211,6 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                                 <Dato etiqueta="Registró">{evento.autor}</Dato>
                                 <Dato etiqueta="Fecha de carga en el sistema">
                                     {evento.registrado}
-                                </Dato>
-                                <Dato etiqueta="Turno">
-                                    {evento.turno &&
-                                        `#${evento.turno.id} · ${evento.turno.fecha} ${evento.turno.hora_inicio}`}
                                 </Dato>
                             </dl>
                         </div>

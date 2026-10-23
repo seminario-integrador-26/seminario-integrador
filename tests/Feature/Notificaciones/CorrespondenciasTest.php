@@ -7,7 +7,6 @@ use App\Models\Evento;
 use App\Models\GrupoInteresado;
 use App\Models\Notificacion;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use App\Services\NotificacionService;
 use Database\Seeders\PermissionSeeder;
@@ -157,7 +156,6 @@ class CorrespondenciasTest extends TestCase
             'evento_id' => Evento::factory()->create([
                 'tipo_evento_id' => $this->robo->id,
                 'usuario_id' => $supervisor->id,
-                'turno_id' => Turno::factory()->create(['supervisor_id' => $supervisor->id])->id,
             ])->id,
             'grupo_interesado_id' => $this->policia->id,
             'canal' => 'log',
@@ -246,7 +244,6 @@ class CorrespondenciasTest extends TestCase
         $evento = Evento::factory()->create([
             'tipo_evento_id' => $this->incendio->id,
             'usuario_id' => $supervisor->id,
-            'turno_id' => Turno::factory()->create(['supervisor_id' => $supervisor->id])->id,
         ]);
 
         $notificaciones = app(NotificacionService::class)->notificarEvento($evento);

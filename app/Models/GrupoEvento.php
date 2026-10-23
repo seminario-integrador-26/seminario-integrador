@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['codigo', 'nombre', 'descripcion'])]
 class GrupoEvento extends Model
 {
+    /** Eventos internos del libro de guardia (apertura, cierre, notas, erratas). */
+    public const INTERNOS = 'internos';
+
     protected $table = 'grupos_evento';
 
     public function tiposEvento(): HasMany

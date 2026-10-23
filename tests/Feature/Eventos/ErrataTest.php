@@ -7,7 +7,6 @@ use App\Models\Errata;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -27,8 +26,6 @@ class ErrataTest extends TestCase
 
     private User $supervisor;
 
-    private Turno $turno;
-
     private TipoEvento $robo;
 
     private PuntoMonitoreo $plaza;
@@ -43,14 +40,12 @@ class ErrataTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-15 15:00:00'));
 
         $this->supervisor = User::factory()->create(['name' => 'Ana Supervisora'])->assignRole('Supervisor');
-        $this->turno = Turno::factory()->create(['supervisor_id' => $this->supervisor->id]);
         $this->robo = TipoEvento::factory()->create(['nombre' => 'Robo', 'requiere_ubicacion' => true]);
         $this->plaza = PuntoMonitoreo::factory()->create(['codigo' => 'PM-M-001', 'nombre' => 'Plaza']);
 
         $this->evento = Evento::factory()->create([
             'tipo_evento_id' => $this->robo->id,
             'punto_monitoreo_id' => $this->plaza->id,
-            'turno_id' => $this->turno->id,
             'usuario_id' => $this->supervisor->id,
             'fecha_hora' => '2026-10-15 10:00:00',
             'timestamp_video' => '09:59:30',
@@ -234,10 +229,8 @@ class ErrataTest extends TestCase
         $this->assertDatabaseCount('erratas', 0);
     }
 
-    public function test_otro_supervisor_corrige_un_evento_de_un_turno_cerrado_y_queda_auditado(): void
+    public function test_otro_supervisor_corrige_un_evento_y_queda_auditado(): void
     {
-        $this->turno->update(['fecha_fin' => '2026-10-15', 'hora_fin' => '14:00:00']);
-        // Sin turno abierto: igual puede corregir.
         $otroSupervisor = User::factory()->create()->assignRole('Supervisor');
 
         $this->actingAs($otroSupervisor)
@@ -256,7 +249,7 @@ class ErrataTest extends TestCase
 
         $auditoria = AuditoriaAcceso::where('evento', AuditoriaAcceso::EVENTO_ERRATA)->latest('id')->firstOrFail();
         $this->assertSame($otroSupervisor->id, $auditoria->user_id);
-        $this->assertStringContainsString("turno #{$this->turno->id}, cargado por Ana Supervisora", $auditoria->descripcion);
+        $this->assertStringContainsString('cargado por Ana Supervisora', $auditoria->descripcion);
 
         // Ve el detalle (para revisar la corrección)...
         $this->actingAs($otroSupervisor)
@@ -264,15 +257,14 @@ class ErrataTest extends TestCase
             ->assertOk();
     }
 
-    public function test_corregir_otros_turnos_no_abre_el_listado_historico(): void
+    public function test_otro_supervisor_ve_el_evento_en_el_listado(): void
     {
         $otroSupervisor = User::factory()->create()->assignRole('Supervisor');
-        Turno::factory()->create(['supervisor_id' => $otroSupervisor->id]);
 
         $this->actingAs($otroSupervisor)
             ->get(route('eventos.index'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->where('eventos.total', 0));
+            ->assertInertia(fn (Assert $page) => $page->where('eventos.total', 1));
     }
 
     public function test_la_errata_es_inmutable(): void

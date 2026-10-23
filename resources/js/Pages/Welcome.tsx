@@ -156,7 +156,7 @@ export default function Welcome({ auth }: PageProps) {
                                     Libro de guardia digital
                                 </h2>
                                 <p className="font-sans text-xs leading-relaxed text-atalaya-text-muted">
-                                    Reporte de turno en PDF/A para archivo a
+                                    Libro de guardia en PDF/A para archivo a
                                     largo plazo, exportación .xlsx en UTF-8 y API
                                     pública de solo lectura versionada (/api/v1).
                                 </p>

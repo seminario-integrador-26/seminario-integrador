@@ -3,17 +3,14 @@
 namespace App\Services;
 
 use App\Events\EventoRegistrado;
-use App\Exceptions\SinTurnoActivoException;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Lógica de negocio del registro y consulta de eventos.
@@ -38,39 +35,26 @@ class EventoService
     public const ALCANCES = ['con_ubicacion', 'sin_ubicacion', 'informativos', 'sin_informativos'];
 
     /**
-     * US-003: registra un evento asociado al turno activo y a su autor.
+     * US-003: registra un evento a nombre de su autor. No hace falta un turno
+     * abierto: abrir y cerrar el turno también son eventos (Apertura de turno /
+     * Cierre de turno, ver LibroGuardiaService).
      *
      * @param  array{tipo_evento_id: int, fecha: string, hora: string, punto_monitoreo_id?: int|null, timestamp_video?: string, descripcion?: string|null}  $datos
-     *
-     * @throws SinTurnoActivoException
      */
     public function registrar(array $datos, User $autor): Evento
     {
-        $evento = DB::transaction(function () use ($datos, $autor) {
-            // Regla de negocio 5 + US-025: el evento se liga al turno abierto DEL
-            // supervisor que lo carga. Si no tiene uno abierto (o lo cerró), no
-            // se puede registrar.
-            $turno = Turno::abierto()
-                ->deSupervisor($autor->id)
-                ->latest('id')
-                ->lockForUpdate()
-                ->first()
-                ?? throw new SinTurnoActivoException;
+        $puntoMonitoreoId = $datos['punto_monitoreo_id'] ?? null;
 
-            $puntoMonitoreoId = $datos['punto_monitoreo_id'] ?? null;
+        $evento = Evento::create([
+            'tipo_evento_id' => $datos['tipo_evento_id'],
+            'punto_monitoreo_id' => $puntoMonitoreoId,
+            'usuario_id' => $autor->id,
+            'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
+            'timestamp_video' => $puntoMonitoreoId ? $datos['timestamp_video'] : null,
+            'descripcion' => $datos['descripcion'] ?? null,
+        ]);
 
-            return Evento::create([
-                'tipo_evento_id' => $datos['tipo_evento_id'],
-                'punto_monitoreo_id' => $puntoMonitoreoId,
-                'turno_id' => $turno->id,
-                'usuario_id' => $autor->id,
-                'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
-                'timestamp_video' => $puntoMonitoreoId ? $datos['timestamp_video'] : null,
-                'descripcion' => $datos['descripcion'] ?? null,
-            ]);
-        });
-
-        // Fuera de la transacción: el listener en cola sólo ve eventos ya confirmados.
+        // El listener en cola notifica (Observer).
         EventoRegistrado::dispatch($evento);
 
         return $evento;
@@ -103,11 +87,6 @@ class EventoService
         return PuntoMonitoreo::paraMapa();
     }
 
-    public function turnoActivoDe(User $supervisor): ?Turno
-    {
-        return Turno::activoDe($supervisor->id)?->load('supervisor:id,name');
-    }
-
     /**
      * US-010: evento con todo lo necesario para mostrar su detalle.
      */
@@ -121,7 +100,6 @@ class EventoService
             'puntoMonitoreo.barrio:id,nombre',
             'puntoMonitoreo.cuadrante:id,nombre',
             'usuario:id,name',
-            'turno:id,fecha,hora_inicio,supervisor_id',
             'notificaciones.grupoInteresado:id,nombre',
             'erratas.autor:id,name',
         ]);
@@ -272,26 +250,16 @@ class EventoService
     }
 
     /**
-     * Alcance de la consulta: con `eventos.consultar_historico` (Administrativo,
-     * Administrador de sistema) se ve todo; sin él (Supervisor) solo los
-     * eventos del turno que tiene abierto, y nada si no tiene turno abierto.
-     * Lista, filtra y exporta los valores vigentes (con fe de errata).
+     * Alcance de la consulta: todos los roles con `eventos.consultar` ven el
+     * libro completo (decisión 2026-10-23: sin turnos, el Supervisor ya no se
+     * limita a su turno). Lista, filtra y exporta los valores vigentes (con fe
+     * de errata).
      *
      * @return Builder<Evento>
      */
     public function visiblesPara(User $consultante): Builder
     {
-        $query = Evento::vigentes();
-
-        if ($consultante->can('eventos.consultar_historico')) {
-            return $query;
-        }
-
-        $turno = Turno::activoDe($consultante->id);
-
-        return $turno
-            ? $query->where('turno_id', $turno->id)
-            : $query->whereRaw('1 = 0');
+        return Evento::vigentes();
     }
 
     public function puedeVer(User $consultante, Evento $evento): bool
@@ -301,8 +269,7 @@ class EventoService
 
     /**
      * Fe de errata (decisión del equipo 2026-10-15): el Supervisor corrige
-     * eventos de cualquier turno, incluso de otros supervisores (auditado).
-     * No abre la consulta histórica: el listado sigue limitado a su turno.
+     * cualquier evento, incluso de otros supervisores (auditado).
      */
     public function puedeCorregir(User $usuario): bool
     {

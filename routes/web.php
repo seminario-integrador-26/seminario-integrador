@@ -15,7 +15,6 @@ use App\Http\Controllers\PuntoMonitoreoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\TokenApiController;
-use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -100,13 +99,6 @@ Route::middleware(['auth', 'permission:parametros.configurar'])->group(function 
 Route::middleware(['auth', 'role:Supervisor'])->group(function () {
     Route::resource('eventos', EventoController::class)->only(['create', 'store']);
 
-    // US-025: apertura, cierre y consulta de turnos de guardia.
-    // TODO: confirmar con el equipo si Administrativo/Admin de sistema también
-    // consultan el historial (hoy 'turnos.index' es sólo del Supervisor).
-    Route::get('turnos', [TurnoController::class, 'index'])->name('turnos.index');
-    Route::post('turnos', [TurnoController::class, 'store'])->name('turnos.store');
-    Route::patch('turnos/{turno}/cerrar', [TurnoController::class, 'cerrar'])->name('turnos.cerrar');
-
     // Regla de negocio 1: corrección de eventos por fe de errata.
     Route::get('eventos/{evento}/errata', [ErrataController::class, 'create'])
         ->whereNumber('evento')->name('erratas.create');
@@ -148,12 +140,14 @@ Route::middleware(['auth', 'permission:dashboards.ver'])->group(function () {
 });
 
 /*
-| Reportes PDF por turno (US-012) y exportación de eventos (US-013) —
+| Libro de guardia en PDF (US-012) y exportación de eventos (US-013) —
 | permiso reportes.exportar (Administrativo y Administrador de sistema).
 */
 Route::middleware(['auth', 'permission:reportes.exportar'])->group(function () {
     Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    Route::get('reportes/turnos/{turno}/pdf', [ReporteController::class, 'turnoPdf'])->name('reportes.turno.pdf');
+    // {apertura}: evento Apertura de turno; el PDF va hasta el Cierre siguiente.
+    Route::get('reportes/guardias/{apertura}/pdf', [ReporteController::class, 'guardiaPdf'])
+        ->whereNumber('apertura')->name('reportes.guardia.pdf');
     Route::get('reportes/eventos.{formato}', [ReporteController::class, 'eventosPlanilla'])
         ->whereIn('formato', ['xlsx', 'xls'])
         ->name('reportes.eventos.planilla');

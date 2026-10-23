@@ -24,7 +24,25 @@ class TipoEvento extends Model
     /** @use HasFactory<TipoEventoFactory> */
     use HasFactory;
 
+    /**
+     * Tipos del grupo Internos que arman el libro de guardia: el turno se abre
+     * y se cierra registrando un evento (docs/rediseno-libro-guardia.md).
+     */
+    public const APERTURA_TURNO = 'Apertura de turno';
+
+    public const CIERRE_TURNO = 'Cierre de turno';
+
     protected $table = 'tipos_evento';
+
+    /**
+     * Id de un tipo del grupo Internos por nombre (o null si no está sembrado).
+     */
+    public static function interno(string $nombre): ?int
+    {
+        return static::where('nombre', $nombre)
+            ->whereHas('grupoEvento', fn ($q) => $q->where('codigo', GrupoEvento::INTERNOS))
+            ->value('id');
+    }
 
     protected function casts(): array
     {

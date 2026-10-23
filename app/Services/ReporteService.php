@@ -3,14 +3,14 @@
 namespace App\Services;
 
 use App\Models\Evento;
-use App\Models\Turno;
+use App\Models\TipoEvento;
 use App\Models\User;
 use App\Services\Exportadores\XlsExportador;
 use DomainException;
 use Illuminate\Support\Carbon;
 
 /**
- * Arma los datos de los reportes (US-012 PDF de turno, US-013 planilla de
+ * Arma los datos de los reportes (US-012 Libro de guardia en PDF, US-013 planilla de
  * eventos) y delega la generación del archivo en ExportacionService, que no
  * sabe nada del dominio.
  */
@@ -19,42 +19,53 @@ class ReporteService
     public function __construct(
         private readonly ExportacionService $exportacion,
         private readonly EventoService $eventos,
+        private readonly LibroGuardiaService $libro,
     ) {}
 
     /**
-     * US-012: PDF de un turno CERRADO con EXCLUSIVAMENTE sus eventos (RN8).
+     * US-012: Libro de guardia en PDF. Se elige una Apertura de turno y el PDF
+     * incluye todo lo registrado hasta el Cierre de turno siguiente (valores
+     * vigentes, con fe de errata). El personal presente y las novedades van
+     * en la descripción de la apertura y del cierre.
      *
      * @return array{nombre: string, contenido: string}
      *
-     * @throws DomainException si el turno sigue abierto.
+     * @throws DomainException si el evento no es una apertura o el turno sigue abierto.
      */
-    public function pdfDeTurno(Turno $turno, User $generadoPor): array
+    public function pdfDeGuardia(Evento $apertura, User $generadoPor): array
     {
-        if ($turno->estaAbierto()) {
-            throw new DomainException('El turno sigue abierto: el reporte se genera al cerrarlo.');
+        if ($apertura->tipo_evento_id !== TipoEvento::interno(TipoEvento::APERTURA_TURNO)) {
+            throw new DomainException('El reporte se genera a partir de una Apertura de turno.');
         }
 
-        $turno->loadMissing('supervisor:id,name');
+        $cierre = $this->libro->cierreSiguiente($apertura)
+            ?? throw new DomainException('El turno sigue abierto: el reporte se genera al registrar el Cierre de turno.');
 
-        $eventos = $turno->eventos()
+        $apertura->loadMissing('usuario:id,name');
+        $cierre->loadMissing('usuario:id,name');
+
+        $eventos = $this->libro->eventosDe($apertura, $cierre)
             ->with(['tipoEvento:id,nombre,grupo_evento_id', 'tipoEvento.grupoEvento:id,nombre', 'puntoMonitoreo:id,codigo,nombre'])
             ->orderBy('fecha_hora')
             ->orderBy('id')
             ->get();
 
+        $fecha = $apertura->fecha_hora->format('d/m/Y');
+
         $contenido = $this->exportacion->exportar('pdf', [
             'vista' => 'reportes.turno',
-            'titulo' => "Reporte de turno #{$turno->id}",
+            'titulo' => "Libro de guardia #{$apertura->id}",
             'turno' => [
-                'id' => $turno->id,
-                'fecha' => $turno->fecha->format('d/m/Y'),
-                'inicio' => substr((string) $turno->hora_inicio, 0, 5),
-                'fin' => ($turno->fecha_fin && ! $turno->fecha_fin->isSameDay($turno->fecha)
-                    ? $turno->fecha_fin->format('d/m/Y').' '
-                    : '').substr((string) $turno->hora_fin, 0, 5),
-                'supervisor' => $turno->supervisor?->name,
-                'personal' => $turno->personal_presente ?? [],
-                'novedades' => $turno->novedades_pendientes,
+                'id' => $apertura->id,
+                'fecha' => $fecha,
+                'inicio' => $apertura->fecha_hora->format('H:i'),
+                'fin' => ($cierre->fecha_hora->format('d/m/Y') !== $fecha
+                    ? $cierre->fecha_hora->format('d/m/Y').' '
+                    : '').$cierre->fecha_hora->format('H:i'),
+                'supervisor' => $apertura->usuario?->name,
+                'supervisor_cierre' => $cierre->usuario?->name,
+                'apertura' => $apertura->descripcion,
+                'cierre' => $cierre->descripcion,
             ],
             'eventos' => $eventos->map(fn (Evento $e) => [
                 'id' => $e->id,
@@ -85,7 +96,7 @@ class ReporteService
         ]);
 
         return [
-            'nombre' => sprintf('Reporte_Turno_%d_%s.pdf', $turno->id, $turno->fecha->format('d-m-Y')),
+            'nombre' => sprintf('Libro_Guardia_%d_%s.pdf', $apertura->id, $apertura->fecha_hora->format('d-m-Y')),
             'contenido' => $contenido,
         ];
     }

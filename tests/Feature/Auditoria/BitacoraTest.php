@@ -5,7 +5,6 @@ namespace Tests\Feature\Auditoria;
 use App\Models\AuditoriaAcceso;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -53,7 +52,6 @@ class BitacoraTest extends TestCase
     public function test_registrar_un_evento_queda_en_la_bitacora_con_rol_e_ip(): void
     {
         $supervisor = User::factory()->create()->assignRole('Supervisor');
-        Turno::factory()->create(['supervisor_id' => $supervisor->id]);
         $tipo = TipoEvento::factory()->create(['requiere_ubicacion' => true]);
         $punto = PuntoMonitoreo::factory()->create();
 

@@ -1,4 +1,4 @@
-{{-- US-012: Reporte de turno (Libro de Guardia digital). Vista Blade PURA
+{{-- US-012: Libro de guardia digital, de una Apertura de turno al Cierre siguiente. Vista Blade PURA
      (sin Inertia) que renderiza PdfExportador con barryvdh/laravel-dompdf.
      Fuente DejaVu Sans: viene con dompdf y cubre tildes y "ñ".
      Logo: se usa public/images/logo-municipalidad.png si existe.
@@ -11,7 +11,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Reporte de Turno #{{ $turno['id'] }}</title>
+    <title>Libro de guardia #{{ $turno['id'] }}</title>
     <style>
         @page { margin: 28mm 16mm 22mm 16mm; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; color: #1f2937; }
@@ -47,8 +47,8 @@
                     @endif
                 </td>
                 <td>
-                    <h1>Reporte de Turno de Trabajo - Centro de Monitoreo Urbano</h1>
-                    <div class="subtitulo">Turno #{{ $turno['id'] }} · {{ $turno['fecha'] }} · {{ $turno['inicio'] }} a {{ $turno['fin'] }} hs</div>
+                    <h1>Libro de Guardia - Centro de Monitoreo Urbano</h1>
+                    <div class="subtitulo">Apertura #{{ $turno['id'] }} · {{ $turno['fecha'] }} · {{ $turno['inicio'] }} a {{ $turno['fin'] }} hs</div>
                 </td>
             </tr>
         </table>
@@ -62,9 +62,10 @@
     <table class="datos">
         <tr><td class="etiqueta">Fecha del turno</td><td>{{ $turno['fecha'] }}</td></tr>
         <tr><td class="etiqueta">Horario</td><td>{{ $turno['inicio'] }} a {{ $turno['fin'] }} hs</td></tr>
-        <tr><td class="etiqueta">Supervisor</td><td>{{ $turno['supervisor'] ?? '—' }}</td></tr>
-        <tr><td class="etiqueta">Personal presente</td><td>{{ $turno['personal'] ? implode(', ', $turno['personal']) : '—' }}</td></tr>
-        <tr><td class="etiqueta">Novedades pendientes</td><td>{{ $turno['novedades'] ?: '—' }}</td></tr>
+        <tr><td class="etiqueta">Abrió</td><td>{{ $turno['supervisor'] ?? '—' }}</td></tr>
+        <tr><td class="etiqueta">Apertura</td><td>{{ $turno['apertura'] ?: '—' }}</td></tr>
+        <tr><td class="etiqueta">Cerró</td><td>{{ $turno['supervisor_cierre'] ?? '—' }}</td></tr>
+        <tr><td class="etiqueta">Cierre</td><td>{{ $turno['cierre'] ?: '—' }}</td></tr>
     </table>
 
     <h2>Eventos del turno ({{ count($eventos) }})</h2>

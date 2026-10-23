@@ -25,7 +25,6 @@ interface EventoFila {
     timestamp_video: string | null;
     descripcion: string | null;
     autor: string | null;
-    turno_id: number;
     notificaciones: Notificacion[];
     corregido: boolean;
 }
@@ -59,8 +58,6 @@ interface Props {
     tiposPunto: Opciones;
     barrios: ItemCatalogo[];
     cuadrantes: ItemCatalogo[];
-    /** Supervisor: solo ve su turno abierto (id null = sin turno). null = ve todo. */
-    alcanceTurno: { id: number | null } | null;
 }
 
 interface Exportacion {
@@ -129,15 +126,12 @@ export default function Index({
     tiposPunto,
     barrios,
     cuadrantes,
-    alcanceTurno,
 }: Props) {
     const { errors, auth } = usePage<PageProps>().props;
     // US-021: si se llegó desde un gráfico de Análisis, ofrecer volver.
     const desdeAnalisis = usePage().url.includes('origen=analisis');
     const puedeReenviar = auth.roles.includes('Supervisor');
     const puedeExportar = auth.permissions.includes('reportes.exportar');
-    const puedeCorregir = auth.permissions.includes('erratas.crear');
-    const [eventoACorregir, setEventoACorregir] = useState('');
     const [exportacion, setExportacion] = useState<Exportacion | null>(null);
     const [form, setForm] = useState<Filtros>({ ...filtrosVacios, ...filtros });
     const primeraVez = useRef(true);
@@ -514,41 +508,6 @@ export default function Index({
                         </div>
                     </form>
 
-                    {alcanceTurno && (
-                        <div className="flex flex-wrap items-center justify-between gap-3 border border-atalaya-cyan/40 bg-atalaya-cyan/10 px-4 py-2 text-sm text-atalaya-cyan">
-                            <p>
-                                {alcanceTurno.id
-                                    ? `Se muestran solo los eventos de tu turno abierto (#${alcanceTurno.id}).`
-                                    : 'No tenés un turno abierto: abrí uno para ver y registrar eventos.'}
-                            </p>
-                            {puedeCorregir && (
-                                // Fe de errata sobre eventos de cualquier turno, por número.
-                                <form
-                                    className="flex items-center gap-2"
-                                    onSubmit={(e) => {
-                                        e.preventDefault();
-                                        if (eventoACorregir) router.visit(route('eventos.show', eventoACorregir));
-                                    }}
-                                >
-                                    <label htmlFor="evento_a_corregir" className="font-mono text-xs uppercase">
-                                        Corregir otro evento #
-                                    </label>
-                                    <TextInput
-                                        id="evento_a_corregir"
-                                        inputMode="numeric"
-                                        className="w-24 py-1 font-mono text-sm"
-                                        placeholder="Nº"
-                                        value={eventoACorregir}
-                                        onChange={(e) => setEventoACorregir(e.target.value.replace(/\D/g, ''))}
-                                    />
-                                    <SecondaryButton type="submit" disabled={!eventoACorregir}>
-                                        Ir
-                                    </SecondaryButton>
-                                </form>
-                            )}
-                        </div>
-                    )}
-
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm text-atalaya-text-muted">
                             {eventos.total === 0
@@ -626,7 +585,6 @@ export default function Index({
                                     </Celda>
                                     <Celda tono="principal" mono nowrap>
                                         {e.fecha_hora}
-                                        <div className="font-sans text-xs text-atalaya-text-dim">Turno #{e.turno_id}</div>
                                     </Celda>
                                     <Celda>
                                         <div className="font-medium text-white">{e.tipo}</div>

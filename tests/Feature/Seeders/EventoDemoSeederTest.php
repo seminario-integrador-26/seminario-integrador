@@ -5,7 +5,8 @@ namespace Tests\Feature\Seeders;
 use App\Events\EventoRegistrado;
 use App\Models\Errata;
 use App\Models\Evento;
-use App\Models\Turno;
+use App\Models\TipoEvento;
+use App\Services\LibroGuardiaService;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\EventoDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,8 +24,13 @@ class EventoDemoSeederTest extends TestCase
 
         $this->seed(EventoDemoSeeder::class);
 
-        $this->assertSame(EventoDemoSeeder::DIAS * 3 - 1, Turno::count());
-        $this->assertSame(0, Turno::abierto()->count());
+        // Cada turno tiene su Apertura y su Cierre; ninguno queda abierto.
+        $turnos = EventoDemoSeeder::DIAS * 3 - 1;
+        $this->assertSame($turnos, Evento::where('tipo_evento_id', TipoEvento::interno(TipoEvento::APERTURA_TURNO))->count());
+        $this->assertSame($turnos, Evento::where('tipo_evento_id', TipoEvento::interno(TipoEvento::CIERRE_TURNO))->count());
+        $this->assertNull(app(LibroGuardiaService::class)->aperturaVigente());
+        // La Errata la crea el sistema: el seeder no la carga como evento.
+        $this->assertSame(0, Evento::where('tipo_evento_id', TipoEvento::interno('Errata'))->count());
         $this->assertGreaterThan(1000, Evento::count());
         $this->assertGreaterThan(0, Errata::count());
 

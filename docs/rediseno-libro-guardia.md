@@ -1,6 +1,6 @@
 # Rediseño: Libro de guardia, eventos internos y fin de los turnos
 
-> Estado: **en curso** (2026-10-23): paso 1 hecho. Retomar desde el paso 2.
+> Estado: **en curso** (2026-10-23): pasos 1 a 4 hechos. Retomar desde el paso 5.
 > Pedido del Centro de Monitoreo: los eventos internos (apertura y cierre de
 > turno, notas, erratas, otros) se registran en el libro y **se notifican por
 > Telegram** como cualquier otro evento.
@@ -90,9 +90,14 @@ estadísticas? Hoy sí (`es_cuantificable=true`); solo los 5 internos nuevos no.
    (`seguridad_ciudadana` → `guardia_local`, `oficios_recepcionados` →
    `internos`); `TipoEventoSeeder` suma Apertura de turno, Cierre de turno,
    Nota, Errata y Otros (no cuantificables). Front y tests con los códigos nuevos.
-2. Apertura y Cierre como eventos; sacar la tarjeta automática y el menú Turnos.
-3. Quitar `turnos` / `turno_id` (migración, vista, modelos, alcance del Supervisor).
-4. PDF del Libro de guardia de apertura a cierre.
+2–4. ✅ (un solo commit: estaban acoplados) Apertura y Cierre como eventos
+   (`LibroGuardiaService`: turno vigente = última Apertura sin Cierre posterior;
+   un Cierre registrado después de otra Apertura no cierra la anterior); sin
+   tarjeta automática ni menú Turnos; migración `2026_10_23_000002` borra
+   `turnos` y `eventos.turno_id` y recrea `eventos_vigentes`; el Supervisor ve
+   todo el libro; permisos `eventos.consultar_historico` y `turnos.gestionar`
+   eliminados; PDF (`reportes.guardia.pdf`) de una Apertura al Cierre
+   siguiente, con valores vigentes; sin Cierre, no se genera.
 5. Evento interno "Errata" automático al cargar una fe de errata.
 6. Docs (`CLAUDE.md`, modelo de dominio, backlog) y deploy (la migración borra
    datos de turnos en producción: `deploy.sh` ya hace backup antes de migrar).

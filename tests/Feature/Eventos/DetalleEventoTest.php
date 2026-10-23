@@ -5,7 +5,6 @@ namespace Tests\Feature\Eventos;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
-use App\Models\Turno;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -22,8 +21,6 @@ class DetalleEventoTest extends TestCase
 
     private User $supervisor;
 
-    private Turno $turno;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,7 +28,6 @@ class DetalleEventoTest extends TestCase
         $this->seed([RoleSeeder::class, PermissionSeeder::class]);
 
         $this->supervisor = User::factory()->create(['name' => 'Ana Supervisora'])->assignRole('Supervisor');
-        $this->turno = Turno::factory()->create(['supervisor_id' => $this->supervisor->id]);
     }
 
     /**
@@ -40,7 +36,6 @@ class DetalleEventoTest extends TestCase
     private function evento(array $atributos = []): Evento
     {
         return Evento::factory()->create([
-            'turno_id' => $this->turno->id,
             'usuario_id' => $this->supervisor->id,
             ...$atributos,
         ]);
@@ -76,7 +71,6 @@ class DetalleEventoTest extends TestCase
                 ->where('evento.punto.codigo', 'PM-P-010')
                 ->where('evento.punto.tipo', 'Provincial')
                 ->where('evento.autor', 'Ana Supervisora')
-                ->where('evento.turno.id', $this->turno->id)
                 ->where('evento.informativo', false)
                 ->has('evento.registrado')
                 ->has('evento.notificaciones', 0));

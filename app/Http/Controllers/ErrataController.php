@@ -74,11 +74,11 @@ class ErrataController extends Controller
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_ERRATA,
             $request->user(),
-            // Turno y autor del evento: deja a la vista correcciones sobre
-            // turnos cerrados o de otros supervisores.
+            // Autor del evento: deja a la vista correcciones sobre eventos
+            // de otros supervisores.
             mb_substr(
                 "Fe de errata sobre el evento #{$evento->id} ({$campos}); "
-                ."turno #{$evento->turno_id}, cargado por {$evento->usuario->name}.",
+                ."cargado por {$evento->usuario->name}.",
                 0,
                 500,
             ),

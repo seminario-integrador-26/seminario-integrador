@@ -15,7 +15,6 @@ import type {
     PageProps,
     PuntoMapa,
     TipoEventoOpcion,
-    TurnoSupervisor,
 } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent } from 'react';
@@ -27,7 +26,6 @@ interface Props {
     /** PM precargado al llegar desde el mapa (?punto_monitoreo_id=X). */
     puntoInicial?: number | null;
     tiposPunto: Opciones;
-    turnoActivo: (TurnoSupervisor & { supervisor: string | null }) | null;
 }
 
 type FormEvento = {
@@ -50,13 +48,18 @@ function Obligatorio() {
     return <span className="text-atalaya-crimson"> *</span>;
 }
 
+/** Qué conviene anotar en la descripción de los eventos de turno. */
+const AYUDA_DESCRIPCION: Record<string, string> = {
+    'Apertura de turno': 'Personal presente en la guardia.',
+    'Cierre de turno': 'Novedades pendientes para el turno siguiente.',
+};
+
 export default function Create({
     tipos,
     categorias,
     puntos,
     puntoInicial = null,
     tiposPunto,
-    turnoActivo,
 }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm<FormEvento>({
         tipo_evento_id: '',
@@ -75,8 +78,9 @@ export default function Create({
     );
     const requiereUbicacion = Boolean(tipoSeleccionado?.requiere_ubicacion);
     const hayPunto = data.punto_monitoreo_id !== null;
-    // Error del servidor sin campo propio en el form (SinTurnoActivoException).
-    const errorTurno = (errors as Record<string, string | undefined>).turno;
+    // Apertura y Cierre de turno se registran como cualquier evento: lo que
+    // antes pedía la tarjeta de turno va en la descripción.
+    const ayudaDescripcion = AYUDA_DESCRIPCION[tipoSeleccionado?.nombre ?? ''];
 
     const seleccionarPunto = (id: number | null) =>
         setData((d) => ({
@@ -119,25 +123,6 @@ export default function Create({
                         </Alert>
                     ) : (
                         <FlashMessages />
-                    )}
-
-                    {turnoActivo ? (
-                        <Alert variant="info">
-                            Turno #{turnoActivo.id} abierto el{' '}
-                            {turnoActivo.fecha} a las {turnoActivo.hora_inicio}
-                            {turnoActivo.supervisor &&
-                                ` por ${turnoActivo.supervisor}`}
-                            . El evento quedará asociado a este turno.
-                        </Alert>
-                    ) : (
-                        <Alert variant="error">
-                            No hay un turno de guardia abierto. Abrí un turno
-                            antes de registrar eventos.
-                        </Alert>
-                    )}
-
-                    {errorTurno && (
-                        <Alert variant="error">{errorTurno}</Alert>
                     )}
 
                     <form
@@ -303,6 +288,7 @@ export default function Create({
                                     maxLength={5000}
                                     className={campoClass}
                                     value={data.descripcion}
+                                    placeholder={ayudaDescripcion}
                                     onChange={(e) =>
                                         setData('descripcion', e.target.value)
                                     }
@@ -331,7 +317,7 @@ export default function Create({
                                 vez registrado.
                             </p>
                             <PrimaryButton
-                                disabled={processing || !turnoActivo}
+                                disabled={processing}
                             >
                                 Registrar evento
                             </PrimaryButton>
