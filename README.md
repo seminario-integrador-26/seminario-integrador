@@ -6,7 +6,7 @@ Villa María (UTN FRVM).
 
 ## Stack
 
-- **Backend:** Laravel · PHP 8.4 · MySQL
+- **Backend:** Laravel · PHP 8.5 (≥ 8.5.12) · MySQL
 - **Frontend interno:** React + Inertia.js (Breeze)
 - **API pública:** REST solo lectura, versionada (`/api/v1`), Laravel Sanctum
 - **Mapas:** Leaflet + OpenStreetMap (react-leaflet)
@@ -31,7 +31,7 @@ Laravel ni dependencias.
 
 ## Bootstrap pendiente (cuando arranquemos la implementación)
 
-> Requiere PHP 8.4, Composer y Node instalados.
+> Requiere PHP 8.5 (≥ 8.5.12), Composer y Node instalados.
 
 ```bash
 # 1. Laravel + Breeze (Inertia + React)

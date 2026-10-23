@@ -39,7 +39,10 @@ echo "==> [1/9] git pull"
 git pull --ff-only
 
 echo "==> [2/9] build de imágenes"
-$COMPOSE build
+# --pull: las bases usan tag de rama (php:8.5-fpm-alpine, node:24-alpine) y
+# así siempre traen el último parche de seguridad. El Dockerfile corta el build
+# si la versión de PHP/Node no tiene el fix, antes de tocar los contenedores.
+$COMPOSE build --pull
 
 echo "==> [3/9] up -d (recrea lo cambiado y re-linkea la red)"
 $COMPOSE up -d

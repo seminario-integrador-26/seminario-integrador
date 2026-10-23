@@ -10,10 +10,14 @@ limpio. Pensada para cualquier integrante del equipo.
 
 Tené instalado (y disponible en el `PATH`):
 
-- **PHP 8.4** (mínimo 8.3) con las extensiones que pide Laravel: `pdo_pgsql`,
+- **PHP 8.5.12** o superior (`composer.json` lo exige: las versiones anteriores
+  tienen CVE-2026-109618/109619, RCE sin autenticación) con las extensiones que pide Laravel: `pdo_pgsql`,
   `pgsql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `curl`.
-- **Composer 2.x**
-- **Node 20+ y npm** (se desarrolló con Node 24 / npm 11)
+  En Windows, apuntar `curl.cainfo` y `openssl.cafile` del `php.ini` a un
+  `cacert.pem` actual (≥ `composer/ca-bundle` 1.6.0, por la CA eMudhra comprometida).
+- **Composer 2.x** (actualizado: `composer self-update`)
+- **Node 24 (≥ 24.22.1) y npm 11**: el `package-lock.json` se genera con npm 11.
+  Node 20 no tiene soporte ni parches de seguridad.
 - **PostgreSQL 15+** corriendo localmente (o accesible por red)
 - **Ghostscript** (`apt install ghostscript`): convierte el reporte de turno a
   PDF/A. Sin él el reporte sale como PDF común y queda un error en el log; para

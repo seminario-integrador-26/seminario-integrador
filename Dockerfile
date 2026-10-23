@@ -2,7 +2,7 @@
 #
 # Build multi-stage para el Seminario Integrador (Laravel 13 + Inertia/React).
 # Produce DOS imágenes desde un mismo archivo:
-#   - target "app": PHP-FPM 8.4 con el código, vendor y assets ya compilados.
+#   - target "app": PHP-FPM 8.5 (>= 8.5.12) con el código, vendor y assets ya compilados.
 #   - target "web": nginx que sirve public/ y delega el PHP al contenedor app.
 # Coexiste con otros proyectos del server: no publica puertos por sí mismo,
 # eso lo decide docker-compose.
@@ -15,6 +15,9 @@
 # @laravel/multiplex).
 FROM node:24-alpine AS assets
 WORKDIR /app
+# Node >= 24.22.1 (o 22.23.4 / 26.12.1): fix de CVE-2026-111497 (Brotli) y de
+# la CA eMudhra. Tag de rama: construir siempre con --pull para traer el último parche.
+RUN node -e "const min={22:[23,4],24:[22,1],26:[12,1]}; const [a,b,c]=process.versions.node.split('.').map(Number); const m=min[a]; if (!m || b<m[0] || (b===m[0] && c<m[1])) { console.error('Node '+process.version+' sin parche de seguridad (>= 24.22.1)'); process.exit(1) }"
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
@@ -32,10 +35,19 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
 
 # ---------------------------------------------------------------------------
-# Stage 3 — Imagen de la app (PHP-FPM 8.4)
+# Stage 3 — Imagen de la app (PHP-FPM 8.5)
 # ---------------------------------------------------------------------------
-FROM php:8.4-fpm-alpine AS app
+FROM php:8.5-fpm-alpine AS app
 WORKDIR /var/www
+
+# PHP >= 8.5.12: fix de CVE-2026-109618 y CVE-2026-109619 (RCE). La imagen
+# oficial compila desde fuente, así que PHP_VERSION es confiable. Si la imagen
+# cacheada es vieja el build falla acá: reconstruir con --pull --no-cache.
+RUN php -r 'if (version_compare(PHP_VERSION, "8.5.12", "<")) { fwrite(STDERR, "PHP ".PHP_VERSION." sin parche de seguridad (>= 8.5.12)" . PHP_EOL); exit(1); }'
+
+# Trust store del contenedor actualizado (CA eMudhra comprometida): la app
+# sale por TLS a Telegram/WhatsApp. Alpine corregido: ca-certificates 20261020-r0.
+RUN apk upgrade --no-cache ca-certificates
 
 # Binario de composer (para el dump-autoload optimizado de más abajo).
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
@@ -51,8 +63,8 @@ RUN install-php-extensions \
     intl \
     mbstring \
     exif \
-    pcntl \
-    opcache
+    pcntl
+# opcache no se instala: desde PHP 8.5 viene compilado siempre en el núcleo.
 
 # RNF PDF/A: Ghostscript convierte el reporte de turno a PDF/A-2b
 # (config/reportes.php). Trae el perfil sRGB en /usr/share/ghostscript/*/iccprofiles.

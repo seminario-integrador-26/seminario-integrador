@@ -15,6 +15,10 @@ host hace de proxy con TLS hacia `127.0.0.1:8080`.
 2. Todo commiteado y **pusheado a `main`**: el VPS hace `git pull` de ahí.
 3. Si el cambio agrega variables al `.env`, cargarlas en el VPS **antes** de
    correr `deploy.sh` (comparar con `.env.production.example`).
+4. Versiones con parche de seguridad: la imagen exige **PHP ≥ 8.5.12** y
+   **Node ≥ 24.22.1** y corta el build si la base no las trae (antes de tocar los
+   contenedores). `deploy.sh` construye con `--pull`; si igual corta, esperar a
+   que salga la imagen oficial o forzar `docker compose -f docker-compose.prod.yml build --pull --no-cache`.
 
 ## Deploy
 

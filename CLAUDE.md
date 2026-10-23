@@ -93,7 +93,7 @@ Detalle completo de carpetas y comunicación: **`docs/arquitectura.md`**.
 
 ## Stack
 
-Laravel (estable) · PHP 8.4 · React + Inertia (Breeze; frontend en **TypeScript**
+Laravel (estable) · PHP 8.5 (≥ 8.5.12) · React + Inertia (Breeze; frontend en **TypeScript**
 estricto, solo `.ts`/`.tsx`, ver `docs/migracion-typescript.md`) · Sanctum (API pública,
 auth por token) · Leaflet + OpenStreetMap (react-leaflet) · **PostgreSQL** ·
 Laravel Queues (driver database) + Supervisor · notificaciones por **Telegram Bot
