@@ -320,6 +320,7 @@ export default function Index({
                                 />
                                 <Select
                                     id="punto_monitoreo_id"
+                                    buscable
                                     className="mt-1"
                                     value={form.punto_monitoreo_id}
                                     onChange={cambiar('punto_monitoreo_id')}
@@ -343,6 +344,7 @@ export default function Index({
                                 />
                                 <Select
                                     id="tipo_punto"
+                                    buscable
                                     className="mt-1"
                                     value={form.tipo_punto}
                                     onChange={cambiar('tipo_punto')}
@@ -363,6 +365,7 @@ export default function Index({
                                 <InputLabel htmlFor="barrio_id" value="Barrio" />
                                 <Select
                                     id="barrio_id"
+                                    buscable
                                     className="mt-1"
                                     value={form.barrio_id}
                                     onChange={cambiar('barrio_id')}
@@ -435,6 +438,7 @@ export default function Index({
                                 <InputLabel htmlFor="alcance" value="Mostrar" />
                                 <Select
                                     id="alcance"
+                                    buscable
                                     className="mt-1"
                                     value={form.alcance}
                                     onChange={cambiar('alcance')}
@@ -455,6 +459,7 @@ export default function Index({
                                     <InputLabel htmlFor="cuadrante_id" value="Cuadrante" />
                                     <Select
                                         id="cuadrante_id"
+                                        buscable
                                         className="mt-1"
                                         value={form.cuadrante_id}
                                         onChange={cambiar('cuadrante_id')}
