@@ -35,7 +35,7 @@ class NotificacionService
      */
     public function notificarEvento(Evento $evento): Collection
     {
-        $evento->loadMissing(['tipoEvento.gruposInteresados', 'tipoEvento.grupoEvento', 'puntoMonitoreo.tipoPuntoMonitoreo']);
+        $evento->loadMissing(['tipoEvento.gruposInteresados', 'tipoEvento.grupoEvento', 'puntoMonitoreo.tipoPuntoMonitoreo', 'barrio']);
         $mensaje = $this->armarMensaje($evento);
 
         return $evento->tipoEvento->gruposInteresados->map(function (GrupoInteresado $grupo) use ($evento, $mensaje) {
@@ -64,7 +64,7 @@ class NotificacionService
 
         $ubicacion = $punto
             ? "{$punto->codigo} — {$punto->nombre} ({$punto->tipoPuntoMonitoreo->nombre})"
-            : 'Sin ubicación';
+            : ($evento->ubicacion() ?? 'Sin ubicación');
 
         return implode("\n", [
             "ATALAYA — {$categoria}: {$tipo->nombre}",

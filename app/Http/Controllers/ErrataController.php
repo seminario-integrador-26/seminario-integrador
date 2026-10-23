@@ -49,6 +49,8 @@ class ErrataController extends Controller
                 'punto_monitoreo_id' => $vigentes['punto_monitoreo_id'] ? (int) $vigentes['punto_monitoreo_id'] : null,
                 'timestamp_video' => $vigentes['timestamp_video'],
                 'descripcion' => $vigentes['descripcion'],
+                // Sin PM: dirección y barrio cargados a mano.
+                'ubicacion' => $evento->load('barrio:id,nombre')->ubicacion(),
             ],
             'tipos' => $this->eventos->tiposEvento(cargables: true),
             'categorias' => GrupoEvento::opciones(),

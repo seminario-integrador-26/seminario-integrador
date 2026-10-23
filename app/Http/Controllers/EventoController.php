@@ -49,9 +49,8 @@ class EventoController extends Controller
             'tipo' => $e->tipoEvento->nombre,
             'categoria' => $e->tipoEvento->grupoEvento->nombre,
             'informativo' => ! $e->tipoEvento->es_cuantificable,
-            'punto' => $e->puntoMonitoreo
-                ? "{$e->puntoMonitoreo->codigo} — {$e->puntoMonitoreo->nombre}"
-                : null,
+            // PM o, sin PM, dirección y barrio cargados a mano.
+            'punto' => $e->ubicacion(),
             'timestamp_video' => $e->timestamp_video,
             'descripcion' => $e->descripcion,
             'autor' => $e->usuario?->name,
@@ -88,6 +87,7 @@ class EventoController extends Controller
             'puntos' => $puntos,
             'puntoInicial' => $puntoInicial,
             'tiposPunto' => TipoPuntoMonitoreo::opciones(),
+            'barrios' => Barrio::orderBy('nombre')->get(['id', 'nombre']),
         ]);
     }
 
@@ -145,6 +145,9 @@ class EventoController extends Controller
                     'longitud' => $punto->longitud,
                 ] : null,
                 'timestamp_video' => $vigentes['timestamp_video'],
+                // Sin PM: lo cargado a mano.
+                'barrio' => $evento->barrio?->nombre,
+                'direccion' => $evento->direccion,
                 'erratas' => $evento->erratas->map(fn (Errata $e) => [
                     'id' => $e->id,
                     // Solo las erratas anteriores a 2026-10-23 corrigen un campo.

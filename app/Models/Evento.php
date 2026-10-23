@@ -18,10 +18,13 @@ use LogicException;
  * Campos: tipo_evento_id, punto_monitoreo_id (nullable, ver requiere_ubicacion),
  * usuario_id (Supervisor autor), fecha_hora (del hecho),
  * timestamp_video (hh:mm:ss, obligatorio con PM), descripcion, created_at.
+ * Sin PM: barrio_id y direccion (obligatorios si el tipo exige ubicación).
  */
 #[Fillable([
     'tipo_evento_id',
     'punto_monitoreo_id',
+    'barrio_id',
+    'direccion',
     'usuario_id',
     'fecha_hora',
     'timestamp_video',
@@ -85,6 +88,31 @@ class Evento extends Model
     public function puntoMonitoreo(): BelongsTo
     {
         return $this->belongsTo(PuntoMonitoreo::class);
+    }
+
+    /** Barrio cargado a mano cuando el evento no tiene PM. */
+    public function barrio(): BelongsTo
+    {
+        return $this->belongsTo(Barrio::class);
+    }
+
+    /**
+     * Ubicación legible: el PM ("PM-M-001 — Plaza") o, sin PM, la dirección y
+     * el barrio cargados a mano ("San Martín 123, barrio Centro"). Null si no
+     * tiene ninguno. Requiere cargadas las relaciones puntoMonitoreo y barrio.
+     */
+    public function ubicacion(): ?string
+    {
+        if ($this->puntoMonitoreo) {
+            return "{$this->puntoMonitoreo->codigo} — {$this->puntoMonitoreo->nombre}";
+        }
+
+        $partes = array_filter([
+            $this->direccion,
+            $this->barrio ? "barrio {$this->barrio->nombre}" : null,
+        ]);
+
+        return $partes ? implode(', ', $partes) : null;
     }
 
     public function usuario(): BelongsTo

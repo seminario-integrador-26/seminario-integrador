@@ -76,7 +76,7 @@ Leyenda: ✅ hecho · 🟡 parcial · ⬜ no empezado (solo stubs o nada)
 |----|----------|--------|-------|
 | 001 | Autenticación | ✅ | login por username, bloqueo 3 intentos/15 min, auditoría de acceso, sesión 30 min. Blanquear la clave o resetearla por email desbloquea la cuenta |
 | 002 | Roles y permisos | ✅ | multi-rol, matriz de permisos, auditado. Nadie le quita el rol Administrador de sistema a quien lo tiene (ni a sí mismo ni a otro) |
-| 003 | Evento con ubicación | ✅ | registro OK con los 498 PMs reales y los 36 tipos del Registro de Intervenciones |
+| 003 | Evento con ubicación | ✅ | registro OK con los 498 PMs reales y los 36 tipos del Registro de Intervenciones. Sin PM: barrio y dirección (obligatorios si el tipo exige ubicación) |
 | 004 | Evento informativo | ✅ | informativo = tipo no cuantificable (decisión del equipo); insignia "Informativo" en la tabla de Eventos y "Sin ubicación" en la columna Ubicación |
 | 005 | Validaciones | ✅ | |
 | 006 | Notificación WhatsApp | ✅ | canal **Telegram** (Bot API) al chat de cada grupo, o `log` en desarrollo; cola, registro del resultado y canal usado. WhatsApp Cloud API sigue disponible pero falta cuenta Meta y plantilla aprobada. Falta: crear el bot real y cargar los chat_id de los grupos |

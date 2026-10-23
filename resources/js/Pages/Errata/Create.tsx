@@ -21,6 +21,8 @@ interface EventoVigente {
     punto_monitoreo_id: number | null;
     timestamp_video: string | null;
     descripcion: string | null;
+    /** Dirección y barrio cuando no hay PM (Evento::ubicacion). */
+    ubicacion: string | null;
 }
 
 interface Props {
@@ -126,14 +128,14 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="punto_monitoreo_id" value="Punto de monitoreo" />
+                                    <InputLabel htmlFor="punto_monitoreo_id" value="Ubicación" />
                                     <TextInput
                                         id="punto_monitoreo_id"
                                         className={'mt-1 block w-full ' + bloqueadoClass}
                                         value={
                                             punto
                                                 ? `${punto.codigo} — ${punto.nombre} · ${tiposPunto[punto.tipo] ?? ''}`
-                                                : 'Sin ubicación'
+                                                : (evento.ubicacion ?? 'Sin ubicación')
                                         }
                                         readOnly
                                     />

@@ -48,6 +48,9 @@ class EventoService
         $evento = Evento::create([
             'tipo_evento_id' => $datos['tipo_evento_id'],
             'punto_monitoreo_id' => $puntoMonitoreoId,
+            // Sin PM: barrio y dirección cargados a mano (con PM, el barrio sale del PM).
+            'barrio_id' => $puntoMonitoreoId ? null : ($datos['barrio_id'] ?? null),
+            'direccion' => $puntoMonitoreoId ? null : (($datos['direccion'] ?? null) ?: null),
             'usuario_id' => $autor->id,
             'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
             'timestamp_video' => $puntoMonitoreoId ? $datos['timestamp_video'] : null,
@@ -130,6 +133,7 @@ class EventoService
             'puntoMonitoreo.tipoPuntoMonitoreo:id,codigo,nombre',
             'puntoMonitoreo.barrio:id,nombre',
             'puntoMonitoreo.cuadrante:id,nombre',
+            'barrio:id,nombre',
             'usuario:id,name',
             'notificaciones.grupoInteresado:id,nombre',
             'erratas.autor:id,name',
@@ -185,6 +189,7 @@ class EventoService
                 'puntoMonitoreo:id,codigo,nombre,tipo_punto_monitoreo_id,barrio_id',
                 'puntoMonitoreo.tipoPuntoMonitoreo:id,codigo,nombre',
                 'puntoMonitoreo.barrio:id,nombre',
+                'barrio:id,nombre',
                 'usuario:id,name',
             ])
             ->when($filtros['tipo_evento_id'] ?? null, fn (Builder $q, $id) => $q->where('tipo_evento_id', (int) $id))
@@ -193,8 +198,10 @@ class EventoService
             ->when($filtros['punto_monitoreo_id'] ?? null, fn (Builder $q, $id) => $q->where('punto_monitoreo_id', (int) $id))
             ->when($filtros['tipo_punto'] ?? null, fn (Builder $q, $tipo) => $q
                 ->whereHas('puntoMonitoreo.tipoPuntoMonitoreo', fn (Builder $t) => $t->where('codigo', $tipo)))
-            ->when($filtros['barrio_id'] ?? null, fn (Builder $q, $id) => $q
-                ->whereHas('puntoMonitoreo', fn (Builder $p) => $p->where('barrio_id', $id)))
+            // Barrio del PM o, sin PM, el cargado a mano.
+            ->when($filtros['barrio_id'] ?? null, fn (Builder $q, $id) => $q->where(fn (Builder $b) => $b
+                ->whereHas('puntoMonitoreo', fn (Builder $p) => $p->where('barrio_id', $id))
+                ->orWhere('eventos.barrio_id', (int) $id)))
             ->when($filtros['cuadrante_id'] ?? null, fn (Builder $q, $id) => $q
                 ->whereHas('puntoMonitoreo', fn (Builder $p) => $p->where('cuadrante_id', $id)))
             ->when($filtros['desde'] ?? null, fn (Builder $q, $desde) => $q

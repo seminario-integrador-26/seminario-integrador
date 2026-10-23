@@ -41,6 +41,9 @@ interface EventoDetalle {
         longitud: number | null;
     } | null;
     timestamp_video: string | null;
+    /** Sin PM: barrio y dirección cargados a mano. */
+    barrio: string | null;
+    direccion: string | null;
     erratas: ErrataDetalle[];
     autor: string | null;
     registrado: string | null;
@@ -131,7 +134,7 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             >
                                 {evento.categoria}
                             </span>
-                            {!evento.punto && (
+                            {!evento.punto && !evento.direccion && !evento.barrio && (
                                 <span
                                     className={`${badge} border-atalaya-cyan/60 text-atalaya-cyan`}
                                 >
@@ -193,6 +196,21 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                                     </span>
                                 </Dato>
                             </dl>
+                        ) : evento.direccion || evento.barrio ? (
+                            <>
+                                <dl className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
+                                    <Dato etiqueta="Dirección">
+                                        {evento.direccion || '—'}
+                                    </Dato>
+                                    <Dato etiqueta="Barrio">
+                                        {evento.barrio || '—'}
+                                    </Dato>
+                                </dl>
+                                <p className="mt-4 text-xs text-atalaya-text-dim">
+                                    Sin punto de monitoreo: no figura en el mapa
+                                    ni en las estadísticas por PM.
+                                </p>
+                            </>
                         ) : (
                             <p className="mt-4 text-sm text-atalaya-text-muted">
                                 Evento sin ubicación: no se incluye en las

@@ -46,7 +46,9 @@ por email vía el flujo estándar de reseteo).
    o Internos (catálogo real del "Registro de Intervenciones" más los eventos
    internos del libro de guardia, `TipoEventoSeeder`).
 3. **Ubicación condicional.** La ubicación (PuntoMonitoreo) es opcional y
-   depende del tipo (`TipoEvento.requiere_ubicacion`).
+   depende del tipo (`TipoEvento.requiere_ubicacion`). Sin PM se cargan
+   **barrio y dirección** (obligatorios si el tipo exige ubicación, opcionales
+   si no). Apertura y Cierre de turno no llevan ubicación.
 4. Hay tipos **no cuantificables** que no entran en estadísticas
    (`TipoEvento.es_cuantificable`). Independiente del punto 3.
    // TODO: confirmar con el equipo cuáles; hoy la planilla real los cuenta a todos.

@@ -3,10 +3,12 @@
 namespace Tests\Feature\Eventos;
 
 use App\Events\EventoRegistrado;
+use App\Models\Barrio;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\TipoEventoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -201,13 +203,82 @@ class RegistroEventoTest extends TestCase
         $this->assertSame('14:29:00', Evento::sole()->timestamp_video);
     }
 
-    public function test_el_tipo_que_requiere_ubicacion_exige_punto_de_monitoreo(): void
+    public function test_el_tipo_que_requiere_ubicacion_sin_pm_exige_barrio_y_direccion(): void
     {
         $this->actingAs($this->supervisor)
             ->post(route('eventos.store'), $this->datosValidos(['punto_monitoreo_id' => null]))
-            ->assertSessionHasErrors('punto_monitoreo_id');
+            ->assertSessionHasErrors(['barrio_id', 'direccion']);
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'punto_monitoreo_id' => null,
+                'barrio_id' => Barrio::create(['nombre' => 'Barrio de prueba'])->id,
+            ]))
+            ->assertSessionHasErrors('direccion');
 
         $this->assertSame(0, Evento::count());
+    }
+
+    public function test_el_tipo_que_requiere_ubicacion_se_registra_con_barrio_y_direccion_sin_pm(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $barrio = Barrio::create(['nombre' => 'Centro']);
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'punto_monitoreo_id' => null,
+                'barrio_id' => $barrio->id,
+                'direccion' => '  San Martín 1234 ',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $evento = Evento::sole();
+        $this->assertNull($evento->punto_monitoreo_id);
+        $this->assertNull($evento->timestamp_video);
+        $this->assertSame($barrio->id, $evento->barrio_id);
+        $this->assertSame('San Martín 1234', $evento->direccion);
+        $this->assertSame('San Martín 1234, barrio Centro', $evento->ubicacion());
+
+        // El detalle la muestra y el listado la usa como ubicación.
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.show', $evento))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('evento.barrio', 'Centro')
+                ->where('evento.direccion', 'San Martín 1234'));
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.index', ['barrio_id' => $barrio->id]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('eventos.total', 1)
+                ->where('eventos.data.0.punto', 'San Martín 1234, barrio Centro'));
+    }
+
+    public function test_con_pm_se_descartan_barrio_y_direccion(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'barrio_id' => Barrio::create(['nombre' => 'Barrio de prueba'])->id,
+                'direccion' => 'San Martín 1234',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull(Evento::sole()->barrio_id);
+        $this->assertNull(Evento::sole()->direccion);
+    }
+
+    public function test_tipo_con_ubicacion_opcional_acepta_barrio_y_direccion_opcionales(): void
+    {
+        $tipo = TipoEvento::factory()->sinUbicacion()->create();
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => $tipo->id,
+                'punto_monitoreo_id' => null,
+                'direccion' => 'Ruta 9 km 560',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Ruta 9 km 560', Evento::sole()->direccion);
+        $this->assertNull(Evento::sole()->barrio_id);
     }
 
     public function test_tipo_sin_ubicacion_se_registra_sin_punto_ni_timestamp(): void

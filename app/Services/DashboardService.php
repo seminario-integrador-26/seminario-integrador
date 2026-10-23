@@ -66,6 +66,7 @@ class DashboardService
                 'tipoEvento:id,nombre,grupo_evento_id,es_cuantificable',
                 'tipoEvento.grupoEvento:id,nombre',
                 'puntoMonitoreo:id,codigo,nombre,latitud,longitud',
+                'barrio:id,nombre',
                 'usuario:id,name',
             ])
             ->orderByDesc('fecha_hora')
@@ -77,9 +78,7 @@ class DashboardService
                 'categoria' => $e->tipoEvento->grupoEvento->nombre,
                 'es_cuantificable' => $e->tipoEvento->es_cuantificable,
                 'tipo' => $e->tipoEvento->nombre,
-                'ubicacion' => $e->puntoMonitoreo
-                    ? "{$e->puntoMonitoreo->codigo} — {$e->puntoMonitoreo->nombre}"
-                    : null,
+                'ubicacion' => $e->ubicacion(),
                 'latitud' => $e->puntoMonitoreo?->latitud,
                 'longitud' => $e->puntoMonitoreo?->longitud,
                 'fecha' => $e->fecha_hora->format('d/m/Y'),

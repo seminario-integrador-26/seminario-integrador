@@ -21,11 +21,12 @@ trait ValidaDatosDeEvento
         $this->merge([
             'hora' => $this->conSegundos($this->input('hora')),
             'timestamp_video' => $this->conSegundos($this->input('timestamp_video')),
+            'direccion' => is_string($d = $this->input('direccion')) ? trim($d) : $d,
         ]);
 
-        // Apertura y Cierre de turno no tienen cámara: sin PM ni timestamp.
+        // Apertura y Cierre de turno no tienen cámara ni ubicación.
         if ($this->tipoEvento()?->sinCamara()) {
-            $this->merge(['punto_monitoreo_id' => null, 'timestamp_video' => null]);
+            $this->merge(['punto_monitoreo_id' => null, 'timestamp_video' => null, 'barrio_id' => null, 'direccion' => null]);
         }
     }
 
@@ -44,12 +45,22 @@ trait ValidaDatosDeEvento
             ],
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i:s'],
-            'punto_monitoreo_id' => [
+            'punto_monitoreo_id' => ['nullable', 'integer', 'exists:puntos_monitoreo,id'],
+            // Regla de negocio 3: si el tipo exige ubicación, va un PM o, sin
+            // PM, barrio y dirección. Con PM se descartan (el barrio sale del PM).
+            'barrio_id' => [
+                Rule::excludeIf(fn () => filled($this->input('punto_monitoreo_id'))),
                 'nullable',
-                // Regla de negocio 3: ubicación condicional según el tipo.
                 Rule::requiredIf(fn () => (bool) $this->tipoEvento()?->requiere_ubicacion),
                 'integer',
-                'exists:puntos_monitoreo,id',
+                'exists:barrios,id',
+            ],
+            'direccion' => [
+                Rule::excludeIf(fn () => filled($this->input('punto_monitoreo_id'))),
+                'nullable',
+                Rule::requiredIf(fn () => (bool) $this->tipoEvento()?->requiere_ubicacion),
+                'string',
+                'max:255',
             ],
             'timestamp_video' => [
                 // Sin PM no hay video asociado: el campo se descarta.
@@ -98,8 +109,10 @@ trait ValidaDatosDeEvento
     {
         return [
             'tipo_evento_id.not_in' => 'El tipo Errata lo registra el sistema al cargar una fe de errata.',
-            'punto_monitoreo_id.required' => 'El tipo de evento seleccionado requiere un punto de monitoreo.',
             'punto_monitoreo_id.exists' => 'El punto de monitoreo seleccionado no existe.',
+            'barrio_id.required' => 'Sin punto de monitoreo, indicá el barrio.',
+            'barrio_id.exists' => 'El barrio seleccionado no existe.',
+            'direccion.required' => 'Sin punto de monitoreo, indicá la dirección.',
             'timestamp_video.required' => 'El timestamp del video es obligatorio cuando se indica un punto de monitoreo.',
             'timestamp_video.date_format' => 'El timestamp del video debe tener el formato hh:mm:ss.',
             'descripcion.required' => 'La descripción no puede estar vacía.',

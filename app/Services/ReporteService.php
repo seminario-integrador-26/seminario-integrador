@@ -45,7 +45,7 @@ class ReporteService
         $cierre->loadMissing('usuario:id,name');
 
         $eventos = $this->libro->eventosDe($apertura, $cierre)
-            ->with(['tipoEvento:id,nombre,grupo_evento_id', 'tipoEvento.grupoEvento:id,nombre', 'puntoMonitoreo:id,codigo,nombre'])
+            ->with(['tipoEvento:id,nombre,grupo_evento_id', 'tipoEvento.grupoEvento:id,nombre', 'puntoMonitoreo:id,codigo,nombre', 'barrio:id,nombre'])
             ->orderBy('fecha_hora')
             ->orderBy('id')
             ->get();
@@ -74,9 +74,7 @@ class ReporteService
                 'tipo' => $e->tipoEvento->nombre,
                 'categoria' => $e->tipoEvento->grupoEvento->nombre,
                 'descripcion' => $e->descripcion,
-                'punto' => $e->puntoMonitoreo
-                    ? "{$e->puntoMonitoreo->codigo} — {$e->puntoMonitoreo->nombre}"
-                    : null,
+                'punto' => $e->ubicacion(),
                 'timestamp_video' => $e->timestamp_video,
             ])->all(),
             'resumen' => $eventos
@@ -133,7 +131,8 @@ class ReporteService
             $e->puntoMonitoreo?->codigo,
             $e->puntoMonitoreo?->nombre,
             $e->puntoMonitoreo?->tipoPuntoMonitoreo->nombre,
-            $e->puntoMonitoreo?->barrio?->nombre,
+            $e->puntoMonitoreo?->barrio?->nombre ?? $e->barrio?->nombre,
+            $e->direccion,
             $e->timestamp_video,
             $e->descripcion,
             $e->usuario?->name,
@@ -149,7 +148,7 @@ class ReporteService
                 'titulo' => 'Eventos CMU',
                 'columnas' => [
                     'ID', 'Fecha', 'Horario', 'Categoría', 'Tipo', 'PM código', 'PM nombre',
-                    'Tipo PM', 'Barrio', 'Timestamp video', 'Descripción', 'Registró', 'Observación',
+                    'Tipo PM', 'Barrio', 'Dirección', 'Timestamp video', 'Descripción', 'Registró', 'Observación',
                 ],
                 'filas' => $filas,
             ]),
@@ -162,7 +161,11 @@ class ReporteService
             return 'Evento informativo';
         }
 
-        return $evento->punto_monitoreo_id ? null : 'Evento sin ubicación';
+        if ($evento->punto_monitoreo_id) {
+            return null;
+        }
+
+        return $evento->barrio_id || $evento->direccion ? 'Evento sin PM' : 'Evento sin ubicación';
     }
 
     /**

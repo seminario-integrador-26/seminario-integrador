@@ -230,15 +230,15 @@ class ReportesTest extends TestCase
         $hoja = $this->leerXlsx($respuesta->getContent());
 
         $this->assertSame(
-            ['ID', 'Fecha', 'Horario', 'Categoría', 'Tipo', 'PM código', 'PM nombre', 'Tipo PM', 'Barrio', 'Timestamp video', 'Descripción', 'Registró', 'Observación'],
+            ['ID', 'Fecha', 'Horario', 'Categoría', 'Tipo', 'PM código', 'PM nombre', 'Tipo PM', 'Barrio', 'Dirección', 'Timestamp video', 'Descripción', 'Registró', 'Observación'],
             $hoja[0],
         );
         $this->assertCount(4, $hoja); // encabezado + 3 eventos
-        $this->assertSame(['03/10/2026', '21:05:09', 'Policía', 'Robo', 'PM-M-007', 'Plaza Centenario', 'Municipal', null, '21:04:50'], array_slice($hoja[1], 1, 9));
-        $this->assertSame('Arrebato de cartera en la esquina de Ñandubay', $hoja[1][10]); // UTF-8
-        $this->assertNull($hoja[1][12]);
-        $this->assertSame('Evento sin ubicación', $hoja[2][12]);
-        $this->assertSame('Evento informativo', $hoja[3][12]);
+        $this->assertSame(['03/10/2026', '21:05:09', 'Policía', 'Robo', 'PM-M-007', 'Plaza Centenario', 'Municipal', null, null, '21:04:50'], array_slice($hoja[1], 1, 10));
+        $this->assertSame('Arrebato de cartera en la esquina de Ñandubay', $hoja[1][11]); // UTF-8
+        $this->assertNull($hoja[1][13]);
+        $this->assertSame('Evento sin ubicación', $hoja[2][13]);
+        $this->assertSame('Evento informativo', $hoja[3][13]);
 
         $this->assertDatabaseHas('auditoria_accesos', [
             'evento' => AuditoriaAcceso::EVENTO_EXPORTACION,
@@ -275,7 +275,7 @@ class ReportesTest extends TestCase
         $hoja = $this->leerXlsx($respuesta->getContent());
         $this->assertSame('Fecha', $hoja[0][1]);
         $this->assertSame('03/10/2026', $hoja[1][1]);
-        $this->assertSame('Arrebato en Ñandubay y Güemes', $hoja[1][10]); // Unicode
+        $this->assertSame('Arrebato en Ñandubay y Güemes', $hoja[1][11]); // Unicode
 
         $this->assertDatabaseHas('auditoria_accesos', [
             'evento' => AuditoriaAcceso::EVENTO_EXPORTACION,

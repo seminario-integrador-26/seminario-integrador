@@ -75,6 +75,14 @@
 2. **Apertura y Cierre de turno no tienen cámara:** el formulario no muestra
    punto de monitoreo ni timestamp del video, y el backend los descarta si
    llegan (`TipoEvento::SIN_CAMARA`). Nota y Otros siguen con PM opcional.
+3. **Sin PM, barrio y dirección:** al registrar un evento sin punto de
+   monitoreo se cargan barrio y dirección (`eventos.barrio_id`,
+   `eventos.direccion`, migración `2026_10_23_000004`). Si el tipo exige
+   ubicación, alcanza con PM **o** barrio + dirección (los dos obligatorios);
+   si no, son opcionales. Se ven en el detalle, el listado, el Panel, el PDF,
+   el Excel (columna Dirección; Barrio = el del PM o el cargado) y el aviso de
+   Telegram; el filtro por barrio los incluye. Mapa, heatmap, estadísticas y
+   ranking siguen basados en el PM (no hay coordenadas).
 
 ## Impacto relevado (≈50 archivos)
 

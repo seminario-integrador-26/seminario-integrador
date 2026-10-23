@@ -11,6 +11,7 @@ import TextInput from '@/Components/TextInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type {
+    ItemCatalogo,
     Opciones,
     PageProps,
     PuntoMapa,
@@ -26,6 +27,7 @@ interface Props {
     /** PM precargado al llegar desde el mapa (?punto_monitoreo_id=X). */
     puntoInicial?: number | null;
     tiposPunto: Opciones;
+    barrios: ItemCatalogo[];
 }
 
 type FormEvento = {
@@ -34,6 +36,9 @@ type FormEvento = {
     hora: string;
     punto_monitoreo_id: number | null;
     timestamp_video: string;
+    /** Sin PM: barrio y dirección a mano. */
+    barrio_id: string;
+    direccion: string;
     descripcion: string;
 };
 
@@ -60,6 +65,7 @@ export default function Create({
     puntos,
     puntoInicial = null,
     tiposPunto,
+    barrios,
 }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm<FormEvento>({
         tipo_evento_id: '',
@@ -68,6 +74,8 @@ export default function Create({
         // Precargado cuando se llega desde un PM del mapa del panel.
         punto_monitoreo_id: puntoInicial,
         timestamp_video: '',
+        barrio_id: '',
+        direccion: '',
         descripcion: '',
     });
 
@@ -89,6 +97,9 @@ export default function Create({
             ...d,
             punto_monitoreo_id: id,
             timestamp_video: id ? d.timestamp_video : '',
+            // Con PM, el barrio sale del PM.
+            barrio_id: id ? '' : d.barrio_id,
+            direccion: id ? '' : d.direccion,
         }));
 
     const submit = (e: FormEvent) => {
@@ -152,6 +163,8 @@ export default function Create({
                                             ...(tipo?.sin_camara && {
                                                 punto_monitoreo_id: null,
                                                 timestamp_video: '',
+                                                barrio_id: '',
+                                                direccion: '',
                                             }),
                                         }));
                                     }}
@@ -239,7 +252,13 @@ export default function Create({
                                     <InputLabel htmlFor="punto_monitoreo_id">
                                         Punto de monitoreo
                                         {requiereUbicacion ? (
-                                            <Obligatorio />
+                                            <>
+                                                <Obligatorio />
+                                                <span className="font-normal text-atalaya-text-dim">
+                                                    {' '}
+                                                    (si no hay, barrio y dirección)
+                                                </span>
+                                            </>
                                         ) : (
                                             <span className="font-normal text-atalaya-text-dim">
                                                 {' '}
@@ -291,6 +310,71 @@ export default function Create({
                                         message={errors.timestamp_video}
                                     />
                                 </div>
+
+                                {!hayPunto && (
+                                    <div className="grid gap-6 sm:grid-cols-2">
+                                        <div>
+                                            <InputLabel htmlFor="barrio_id">
+                                                Barrio
+                                                {requiereUbicacion ? (
+                                                    <Obligatorio />
+                                                ) : (
+                                                    <span className="font-normal text-atalaya-text-dim">
+                                                        {' '}
+                                                        (opcional)
+                                                    </span>
+                                                )}
+                                            </InputLabel>
+                                            <Select
+                                                id="barrio_id"
+                                                buscable
+                                                className="mt-1"
+                                                value={data.barrio_id}
+                                                onChange={(e) =>
+                                                    setData('barrio_id', e.target.value)
+                                                }
+                                            >
+                                                <option value="">Elegí un barrio…</option>
+                                                {barrios.map((b) => (
+                                                    <option key={b.id} value={b.id}>
+                                                        {b.nombre}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors.barrio_id}
+                                            />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="direccion">
+                                                Dirección
+                                                {requiereUbicacion ? (
+                                                    <Obligatorio />
+                                                ) : (
+                                                    <span className="font-normal text-atalaya-text-dim">
+                                                        {' '}
+                                                        (opcional)
+                                                    </span>
+                                                )}
+                                            </InputLabel>
+                                            <TextInput
+                                                id="direccion"
+                                                maxLength={255}
+                                                placeholder="Ej.: San Martín 1234 / Salta y La Rioja"
+                                                className="mt-1 block w-full"
+                                                value={data.direccion}
+                                                onChange={(e) =>
+                                                    setData('direccion', e.target.value)
+                                                }
+                                            />
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors.direccion}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 </>
                             )}
 
