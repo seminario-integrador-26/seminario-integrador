@@ -1,6 +1,6 @@
 # Rediseño: Libro de guardia, eventos internos y fin de los turnos
 
-> Estado: **implementado** (2026-10-23), pasos 1 a 6. Quedan los puntos abiertos de abajo.
+> Estado: **implementado** (2026-10-23), pasos 1 a 6, sin puntos abiertos.
 > Pedido del Centro de Monitoreo: los eventos internos (apertura y cierre de
 > turno, notas, erratas, otros) se registran en el libro y **se notifican por
 > Telegram** como cualquier otro evento.
@@ -57,12 +57,14 @@
    `CLAUDE.md`, `docs/modelo-dominio.md` y US-012 / US-025 en `docs/backlog.md`
    (paso 6).
 
-Abierto:
-- ¿Los tipos de Oficios (ahora en Internos) siguen contando en estadísticas?
-  Hoy sí (`es_cuantificable=true`); solo los 5 internos nuevos no.
-- La API de estadísticas (`/api/v1/estadisticas/*`) da los mismos números que
-  la pantalla, así que incluye la clave `internos` (hoy, solo oficios). ¿Se
-  saca para respetar "la API no expone Internos"?
+## Decidido el 2026-10-23 (3ª tanda)
+
+1. **Los tipos de Oficios (ahora en Internos) siguen contando en
+   estadísticas** (`es_cuantificable=true`); solo los 5 internos nuevos no.
+2. **La API de estadísticas (`/api/v1/estadisticas/*`) conserva la clave
+   `internos`:** da los mismos números que la pantalla (agregados, en la práctica
+   solo oficios). "La API no expone Internos" aplica al listado de eventos
+   (`/api/v1/eventos`), no a los totales.
 
 ## Impacto relevado (≈50 archivos)
 
