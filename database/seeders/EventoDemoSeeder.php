@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Errata;
 use App\Models\Evento;
 use App\Models\GrupoEvento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
 use App\Models\User;
-use App\Services\ErrataService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -28,8 +28,8 @@ use Illuminate\Support\Facades\DB;
  *   ranking, la franja horaria y el heatmap muestren algo.
  * - Los eventos se crean sin pasar por EventoService: no disparan
  *   EventoRegistrado, así que no se envían notificaciones.
- * - Algunos eventos llevan fe de errata (vía ErrataService), para ver los
- *   valores vigentes y el historial.
+ * - Algunos eventos llevan fe de errata (solo el motivo), para ver el
+ *   historial en el detalle.
  */
 class EventoDemoSeeder extends Seeder
 {
@@ -52,7 +52,7 @@ class EventoDemoSeeder extends Seeder
         'Se deja constancia para su registro.',
     ];
 
-    public function run(ErrataService $erratas): void
+    public function run(): void
     {
         if (app()->isProduction()) {
             $this->command?->error('EventoDemoSeeder es solo para desarrollo: no se corre en producción.');
@@ -84,7 +84,7 @@ class EventoDemoSeeder extends Seeder
         // ~25 PMs concentran la mitad de los eventos con ubicación.
         $calientes = $puntos->shuffle()->take(25)->values();
 
-        DB::transaction(function () use ($supervisores, $tipos, $puntos, $calientes, $erratas, $apertura, $cierre) {
+        DB::transaction(function () use ($supervisores, $tipos, $puntos, $calientes, $apertura, $cierre) {
             $total = 0;
             $turnos = 0;
             $hoy = Carbon::today();
@@ -115,7 +115,7 @@ class EventoDemoSeeder extends Seeder
                         $total++;
 
                         if (mt_rand(1, 50) === 1) {
-                            $this->corregir($erratas, $evento, $tipos, $supervisor);
+                            $this->corregir($evento, $supervisor);
                         }
                     }
 
@@ -170,29 +170,18 @@ class EventoDemoSeeder extends Seeder
     }
 
     /**
-     * Fe de errata de ejemplo: corrige el tipo (dentro del mismo requisito de
-     * ubicación) o la descripción.
-     *
-     * @param  Collection<int, TipoEvento>  $tipos
+     * Fe de errata de ejemplo: solo el motivo. Se crea directo (sin
+     * ErrataService) para no cargar la constancia ni notificar.
      */
-    private function corregir(ErrataService $erratas, Evento $evento, Collection $tipos, User $autor): void
+    private function corregir(Evento $evento, User $autor): void
     {
-        $evento->loadMissing('tipoEvento');
-        $otroTipo = $tipos
-            ->where('requiere_ubicacion', $evento->tipoEvento->requiere_ubicacion)
-            ->where('id', '!=', $evento->tipo_evento_id)
-            ->random();
-
-        $cambiaTipo = mt_rand(0, 1) === 1;
-
-        $erratas->registrar($evento, [
-            'tipo_evento_id' => $cambiaTipo ? $otroTipo->id : $evento->tipo_evento_id,
-            'fecha' => $evento->fecha_hora->toDateString(),
-            'hora' => $evento->fecha_hora->format('H:i:s'),
-            'punto_monitoreo_id' => $evento->punto_monitoreo_id,
-            'timestamp_video' => $evento->timestamp_video,
-            'descripcion' => $cambiaTipo ? $evento->descripcion : $evento->descripcion.' Se agrega: intervino personal policial.',
-        ], $cambiaTipo ? 'Se cargó con el tipo equivocado.' : 'Faltaba un dato en la descripción.', $autor);
+        Errata::create([
+            'evento_id' => $evento->id,
+            'usuario_id' => $autor->id,
+            'motivo' => mt_rand(0, 1) === 1
+                ? 'Se cargó con el tipo equivocado: correspondía a otro de la misma categoría.'
+                : 'Faltaba un dato en la descripción: intervino personal policial.',
+        ]);
     }
 
     private function poisson(float $media): int

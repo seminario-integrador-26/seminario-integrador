@@ -118,7 +118,8 @@ class Evento extends Model
             'descripcion' => $this->descripcion,
         ];
 
-        foreach ($this->erratas as $errata) {
+        // Las erratas de solo motivo (sin campo) no cambian valores.
+        foreach ($this->erratas->whereNotNull('campo_corregido') as $errata) {
             $valores[$errata->campo_corregido] = $errata->valor_nuevo;
         }
 

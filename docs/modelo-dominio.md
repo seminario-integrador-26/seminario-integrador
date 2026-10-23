@@ -40,7 +40,7 @@ esta tabla deja registradas las diferencias.
 | Entidad | Campos | Notas |
 |---|---|---|
 | **Evento** | tipo_evento_id, punto_monitoreo_id (nullable), usuario_id, fecha_hora, timestamp_video (hh:mm:ss, nullable), descripcion, created_at | **Inmutable** (sin updated_at; el modelo bloquea update/delete). Sin derivación. Abrir y cerrar el turno también son eventos (grupo Internos). `timestamp_video` obligatorio con PM y no posterior al hecho; descripción obligatoria (US-003/US-005). |
-| **Errata** | evento_id, campo_corregido, valor_anterior, valor_nuevo, motivo, usuario_id, created_at | Tabla separada, inmutable. Único mecanismo de corrección: una fila por campo corregido. |
+| **Errata** | evento_id, motivo, usuario_id, created_at (campo_corregido, valor_anterior, valor_nuevo: solo en las anteriores a 2026-10-23) | Tabla separada, inmutable. Único mecanismo de corrección: registra el motivo; los datos del evento quedan bloqueados. Las erratas viejas con campo y valores siguen aplicando en `eventos_vigentes`. |
 | **TipoEvento** | nombre, categoria, requiere_ubicacion (bool), es_cuantificable (bool) | Flags independientes. N:M con GrupoInteresado. |
 | **PuntoMonitoreo** | codigo (único), nombre, jurisdiccion (`municipal` \| `provincial`), zona (nullable), latitud, longitud (nullable) | 394 PM: 235 municipales + 159 provinciales. Coordenadas dentro de Villa María. Se cargan desde Puntos → Importación masiva (US-024). |
 | **GrupoInteresado** | nombre, identificador_whatsapp (nullable) | N:M con TipoEvento; 1:N con Contacto. |

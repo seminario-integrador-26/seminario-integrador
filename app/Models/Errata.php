@@ -12,14 +12,16 @@ use LogicException;
  * NO una columna en eventos. Referencia al evento original sin modificarlo.
  * Inmutable, como el evento: no se edita ni se borra.
  *
- * Campos: evento_id, campo_corregido, valor_anterior, valor_nuevo, motivo,
- * usuario_id, created_at.
+ * Desde 2026-10-23 registra solo el motivo (campo_corregido null): los datos
+ * del evento quedan bloqueados. Las erratas anteriores guardan además
+ * campo_corregido, valor_anterior y valor_nuevo, y siguen aplicando en los
+ * valores vigentes.
  */
 #[Fillable(['evento_id', 'usuario_id', 'campo_corregido', 'valor_anterior', 'valor_nuevo', 'motivo'])]
 class Errata extends Model
 {
     /**
-     * Campos del evento que se pueden corregir (columna => etiqueta).
+     * Campos que corregían las erratas anteriores (columna => etiqueta).
      */
     public const CAMPOS = [
         'tipo_evento_id' => 'Tipo de evento',

@@ -19,7 +19,8 @@
 - **Alternativos:** tipo sin ubicación; error en la notificación (no bloquea).
 
 ## CU03 — Corregir evento con fe de errata (Supervisor)
-- Registrar una errata que referencia al evento sin modificarlo.
+- Registrar una errata que referencia al evento sin modificarlo: los datos del
+  evento se ven bloqueados y solo se escribe el motivo de la corrección.
 
 ## CU04 — Consultar y filtrar eventos (Administrativo / Administrador de sistema)
 - Filtros por tipo, fecha, horario, ubicación.

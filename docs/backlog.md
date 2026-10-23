@@ -23,6 +23,8 @@ están en **Desvíos respecto del doc** y el avance real en **Estado**.
 
 - **Fe de errata:** estadísticas, análisis, mapa, Excel y API usan los
   valores **corregidos** (vigentes); el original queda en el historial.
+  **2026-10-23:** la errata pasa a registrar **solo el motivo**; los datos del
+  evento quedan bloqueados (las erratas anteriores con valores siguen aplicando).
 - **Errata de turnos cerrados:** el Supervisor puede corregir eventos de
   **cualquier turno**, incluso de otros supervisores (auditado).
 - **Notificaciones:** no se siembran correspondencias; el Admin de sistema arma
@@ -102,8 +104,8 @@ Leyenda: ✅ hecho · 🟡 parcial · ⬜ no empezado (solo stubs o nada)
 | 028 | Config notificaciones | ✅ | sección Administración → Notificaciones (permiso `notificaciones.configurar`): ABM de grupos (identificador de grupo de WhatsApp o contactos individuales), matriz tipo de evento × grupo con aviso de tipos que no se notifican, rige desde el próximo evento, auditado con altas/bajas. La "fuerza de respuesta" es el propio grupo destinatario. Un grupo con notificaciones enviadas no se elimina |
 | 029 | Parámetros del sistema | ✅ | Administración → Parámetros (permiso `parametros.configurar`): sesión, intentos de login, minutos de bloqueo, refresco de dashboards, reintentos e intervalo de WhatsApp; defaults de fábrica sin cargar nada (tabla `parametros`), rangos validados, "Restablecer valores por defecto", auditado con valor anterior → nuevo. `NOTIFICADOR_REINTENTOS`/`NOTIFICADOR_INTERVALO_REINTENTO` del `.env` ya no se usan |
 
-Fuera del backlog pero en CLAUDE.md: **fe de errata** ✅ (Supervisor, sobre cualquier evento; deja una constancia Errata en el libro de guardia; una errata por campo con
-motivo, detalle con valores vigentes + historial, auditada; consulta, estadísticas,
+Fuera del backlog pero en CLAUDE.md: **fe de errata** ✅ (Supervisor, sobre cualquier evento; deja una constancia Errata en el libro de guardia; desde 2026-10-23 registra
+solo el motivo con los datos del evento bloqueados, historial en el detalle, auditada; consulta, estadísticas,
 análisis, panel, mapa, Excel y API leen los valores vigentes desde la vista
 `eventos_vigentes` (`Evento::vigentes()`), también el Libro de guardia en PDF) y **API
 pública `/api/v1`** ✅ (Sanctum, solo lectura, eventos + estadísticas, sin datos

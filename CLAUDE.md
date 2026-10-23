@@ -36,10 +36,11 @@ por email vía el flujo estándar de reseteo).
 ## Reglas de negocio (no negociables)
 
 1. **Eventos inmutables.** No se editan ni se eliminan; se corrigen con **fe de
-   errata** (registro separado que referencia al original: campo, valor
-   anterior, valor nuevo, motivo, autor). El original nunca se sobreescribe.
-   Para leer los valores corregidos (estadísticas, mapa, exportaciones, API)
-   usar `Evento::vigentes()` (vista `eventos_vigentes`), no `Evento::query()`.
+   errata**: registro separado que referencia al original y guarda **solo el
+   motivo** y el autor; los datos del evento quedan bloqueados (decisión
+   2026-10-23). Las erratas anteriores con campo, valor anterior y valor nuevo
+   siguen aplicando: para leer estadísticas, mapa, exportaciones y API usar
+   `Evento::vigentes()` (vista `eventos_vigentes`), no `Evento::query()`.
 2. **Clasificación obligatoria.** Todo evento se clasifica al registrarse por su
    TipoEvento, que pertenece a un **GrupoEvento**: Policía, Guardia Local
    o Internos (catálogo real del "Registro de Intervenciones" más los eventos

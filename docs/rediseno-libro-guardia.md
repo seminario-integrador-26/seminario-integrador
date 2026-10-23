@@ -28,9 +28,9 @@
 
 - **Errata:** la corrección **sigue en la tabla `erratas`**, porque de ahí sale la
   vista `eventos_vigentes` (estadísticas, mapa, Excel, API: regla 1). Además, al
-  cargarla se crea un evento interno "Errata" con un resumen ("Corrige
-  AT-2026-0012: Tipo de evento, de «Robos» a «Hurtos». Motivo: …") para que figure en el libro
-  y se notifique.
+  cargarla se crea un evento interno "Errata" con un resumen para que figure
+  en el libro y se notifique. Desde la 4ª tanda la errata registra solo el
+  motivo: la constancia queda "Errata sobre AT-2026-0012: <motivo>".
 - **Notificación:** sin código nuevo. Todo evento dispara `EventoRegistrado` →
   `NotificarInteresadosListener` → Telegram, según los tipos asociados a cada
   grupo en Administración → Notificaciones.
@@ -65,6 +65,13 @@
    `internos`:** da los mismos números que la pantalla (agregados, en la práctica
    solo oficios). "La API no expone Internos" aplica al listado de eventos
    (`/api/v1/eventos`), no a los totales.
+
+## Decidido el 2026-10-23 (4ª tanda)
+
+1. **La fe de errata registra solo el motivo.** El formulario muestra los datos
+   del evento bloqueados; no se cambia ningún valor (`campo_corregido` en null,
+   migración `2026_10_23_000003`). Las erratas anteriores con campo y valores
+   se conservan y siguen aplicando en `eventos_vigentes`.
 
 ## Impacto relevado (≈50 archivos)
 

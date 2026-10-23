@@ -8,9 +8,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Reglas de los datos de un evento (US-003 / US-005), compartidas por el
- * registro (StoreEventoRequest) y la fe de errata (StoreErrataRequest): un
- * evento corregido tiene que cumplir lo mismo que uno nuevo.
+ * Reglas de los datos de un evento (US-003 / US-005) para el registro
+ * (StoreEventoRequest). La fe de errata ya no cambia datos: solo pide el motivo.
  */
 trait ValidaDatosDeEvento
 {

@@ -4,9 +4,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import MapaPuntosMonitoreo, { EncabezadoMapaPuntos } from '@/Components/MapaPuntosMonitoreo';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SelectorPuntoMonitoreo from '@/Components/SelectorPuntoMonitoreo';
 import TextInput from '@/Components/TextInput';
-import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { Opciones, PuntoMapa, TipoEventoOpcion } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -33,70 +31,22 @@ interface Props {
     tiposPunto: Opciones;
 }
 
-type DatosCorregibles = {
-    tipo_evento_id: string;
-    fecha: string;
-    hora: string;
-    punto_monitoreo_id: number | null;
-    timestamp_video: string;
-    descripcion: string;
-};
-
 const campoClass =
     'mt-1 block w-full rounded-none border-atalaya-border bg-atalaya-canvas font-mono text-xs ' +
     'text-white focus:border-atalaya-cyan focus:ring-1 focus:ring-atalaya-cyan';
 
-const hoy = () => new Date().toLocaleDateString('en-CA');
-
-/** hh:mm y hh:mm:ss se comparan igual. */
-const normalizar = (v: string | number | null | undefined) =>
-    v === null || v === undefined || v === ''
-        ? ''
-        : /^\d{2}:\d{2}$/.test(String(v))
-          ? `${v}:00`
-          : String(v);
-
-function Cambio({ cambiado }: { cambiado: boolean }) {
-    return cambiado ? (
-        <span className="ml-2 font-mono text-[10px] font-bold uppercase text-atalaya-amber">
-            · corregido
-        </span>
-    ) : null;
-}
+const bloqueadoClass = 'disabled:cursor-not-allowed disabled:text-atalaya-text-muted';
 
 /**
- * Fe de errata (regla de negocio 1): se corrigen los datos vigentes del evento
- * sin tocar el original. Cada campo cambiado queda registrado aparte con el
- * valor anterior, el nuevo, el motivo y el autor.
+ * Fe de errata (regla de negocio 1): los datos del evento se muestran
+ * bloqueados y solo se registra el motivo de la corrección, con el autor. El
+ * evento original no se toca y la errata deja constancia en el libro.
  */
 export default function Create({ evento, tipos, categorias, puntos, tiposPunto }: Props) {
-    const original: DatosCorregibles = {
-        tipo_evento_id: String(evento.tipo_evento_id),
-        fecha: evento.fecha,
-        hora: evento.hora,
-        punto_monitoreo_id: evento.punto_monitoreo_id,
-        timestamp_video: evento.timestamp_video ?? '',
-        descripcion: evento.descripcion ?? '',
-    };
+    const { data, setData, post, processing, errors } = useForm({ motivo: '' });
 
-    const { data, setData, post, processing, errors } = useForm<DatosCorregibles & { motivo: string }>({
-        ...original,
-        motivo: '',
-    });
-
-    const cambio = (campo: keyof DatosCorregibles) => normalizar(data[campo]) !== normalizar(original[campo]);
-    const cambiados = (Object.keys(original) as (keyof DatosCorregibles)[]).filter(cambio);
-
-    const tipoSeleccionado = tipos.find((t) => String(t.id) === String(data.tipo_evento_id));
-    const requiereUbicacion = Boolean(tipoSeleccionado?.requiere_ubicacion);
-    const hayPunto = data.punto_monitoreo_id !== null;
-
-    const seleccionarPunto = (id: number | null) =>
-        setData((d) => ({
-            ...d,
-            punto_monitoreo_id: id,
-            timestamp_video: id ? d.timestamp_video : '',
-        }));
+    const tipo = tipos.find((t) => t.id === evento.tipo_evento_id);
+    const punto = puntos.find((p) => p.id === evento.punto_monitoreo_id);
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -130,9 +80,9 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                     <FlashMessages />
 
                     <Alert variant="info">
-                        El evento original no se modifica: cada dato que
-                        cambies queda registrado como fe de errata, con el
-                        valor anterior, el nuevo y el motivo.
+                        Los datos del evento no se modifican: la fe de errata
+                        registra el motivo de la corrección, con tu usuario y
+                        la hora, y deja constancia en el libro de guardia.
                     </Alert>
 
                     <form
@@ -140,123 +90,78 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                         className="grid gap-6 border border-atalaya-border bg-atalaya-surface p-6 lg:grid-cols-5"
                     >
                         <div className="space-y-6 lg:col-span-2">
-                            <div>
-                                <InputLabel htmlFor="tipo_evento_id">
-                                    Tipo de evento
-                                    <Cambio cambiado={cambio('tipo_evento_id')} />
-                                </InputLabel>
-                                <Select
-                                    id="tipo_evento_id"
-                                    buscable
-                                    className="mt-1"
-                                    value={data.tipo_evento_id}
-                                    onChange={(e) => setData('tipo_evento_id', e.target.value)}
-                                >
-                                    {Object.entries(categorias).map(([clave, etiqueta]) => {
-                                        const deCategoria = tipos.filter((t) => t.categoria === clave);
-
-                                        return (
-                                            deCategoria.length > 0 && (
-                                                <optgroup key={clave} label={etiqueta}>
-                                                    {deCategoria.map((t) => (
-                                                        <option key={t.id} value={t.id}>
-                                                            {t.nombre}
-                                                        </option>
-                                                    ))}
-                                                </optgroup>
-                                            )
-                                        );
-                                    })}
-                                </Select>
-                                <InputError className="mt-2" message={errors.tipo_evento_id} />
-                            </div>
-
-                            <div className="grid gap-6 sm:grid-cols-2">
+                            <fieldset disabled className="space-y-6">
                                 <div>
-                                    <InputLabel htmlFor="fecha">
-                                        Fecha del hecho
-                                        <Cambio cambiado={cambio('fecha')} />
-                                    </InputLabel>
+                                    <InputLabel htmlFor="tipo_evento_id" value="Tipo de evento" />
                                     <TextInput
-                                        id="fecha"
-                                        type="date"
-                                        max={hoy()}
-                                        className="mt-1 block w-full"
-                                        value={data.fecha}
-                                        onChange={(e) => setData('fecha', e.target.value)}
+                                        id="tipo_evento_id"
+                                        className={'mt-1 block w-full ' + bloqueadoClass}
+                                        value={tipo ? `${tipo.nombre} · ${categorias[tipo.categoria] ?? ''}` : ''}
+                                        readOnly
                                     />
-                                    <InputError className="mt-2" message={errors.fecha} />
                                 </div>
+
+                                <div className="grid gap-6 sm:grid-cols-2">
+                                    <div>
+                                        <InputLabel htmlFor="fecha" value="Fecha del hecho" />
+                                        <TextInput
+                                            id="fecha"
+                                            type="date"
+                                            className={'mt-1 block w-full ' + bloqueadoClass}
+                                            value={evento.fecha}
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="hora" value="Horario del hecho" />
+                                        <TextInput
+                                            id="hora"
+                                            type="time"
+                                            step="1"
+                                            className={'mt-1 block w-full ' + bloqueadoClass}
+                                            value={evento.hora}
+                                            readOnly
+                                        />
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <InputLabel htmlFor="hora">
-                                        Horario del hecho
-                                        <Cambio cambiado={cambio('hora')} />
-                                    </InputLabel>
+                                    <InputLabel htmlFor="punto_monitoreo_id" value="Punto de monitoreo" />
                                     <TextInput
-                                        id="hora"
+                                        id="punto_monitoreo_id"
+                                        className={'mt-1 block w-full ' + bloqueadoClass}
+                                        value={
+                                            punto
+                                                ? `${punto.codigo} — ${punto.nombre} · ${tiposPunto[punto.tipo] ?? ''}`
+                                                : 'Sin ubicación'
+                                        }
+                                        readOnly
+                                    />
+                                </div>
+
+                                <div>
+                                    <InputLabel htmlFor="timestamp_video" value="Timestamp del video (hh:mm:ss)" />
+                                    <TextInput
+                                        id="timestamp_video"
                                         type="time"
                                         step="1"
-                                        className="mt-1 block w-full"
-                                        value={data.hora}
-                                        onChange={(e) => setData('hora', e.target.value)}
+                                        className={'mt-1 block w-full ' + bloqueadoClass}
+                                        value={evento.timestamp_video ?? ''}
+                                        readOnly
                                     />
-                                    <InputError className="mt-2" message={errors.hora} />
                                 </div>
-                            </div>
 
-                            <div>
-                                <InputLabel htmlFor="punto_monitoreo_id">
-                                    Punto de monitoreo
-                                    {!requiereUbicacion && (
-                                        <span className="font-normal text-atalaya-text-dim"> (opcional)</span>
-                                    )}
-                                    <Cambio cambiado={cambio('punto_monitoreo_id')} />
-                                </InputLabel>
-                                <SelectorPuntoMonitoreo
-                                    id="punto_monitoreo_id"
-                                    puntos={puntos}
-                                    tiposPunto={tiposPunto}
-                                    value={data.punto_monitoreo_id}
-                                    onChange={seleccionarPunto}
-                                />
-                                <InputError className="mt-2" message={errors.punto_monitoreo_id} />
-                                <p className="mt-1 text-xs text-atalaya-text-dim">
-                                    Buscalo por código o dirección, o hacé clic en el mapa.
-                                </p>
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="timestamp_video">
-                                    Timestamp del video (hh:mm:ss)
-                                    <Cambio cambiado={cambio('timestamp_video')} />
-                                </InputLabel>
-                                <TextInput
-                                    id="timestamp_video"
-                                    type="time"
-                                    step="1"
-                                    disabled={!hayPunto}
-                                    className="mt-1 block w-full disabled:bg-atalaya-canvas"
-                                    value={data.timestamp_video}
-                                    onChange={(e) => setData('timestamp_video', e.target.value)}
-                                />
-                                <InputError className="mt-2" message={errors.timestamp_video} />
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="descripcion">
-                                    Descripción
-                                    <Cambio cambiado={cambio('descripcion')} />
-                                </InputLabel>
-                                <textarea
-                                    id="descripcion"
-                                    rows={4}
-                                    maxLength={5000}
-                                    className={campoClass}
-                                    value={data.descripcion}
-                                    onChange={(e) => setData('descripcion', e.target.value)}
-                                />
-                                <InputError className="mt-2" message={errors.descripcion} />
-                            </div>
+                                <div>
+                                    <InputLabel htmlFor="descripcion" value="Descripción" />
+                                    <textarea
+                                        id="descripcion"
+                                        rows={4}
+                                        className={campoClass + ' ' + bloqueadoClass}
+                                        value={evento.descripcion ?? ''}
+                                        readOnly
+                                    />
+                                </div>
+                            </fieldset>
 
                             <div className="border-t border-atalaya-border pt-6">
                                 <InputLabel htmlFor="motivo">
@@ -265,9 +170,10 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                                 </InputLabel>
                                 <textarea
                                     id="motivo"
-                                    rows={3}
+                                    rows={4}
                                     maxLength={1000}
-                                    placeholder="Ej.: se cargó el PM equivocado; el hecho fue en la esquina de enfrente."
+                                    autoFocus
+                                    placeholder="Ej.: se cargó el PM equivocado; el hecho fue en la esquina de enfrente (PM-M-045)."
                                     className={campoClass}
                                     value={data.motivo}
                                     onChange={(e) => setData('motivo', e.target.value)}
@@ -280,19 +186,13 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                             <EncabezadoMapaPuntos />
                             <MapaPuntosMonitoreo
                                 puntos={puntos}
-                                seleccionadoId={data.punto_monitoreo_id}
-                                onSelect={seleccionarPunto}
+                                seleccionadoId={evento.punto_monitoreo_id}
                                 className="h-[420px] w-full border border-atalaya-border lg:h-auto lg:min-h-[560px] lg:flex-1"
                             />
                         </div>
 
-                        <div className="flex items-center justify-between gap-4 border-t border-atalaya-border pt-4 lg:col-span-5">
-                            <p className="text-xs text-atalaya-text-dim">
-                                {cambiados.length === 0
-                                    ? 'Todavía no cambiaste ningún dato.'
-                                    : `${cambiados.length} dato(s) a corregir.`}
-                            </p>
-                            <PrimaryButton disabled={processing || cambiados.length === 0}>
+                        <div className="flex items-center justify-end gap-4 border-t border-atalaya-border pt-4 lg:col-span-5">
+                            <PrimaryButton disabled={processing || data.motivo.trim().length < 5}>
                                 Registrar fe de errata
                             </PrimaryButton>
                         </div>

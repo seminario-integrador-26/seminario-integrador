@@ -147,9 +147,10 @@ class EventoController extends Controller
                 'timestamp_video' => $vigentes['timestamp_video'],
                 'erratas' => $evento->erratas->map(fn (Errata $e) => [
                     'id' => $e->id,
-                    'campo' => Errata::CAMPOS[$e->campo_corregido] ?? $e->campo_corregido,
-                    'anterior' => $this->erratasLegibles->legible($e->campo_corregido, $e->valor_anterior),
-                    'nuevo' => $this->erratasLegibles->legible($e->campo_corregido, $e->valor_nuevo),
+                    // Solo las erratas anteriores a 2026-10-23 corrigen un campo.
+                    'campo' => $e->campo_corregido ? (Errata::CAMPOS[$e->campo_corregido] ?? $e->campo_corregido) : null,
+                    'anterior' => $e->campo_corregido ? $this->erratasLegibles->legible($e->campo_corregido, $e->valor_anterior) : null,
+                    'nuevo' => $e->campo_corregido ? $this->erratasLegibles->legible($e->campo_corregido, $e->valor_nuevo) : null,
                     'motivo' => $e->motivo,
                     'autor' => $e->autor?->name,
                     'fecha' => $e->created_at?->format('d/m/Y H:i:s'),

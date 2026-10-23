@@ -8,8 +8,8 @@ import type { ReactNode } from 'react';
 /** Fe de errata ya legible (EventoController::show). */
 interface ErrataDetalle {
     id: number;
-    /** Etiqueta del campo corregido (Errata::CAMPOS). */
-    campo: string;
+    /** Etiqueta del campo corregido (Errata::CAMPOS); null en las de solo motivo. */
+    campo: string | null;
     anterior: string | null;
     nuevo: string | null;
     motivo: string;
@@ -111,9 +111,8 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
 
                     {evento.erratas.length > 0 && (
                         <p className="border border-atalaya-amber/50 bg-atalaya-amber/10 px-4 py-2 text-sm text-amber-100">
-                            Este evento tiene {evento.erratas.length}{' '}
-                            corrección(es) por fe de errata. Se muestran los
-                            datos vigentes; el historial está al final.
+                            Este evento tiene {evento.erratas.length} fe(s) de
+                            errata; el detalle está al final.
                         </p>
                     )}
 
@@ -239,21 +238,29 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                                         key={e.id}
                                         className="border-l-2 border-atalaya-amber pl-4 text-sm"
                                     >
-                                        <p className="font-medium text-white">
-                                            {e.campo}
-                                        </p>
-                                        <p className="mt-1 text-atalaya-text-muted">
-                                            <span className="text-atalaya-text-dim line-through">
-                                                {e.anterior ?? '(vacío)'}
-                                            </span>{' '}
-                                            →{' '}
-                                            <span className="text-white">
-                                                {e.nuevo ?? '(vacío)'}
-                                            </span>
-                                        </p>
-                                        <p className="mt-1 text-xs text-atalaya-text-dim">
-                                            Motivo: {e.motivo}
-                                        </p>
+                                        {e.campo !== null ? (
+                                            <>
+                                                <p className="font-medium text-white">
+                                                    {e.campo}
+                                                </p>
+                                                <p className="mt-1 text-atalaya-text-muted">
+                                                    <span className="text-atalaya-text-dim line-through">
+                                                        {e.anterior ?? '(vacío)'}
+                                                    </span>{' '}
+                                                    →{' '}
+                                                    <span className="text-white">
+                                                        {e.nuevo ?? '(vacío)'}
+                                                    </span>
+                                                </p>
+                                                <p className="mt-1 text-xs text-atalaya-text-dim">
+                                                    Motivo: {e.motivo}
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <p className="whitespace-pre-line text-white">
+                                                {e.motivo}
+                                            </p>
+                                        )}
                                         <p className="text-xs text-atalaya-text-dim">
                                             {e.autor} · {e.fecha}
                                         </p>

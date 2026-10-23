@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Eventos;
 
+use App\Models\Errata;
 use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
 use App\Models\User;
-use App\Services\ErrataService;
 use App\Services\EstadisticaService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -60,14 +60,32 @@ class ValoresVigentesTest extends TestCase
             'descripcion' => 'Original',
         ]);
 
-        app(ErrataService::class)->registrar($this->evento, [
-            'tipo_evento_id' => $this->ruidos->id,
-            'fecha' => '2026-10-02',
-            'hora' => '01:00:00',
-            'punto_monitoreo_id' => $this->ruta->id,
-            'timestamp_video' => '00:59:00',
-            'descripcion' => 'Corregida',
-        ], 'Se cargó mal en la guardia.', User::factory()->create()->assignRole('Supervisor'));
+        // Erratas anteriores a 2026-10-23 (con campo y valores): siguen
+        // aplicando en los valores vigentes.
+        $supervisor = User::factory()->create()->assignRole('Supervisor');
+        foreach ([
+            'tipo_evento_id' => [$this->robo->id, $this->ruidos->id],
+            'fecha_hora' => ['2026-09-30 23:00:00', '2026-10-02 01:00:00'],
+            'punto_monitoreo_id' => [$this->plaza->id, $this->ruta->id],
+            'timestamp_video' => ['22:59:00', '00:59:00'],
+            'descripcion' => ['Original', 'Corregida'],
+        ] as $campo => [$anterior, $nuevo]) {
+            Errata::create([
+                'evento_id' => $this->evento->id,
+                'usuario_id' => $supervisor->id,
+                'campo_corregido' => $campo,
+                'valor_anterior' => (string) $anterior,
+                'valor_nuevo' => (string) $nuevo,
+                'motivo' => 'Se cargó mal en la guardia.',
+            ]);
+        }
+
+        // Una errata de solo motivo no cambia nada.
+        Errata::create([
+            'evento_id' => $this->evento->id,
+            'usuario_id' => $supervisor->id,
+            'motivo' => 'Nota posterior.',
+        ]);
     }
 
     public function test_el_original_no_cambia(): void

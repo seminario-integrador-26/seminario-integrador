@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreErrataRequest;
 use App\Models\AuditoriaAcceso;
-use App\Models\Errata;
 use App\Models\Evento;
 use App\Models\GrupoEvento;
 use App\Models\TipoPuntoMonitoreo;
@@ -62,30 +61,21 @@ class ErrataController extends Controller
     {
         abort_unless($this->eventos->puedeCorregir($request->user()), 403);
 
-        $datos = $request->validated();
-
         try {
-            $erratas = $this->erratas->corregir($evento, $datos, $datos['motivo'], $request->user());
+            $this->erratas->corregir($evento, $request->validated('motivo'), $request->user());
         } catch (DomainException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
-
-        $campos = $erratas->map(fn (Errata $e) => Errata::CAMPOS[$e->campo_corregido])->implode(', ');
 
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_ERRATA,
             $request->user(),
             // Autor del evento: deja a la vista correcciones sobre eventos
             // de otros supervisores.
-            mb_substr(
-                "Fe de errata sobre el evento #{$evento->id} ({$campos}); "
-                ."cargado por {$evento->usuario->name}.",
-                0,
-                500,
-            ),
+            "Fe de errata sobre el evento #{$evento->id}; cargado por {$evento->usuario->name}.",
         );
 
         return redirect()->route('eventos.show', $evento)
-            ->with('success', "Fe de errata registrada: {$campos}.");
+            ->with('success', 'Fe de errata registrada.');
     }
 }
