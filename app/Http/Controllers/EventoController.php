@@ -83,7 +83,7 @@ class EventoController extends Controller
         $puntoInicial = $puntos->firstWhere('id', $request->integer('punto_monitoreo_id'))['id'] ?? null;
 
         return Inertia::render('Eventos/Create', [
-            'tipos' => $this->eventos->tiposEvento(),
+            'tipos' => $this->eventos->tiposEvento(cargables: true),
             'categorias' => GrupoEvento::opciones(),
             'puntos' => $puntos,
             'puntoInicial' => $puntoInicial,
@@ -125,7 +125,7 @@ class EventoController extends Controller
         $fechaHora = Carbon::parse($vigentes['fecha_hora']);
 
         return Inertia::render('Eventos/Show', [
-            'puedeCorregir' => $request->user()->can('erratas.crear'),
+            'puedeCorregir' => $request->user()->can('erratas.crear') && ! $this->eventos->esConstancia($evento),
             'evento' => [
                 'id' => $evento->id,
                 'tipo' => $tipo->nombre,

@@ -11,6 +11,7 @@ use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Único mecanismo de corrección permitido sobre un Evento (regla de negocio 1).
@@ -22,6 +23,58 @@ use Illuminate\Support\Facades\DB;
  */
 class ErrataService
 {
+    /** Largo máximo de cada valor citado en la constancia. */
+    private const LARGO_VALOR = 80;
+
+    public function __construct(private readonly EventoService $eventos) {}
+
+    /**
+     * Fe de errata desde la UI: registra las erratas y, en la misma
+     * transacción, la constancia (evento interno Errata) que la deja en el
+     * libro de guardia y se notifica según la matriz.
+     *
+     * @param  array<string, mixed>  $datos  ver registrar()
+     * @return Collection<int, Errata>
+     *
+     * @throws DomainException si el evento es una constancia o no hay cambios.
+     */
+    public function corregir(Evento $evento, array $datos, string $motivo, User $autor): Collection
+    {
+        if ($this->eventos->esConstancia($evento)) {
+            throw new DomainException('Las constancias de errata las registra el sistema: no se corrigen.');
+        }
+
+        return DB::transaction(function () use ($evento, $datos, $motivo, $autor) {
+            $erratas = $this->registrar($evento, $datos, $motivo, $autor);
+            $this->eventos->registrarConstancia(TipoEvento::ERRATA, $this->constancia($evento, $erratas, $motivo), $autor);
+
+            return $erratas;
+        });
+    }
+
+    /**
+     * "Corrige AT-2026-0012: Tipo de evento, de «Robos» a «Hurtos». Motivo: …"
+     *
+     * @param  Collection<int, Errata>  $erratas
+     */
+    public function constancia(Evento $evento, Collection $erratas, string $motivo): string
+    {
+        $cambios = $erratas->map(fn (Errata $e) => sprintf(
+            '%s, de %s a %s',
+            Errata::CAMPOS[$e->campo_corregido] ?? $e->campo_corregido,
+            $this->citar($e->campo_corregido, $e->valor_anterior),
+            $this->citar($e->campo_corregido, $e->valor_nuevo),
+        ))->implode('; ');
+
+        return "Corrige {$evento->codigo()}: {$cambios}. Motivo: {$motivo}";
+    }
+
+    private function citar(string $campo, ?string $valor): string
+    {
+        $legible = $this->legible($campo, $valor);
+
+        return $legible === null ? '(vacío)' : '«'.Str::limit($legible, self::LARGO_VALOR).'»';
+    }
     /**
      * Compara los datos corregidos con los valores vigentes y registra una
      * errata por cada campo que cambió, todas con el mismo motivo.

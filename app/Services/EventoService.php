@@ -61,13 +61,43 @@ class EventoService
     }
 
     /**
-     * Tipos para selects; `categoria` es el código de su GrupoEvento.
+     * Evento interno que registra el sistema (hoy, la constancia de una fe de
+     * errata): con la hora actual, sin ubicación, y se notifica como cualquier
+     * otro según la matriz de Notificaciones.
+     */
+    public function registrarConstancia(string $tipo, string $descripcion, User $autor): Evento
+    {
+        $evento = Evento::create([
+            'tipo_evento_id' => TipoEvento::interno($tipo),
+            'usuario_id' => $autor->id,
+            'fecha_hora' => Carbon::now()->startOfSecond(),
+            'descripcion' => $descripcion,
+        ]);
+
+        EventoRegistrado::dispatch($evento);
+
+        return $evento;
+    }
+
+    /**
+     * Las constancias (evento interno Errata) las crea el sistema: no se
+     * cargan a mano ni se corrigen.
+     */
+    public function esConstancia(Evento $evento): bool
+    {
+        return $evento->tipo_evento_id === TipoEvento::interno(TipoEvento::ERRATA);
+    }
+
+    /**
+     * Tipos para selects; `categoria` es el código de su GrupoEvento. Con
+     * `$cargables`, sin la constancia Errata (no se carga a mano).
      *
      * @return Collection<int, array{id: int, nombre: string, categoria: string, requiere_ubicacion: bool}>
      */
-    public function tiposEvento(): Collection
+    public function tiposEvento(bool $cargables = false): Collection
     {
         return TipoEvento::with('grupoEvento:id,codigo')
+            ->when($cargables ? TipoEvento::interno(TipoEvento::ERRATA) : null, fn (Builder $q, int $errata) => $q->whereKeyNot($errata))
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'grupo_evento_id', 'requiere_ubicacion'])
             ->map(fn (TipoEvento $t) => [

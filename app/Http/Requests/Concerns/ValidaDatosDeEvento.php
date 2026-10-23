@@ -31,7 +31,13 @@ trait ValidaDatosDeEvento
     protected function reglasDeEvento(): array
     {
         return [
-            'tipo_evento_id' => ['required', 'integer', 'exists:tipos_evento,id'],
+            'tipo_evento_id' => [
+                'required',
+                'integer',
+                'exists:tipos_evento,id',
+                // La constancia Errata la crea el sistema al cargar una fe de errata.
+                Rule::notIn(array_filter([TipoEvento::interno(TipoEvento::ERRATA)])),
+            ],
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i:s'],
             'punto_monitoreo_id' => [
@@ -87,6 +93,7 @@ trait ValidaDatosDeEvento
     public function messages(): array
     {
         return [
+            'tipo_evento_id.not_in' => 'El tipo Errata lo registra el sistema al cargar una fe de errata.',
             'punto_monitoreo_id.required' => 'El tipo de evento seleccionado requiere un punto de monitoreo.',
             'punto_monitoreo_id.exists' => 'El punto de monitoreo seleccionado no existe.',
             'timestamp_video.required' => 'El timestamp del video es obligatorio cuando se indica un punto de monitoreo.',

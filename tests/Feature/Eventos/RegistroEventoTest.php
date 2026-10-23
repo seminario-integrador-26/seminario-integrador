@@ -8,6 +8,7 @@ use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
+use Database\Seeders\TipoEventoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -271,6 +272,44 @@ class RegistroEventoTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertSame(1, Evento::count());
+    }
+
+    public function test_la_constancia_errata_no_se_registra_a_mano(): void
+    {
+        $this->seed(TipoEventoSeeder::class);
+        $errata = TipoEvento::interno(TipoEvento::ERRATA);
+
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.create'))
+            ->assertInertia(fn (Assert $page) => $page->where(
+                'tipos',
+                fn ($tipos) => collect($tipos)->pluck('id')->doesntContain($errata),
+            ));
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos(['tipo_evento_id' => $errata, 'punto_monitoreo_id' => null]))
+            ->assertSessionHasErrors('tipo_evento_id');
+
+        $this->assertSame(0, Evento::count());
+    }
+
+    public function test_apertura_y_cierre_de_turno_se_registran_como_cualquier_evento(): void
+    {
+        Event::fake([EventoRegistrado::class]);
+        $this->seed(TipoEventoSeeder::class);
+
+        foreach ([TipoEvento::APERTURA_TURNO, TipoEvento::CIERRE_TURNO] as $tipo) {
+            $this->actingAs($this->supervisor)
+                ->post(route('eventos.store'), $this->datosValidos([
+                    'tipo_evento_id' => TipoEvento::interno($tipo),
+                    'punto_monitoreo_id' => null,
+                    'descripcion' => 'Personal presente: Juan y María.',
+                ]))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(2, Evento::count());
+        Event::assertDispatchedTimes(EventoRegistrado::class, 2);
     }
 
     public function test_el_evento_registrado_es_inmutable(): void

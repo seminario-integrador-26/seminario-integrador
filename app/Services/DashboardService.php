@@ -73,8 +73,7 @@ class DashboardService
             ->get()
             ->map(fn (Evento $e) => [
                 'id' => $e->id,
-                // Código legible del evento: AT-<año>-<id con 4 dígitos>.
-                'codigo' => sprintf('AT-%s-%04d', $e->fecha_hora->format('Y'), $e->id),
+                'codigo' => $e->codigo(),
                 'categoria' => $e->tipoEvento->grupoEvento->nombre,
                 'es_cuantificable' => $e->tipoEvento->es_cuantificable,
                 'tipo' => $e->tipoEvento->nombre,

@@ -93,6 +93,20 @@ class ApiPublicaTest extends TestCase
         $this->getJson('/api/v1/eventos?por_pagina=500')->assertUnprocessable();
     }
 
+    public function test_no_publica_los_eventos_internos(): void
+    {
+        $robo = TipoEvento::factory()->delGrupo('policia')->create();
+        $apertura = TipoEvento::factory()->sinUbicacion()->delGrupo('internos')->create(['nombre' => 'Apertura de turno']);
+        Evento::factory()->create(['tipo_evento_id' => $robo->id]);
+        $interno = Evento::factory()->create(['tipo_evento_id' => $apertura->id]);
+
+        $this->conToken();
+
+        $this->getJson('/api/v1/eventos')->assertJsonCount(1, 'data');
+        $this->getJson('/api/v1/eventos?categoria=internos')->assertJsonCount(0, 'data');
+        $this->getJson("/api/v1/eventos/{$interno->id}")->assertNotFound();
+    }
+
     public function test_detalle_de_un_evento(): void
     {
         $evento = Evento::factory()->create();

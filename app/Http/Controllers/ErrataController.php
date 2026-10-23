@@ -36,6 +36,7 @@ class ErrataController extends Controller
     public function create(Request $request, Evento $evento): Response
     {
         abort_unless($this->eventos->puedeCorregir($request->user()), 403);
+        abort_if($this->eventos->esConstancia($evento), 403);
 
         $vigentes = $evento->load('erratas')->valoresVigentes();
         $fechaHora = Carbon::parse($vigentes['fecha_hora']);
@@ -50,7 +51,7 @@ class ErrataController extends Controller
                 'timestamp_video' => $vigentes['timestamp_video'],
                 'descripcion' => $vigentes['descripcion'],
             ],
-            'tipos' => $this->eventos->tiposEvento(),
+            'tipos' => $this->eventos->tiposEvento(cargables: true),
             'categorias' => GrupoEvento::opciones(),
             'puntos' => $this->eventos->puntosMonitoreo(),
             'tiposPunto' => TipoPuntoMonitoreo::opciones(),
@@ -64,7 +65,7 @@ class ErrataController extends Controller
         $datos = $request->validated();
 
         try {
-            $erratas = $this->erratas->registrar($evento, $datos, $datos['motivo'], $request->user());
+            $erratas = $this->erratas->corregir($evento, $datos, $datos['motivo'], $request->user());
         } catch (DomainException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Eventos;
 
+use App\Events\EventoRegistrado;
 use App\Models\AuditoriaAcceso;
 use App\Models\Errata;
 use App\Models\Evento;
@@ -10,8 +11,10 @@ use App\Models\TipoEvento;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Database\Seeders\TipoEventoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia as Assert;
 use LogicException;
 use Tests\TestCase;
@@ -36,7 +39,7 @@ class ErrataTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed([RoleSeeder::class, PermissionSeeder::class]);
+        $this->seed([RoleSeeder::class, PermissionSeeder::class, TipoEventoSeeder::class]);
         $this->travelTo(Carbon::parse('2026-10-15 15:00:00'));
 
         $this->supervisor = User::factory()->create(['name' => 'Ana Supervisora'])->assignRole('Supervisor');
@@ -138,8 +141,9 @@ class ErrataTest extends TestCase
                 ->where('evento.erratas.0.autor', 'Ana Supervisora')
                 ->where('puedeCorregir', true));
 
+        // Filtrado por tipo: las constancias de errata también figuran en el libro.
         $this->actingAs($this->supervisor)
-            ->get(route('eventos.index'))
+            ->get(route('eventos.index', ['tipo_evento_id' => $this->robo->id]))
             ->assertInertia(fn (Assert $page) => $page->where('eventos.data.0.corregido', true));
     }
 
@@ -265,6 +269,69 @@ class ErrataTest extends TestCase
             ->get(route('eventos.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('eventos.total', 1));
+    }
+
+    // --- Constancia en el libro de guardia (evento interno Errata) ----------
+
+    public function test_la_fe_de_errata_deja_una_constancia_en_el_libro_y_se_notifica(): void
+    {
+        Event::fake([EventoRegistrado::class]);
+        $hurto = TipoEvento::factory()->create(['nombre' => 'Hurto', 'requiere_ubicacion' => true]);
+
+        $this->actingAs($this->supervisor)
+            ->post(route('erratas.store', $this->evento), $this->datos(['tipo_evento_id' => $hurto->id]))
+            ->assertRedirect(route('eventos.show', $this->evento));
+
+        $constancia = Evento::where('tipo_evento_id', TipoEvento::interno(TipoEvento::ERRATA))->sole();
+        $this->assertSame($this->supervisor->id, $constancia->usuario_id);
+        $this->assertNull($constancia->punto_monitoreo_id);
+        $this->assertSame('2026-10-15 15:00:00', $constancia->fecha_hora->format('Y-m-d H:i:s'));
+        $this->assertSame(
+            "Corrige AT-2026-{$this->formato($this->evento->id)}: Tipo de evento, de «Robo» a «Hurto». Motivo: Se cargó mal el dato en la guardia.",
+            $constancia->descripcion,
+        );
+
+        Event::assertDispatched(EventoRegistrado::class, fn ($e) => $e->evento->is($constancia));
+    }
+
+    public function test_sin_cambios_no_hay_constancia(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('erratas.store', $this->evento), $this->datos());
+
+        $this->assertSame(1, Evento::count());
+    }
+
+    public function test_a_una_constancia_no_se_le_hace_errata(): void
+    {
+        $constancia = Evento::factory()->create([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::ERRATA),
+            'usuario_id' => $this->supervisor->id,
+        ]);
+
+        $this->actingAs($this->supervisor)->get(route('erratas.create', $constancia))->assertForbidden();
+        $this->actingAs($this->supervisor)
+            ->post(route('erratas.store', $constancia), $this->datos(['descripcion' => 'Otra cosa']))
+            ->assertSessionHas('error');
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.show', $constancia))
+            ->assertInertia(fn (Assert $page) => $page->where('puedeCorregir', false));
+
+        $this->assertDatabaseCount('erratas', 0);
+    }
+
+    public function test_la_errata_no_cambia_el_tipo_a_errata(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('erratas.store', $this->evento), $this->datos(['tipo_evento_id' => TipoEvento::interno(TipoEvento::ERRATA)]))
+            ->assertSessionHasErrors('tipo_evento_id');
+
+        $this->assertDatabaseCount('erratas', 0);
+    }
+
+    private function formato(int $id): string
+    {
+        return sprintf('%04d', $id);
     }
 
     public function test_la_errata_es_inmutable(): void

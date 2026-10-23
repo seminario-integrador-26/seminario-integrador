@@ -69,6 +69,14 @@ class Evento extends Model
         return static::query()->from('eventos_vigentes', 'eventos');
     }
 
+    /**
+     * Código legible del evento: AT-<año>-<id con 4 dígitos>.
+     */
+    public function codigo(): string
+    {
+        return sprintf('AT-%s-%04d', $this->fecha_hora->format('Y'), $this->id);
+    }
+
     public function tipoEvento(): BelongsTo
     {
         return $this->belongsTo(TipoEvento::class);

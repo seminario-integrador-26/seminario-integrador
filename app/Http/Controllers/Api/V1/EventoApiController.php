@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\EventoResource;
 use App\Models\Evento;
+use App\Models\GrupoEvento;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -14,6 +15,9 @@ use Illuminate\Support\Carbon;
  * API PÚBLICA versionada (/api/v1), SOLO LECTURA, para Datos Abiertos.
  * Convive con Inertia (que resuelve el frontend interno); esto es ADEMÁS.
  * Auth: token personal de Sanctum con la habilidad 'datos-abiertos:leer'.
+ *
+ * Decisión 2026-10-23: los eventos del grupo Internos (apertura y cierre de
+ * turno, notas, erratas, oficios) son del libro de guardia y no se publican.
  */
 class EventoApiController extends Controller
 {
@@ -36,7 +40,7 @@ class EventoApiController extends Controller
             'por_pagina' => ['nullable', 'integer', 'between:1,100'],
         ]);
 
-        $eventos = Evento::vigentes()
+        $eventos = $this->publicos()
             ->with(self::RELACIONES)
             ->select('eventos.*')
             ->withCount('erratas')
@@ -57,11 +61,22 @@ class EventoApiController extends Controller
     {
         // Valores vigentes (con fe de errata), igual que el listado.
         return new EventoResource(
-            Evento::vigentes()
+            $this->publicos()
                 ->select('eventos.*')
                 ->with(self::RELACIONES)
                 ->withCount('erratas')
                 ->findOrFail($evento),
+        );
+    }
+
+    /**
+     * @return Builder<Evento>
+     */
+    private function publicos(): Builder
+    {
+        return Evento::vigentes()->whereDoesntHave(
+            'tipoEvento.grupoEvento',
+            fn (Builder $g) => $g->where('codigo', GrupoEvento::INTERNOS),
         );
     }
 }

@@ -1,6 +1,6 @@
 # Rediseño: Libro de guardia, eventos internos y fin de los turnos
 
-> Estado: **en curso** (2026-10-23): pasos 1 a 4 hechos. Retomar desde el paso 5.
+> Estado: **en curso** (2026-10-23): pasos 1 a 5 hechos. Falta el paso 6 (docs).
 > Pedido del Centro de Monitoreo: los eventos internos (apertura y cierre de
 > turno, notas, erratas, otros) se registran en el libro y **se notifican por
 > Telegram** como cualquier otro evento.
@@ -29,7 +29,7 @@
 - **Errata:** la corrección **sigue en la tabla `erratas`**, porque de ahí sale la
   vista `eventos_vigentes` (estadísticas, mapa, Excel, API: regla 1). Además, al
   cargarla se crea un evento interno "Errata" con un resumen ("Corrige
-  AT-2026-0012: Tipo, de Robos a Hurto. Motivo: …") para que figure en el libro
+  AT-2026-0012: Tipo de evento, de «Robos» a «Hurtos». Motivo: …") para que figure en el libro
   y se notifique.
 - **Notificación:** sin código nuevo. Todo evento dispara `EventoRegistrado` →
   `NotificarInteresadosListener` → Telegram, según los tipos asociados a cada
@@ -57,8 +57,12 @@
    `CLAUDE.md`, `docs/modelo-dominio.md` y US-012 / US-025 en `docs/backlog.md`
    (paso 6).
 
-Abierto: ¿los tipos de Oficios (ahora en Internos) siguen contando en
-estadísticas? Hoy sí (`es_cuantificable=true`); solo los 5 internos nuevos no.
+Abierto:
+- ¿Los tipos de Oficios (ahora en Internos) siguen contando en estadísticas?
+  Hoy sí (`es_cuantificable=true`); solo los 5 internos nuevos no.
+- La API de estadísticas (`/api/v1/estadisticas/*`) da los mismos números que
+  la pantalla, así que incluye la clave `internos` (hoy, solo oficios). ¿Se
+  saca para respetar "la API no expone Internos"?
 
 ## Impacto relevado (≈50 archivos)
 
@@ -98,6 +102,10 @@ estadísticas? Hoy sí (`es_cuantificable=true`); solo los 5 internos nuevos no.
    todo el libro; permisos `eventos.consultar_historico` y `turnos.gestionar`
    eliminados; PDF (`reportes.guardia.pdf`) de una Apertura al Cierre
    siguiente, con valores vigentes; sin Cierre, no se genera.
-5. Evento interno "Errata" automático al cargar una fe de errata.
+5. ✅ Evento interno "Errata" automático al cargar una fe de errata
+   (`ErrataService::corregir`, misma transacción, se notifica según la matriz).
+   El tipo Errata no se ofrece ni se acepta en el registro manual ni como
+   corrección, y a una constancia no se le hace errata. La API de eventos
+   (`/api/v1/eventos`) no publica el grupo Internos.
 6. Docs (`CLAUDE.md`, modelo de dominio, backlog) y deploy (la migración borra
    datos de turnos en producción: `deploy.sh` ya hace backup antes de migrar).

@@ -32,6 +32,12 @@ class TipoEvento extends Model
 
     public const CIERRE_TURNO = 'Cierre de turno';
 
+    /**
+     * Constancia que crea el sistema al cargar una fe de errata: no se
+     * registra a mano ni se le hace errata.
+     */
+    public const ERRATA = 'Errata';
+
     protected $table = 'tipos_evento';
 
     /**

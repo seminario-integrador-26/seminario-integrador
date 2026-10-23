@@ -14,7 +14,8 @@ class TipoEventoFactory extends Factory
     public function definition(): array
     {
         return [
-            'grupo_evento_id' => fn () => GrupoEvento::inRandomOrder()->value('id'),
+            // Internos (libro de guardia) solo con delGrupo('internos').
+            'grupo_evento_id' => fn () => GrupoEvento::where('codigo', '!=', GrupoEvento::INTERNOS)->inRandomOrder()->value('id'),
             'nombre' => fake()->unique()->words(3, true),
             'requiere_ubicacion' => true,
             'es_cuantificable' => true,
