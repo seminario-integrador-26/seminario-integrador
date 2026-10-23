@@ -43,8 +43,8 @@ class EstadisticasTest extends TestCase
 
         $this->turno = Turno::factory()->create();
         $this->robo = TipoEvento::factory()->delGrupo('policia')->create(['nombre' => 'Robo']);
-        $this->ruidos = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create(['nombre' => 'Ruidos']);
-        $this->informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('oficios_recepcionados')->create([
+        $this->ruidos = TipoEvento::factory()->delGrupo('guardia_local')->create(['nombre' => 'Ruidos']);
+        $this->informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('internos')->create([
             'nombre' => 'Novedad', 'es_cuantificable' => false,
         ]);
         $this->municipal = PuntoMonitoreo::factory()->delTipo('municipal')->create(['codigo' => 'PM-M-001']);
@@ -94,10 +94,10 @@ class EstadisticasTest extends TestCase
         $e = app(EstadisticaService::class)->mensual(2026, 10);
         $porCategoria = collect($e['por_categoria'])->pluck('cantidad', 'clave')->all();
 
-        $this->assertSame(['policia' => 2, 'seguridad_ciudadana' => 2, 'oficios_recepcionados' => 0], $porCategoria);
+        $this->assertSame(['policia' => 2, 'guardia_local' => 2, 'internos' => 0], $porCategoria);
         $this->assertSame(
             [['nombre' => 'Robo', 'categoria' => 'Policía', 'cantidad' => 2],
-                ['nombre' => 'Ruidos', 'categoria' => 'Seguridad Ciudadana', 'cantidad' => 2]],
+                ['nombre' => 'Ruidos', 'categoria' => 'Guardia Local', 'cantidad' => 2]],
             $e['por_tipo'],
         );
     }
@@ -130,7 +130,7 @@ class EstadisticasTest extends TestCase
         );
         $this->assertSame([2, 1, 0, 0, 1], array_column($evolucion, 'total'));
         $this->assertSame(2, $evolucion[0]['policia']);
-        $this->assertSame(1, $evolucion[4]['seguridad_ciudadana']);
+        $this->assertSame(1, $evolucion[4]['guardia_local']);
     }
 
     public function test_anual_agrupa_mes_a_mes(): void

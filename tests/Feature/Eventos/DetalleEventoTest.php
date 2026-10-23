@@ -84,7 +84,7 @@ class DetalleEventoTest extends TestCase
 
     public function test_un_evento_sin_ubicacion_lo_indica(): void
     {
-        $informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('oficios_recepcionados')->create([
+        $informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('internos')->create([
             'es_cuantificable' => false,
         ]);
         $evento = $this->evento(['tipo_evento_id' => $informativo->id]);

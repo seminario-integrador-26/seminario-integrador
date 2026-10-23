@@ -89,8 +89,8 @@ const RADIO_DRILL_DOWN = 250;
 
 const categoriaActiva: Record<string, string> = {
     policia: 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
-    seguridad_ciudadana: 'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
-    oficios_recepcionados: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
+    guardia_local: 'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
+    internos: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
 };
 
 /** Estilo del círculo según el tipo de PM (municipal | provincial | alarma). */
@@ -103,7 +103,7 @@ const ESTILO_TIPO_PUNTO: Record<string, PathOptions> = {
 /**
  * US-016: forma del marcador según el tipo de PM y color según la categoría.
  * La forma distingue municipal / provincial / alarma sin usar color (el cian
- * ya es de Oficios y del mapa de calor).
+ * ya es de Internos y del mapa de calor).
  */
 const FORMA_PUNTO: Record<string, string> = {
     municipal: '<circle cx="8" cy="8" r="6" />',

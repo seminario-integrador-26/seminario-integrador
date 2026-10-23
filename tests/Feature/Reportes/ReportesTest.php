@@ -165,7 +165,7 @@ class ReportesTest extends TestCase
     public function test_exporta_los_eventos_filtrados_con_fechas_ddmmaaaa_y_observacion(): void
     {
         $robo = TipoEvento::factory()->delGrupo('policia')->create(['nombre' => 'Robo']);
-        $informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('oficios_recepcionados')->create([
+        $informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('internos')->create([
             'nombre' => 'Novedad', 'es_cuantificable' => false,
         ]);
         $punto = PuntoMonitoreo::factory()->delTipo('municipal')->create(['codigo' => 'PM-M-007', 'nombre' => 'Plaza Centenario']);

@@ -101,7 +101,7 @@ class ConsultaEventosTest extends TestCase
     public function test_filtra_por_tipo_categoria_y_punto(): void
     {
         $robo = TipoEvento::factory()->delGrupo('policia')->create();
-        $ruido = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create();
+        $ruido = TipoEvento::factory()->delGrupo('guardia_local')->create();
         $punto = PuntoMonitoreo::factory()->create();
 
         $conPunto = $this->evento(['tipo_evento_id' => $robo->id, 'punto_monitoreo_id' => $punto->id, 'timestamp_video' => '10:00:00']);
@@ -115,7 +115,7 @@ class ConsultaEventosTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->has('eventos.data', 2));
 
         $this->actingAs($admin)
-            ->get(route('eventos.index', ['categorias' => ['seguridad_ciudadana']]))
+            ->get(route('eventos.index', ['categorias' => ['guardia_local']]))
             ->assertInertia(fn (Assert $page) => $page->has('eventos.data', 1));
 
         $this->actingAs($admin)
@@ -171,12 +171,12 @@ class ConsultaEventosTest extends TestCase
     public function test_filtra_por_varias_categorias_a_la_vez(): void
     {
         $policia = $this->evento(['tipo_evento_id' => TipoEvento::factory()->delGrupo('policia')->create()->id]);
-        $oficio = $this->evento(['tipo_evento_id' => TipoEvento::factory()->delGrupo('oficios_recepcionados')->create()->id]);
-        $this->evento(['tipo_evento_id' => TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create()->id]);
+        $oficio = $this->evento(['tipo_evento_id' => TipoEvento::factory()->delGrupo('internos')->create()->id]);
+        $this->evento(['tipo_evento_id' => TipoEvento::factory()->delGrupo('guardia_local')->create()->id]);
 
         $this->assertSame(
             [$policia->id, $oficio->id],
-            $this->idsListados(['categorias' => ['policia', 'oficios_recepcionados']]),
+            $this->idsListados(['categorias' => ['policia', 'internos']]),
         );
     }
 

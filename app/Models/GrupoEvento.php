@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Agrupa los tipos de evento (la "categoría" del registro de intervenciones):
- * Policía, Seguridad Ciudadana, Oficios Recepcionados.
+ * Policía, Guardia Local, Internos.
  * `codigo` es la clave estable que usan filtros y frontend.
  */
 #[Fillable(['codigo', 'nombre', 'descripcion'])]

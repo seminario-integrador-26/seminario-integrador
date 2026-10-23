@@ -7,8 +7,8 @@
  */
 export const COLOR_GRUPO: Record<string, string> = {
     policia: '#EF4444',
-    seguridad_ciudadana: '#F59E0B',
-    oficios_recepcionados: '#00D2FF',
+    guardia_local: '#F59E0B',
+    internos: '#00D2FF',
 };
 
 export const COLOR_TIPO_PUNTO: Record<string, string> = {

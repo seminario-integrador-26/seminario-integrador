@@ -40,7 +40,7 @@ class TipoEventoSeeder extends Seeder
             'Resistencia a la autoridad',
             'Otros',
         ]],
-        'seguridad_ciudadana' => ['Seguridad Ciudadana', true, [
+        'guardia_local' => ['Guardia Local', true, [
             'Camiones en zona prohibida',
             'Vehículos mal estacionados',
             'Animales sueltos',
@@ -61,13 +61,27 @@ class TipoEventoSeeder extends Seeder
             'Vehículo en estado de abandono',
             'Otros',
         ]],
-        // Los oficios se reciben en la sala: no se ubican en un PM.
-        'oficios_recepcionados' => ['Oficios Recepcionados', false, [
+        // Ocurren en la sala (oficios recibidos, libro de guardia): no se ubican en un PM.
+        'internos' => ['Internos', false, [
             'Oficios judiciales',
             'Particulares',
             'Solicitudes de seguros',
+            'Apertura de turno',
+            'Cierre de turno',
+            'Nota',
+            'Errata',
+            'Otros',
         ]],
     ];
+
+    /**
+     * Eventos internos del libro de guardia: se registran y se notifican, pero
+     * no entran en estadísticas (docs/rediseno-libro-guardia.md).
+     * // TODO: confirmar con el equipo si los oficios también dejan de contarse.
+     *
+     * @var list<string>
+     */
+    public const INTERNOS_NO_CUANTIFICABLES = ['Apertura de turno', 'Cierre de turno', 'Nota', 'Errata', 'Otros'];
 
     /** Tipos de ejemplo que cargaba la versión anterior de este seeder. */
     private const TIPOS_DE_EJEMPLO = [
@@ -90,8 +104,11 @@ class TipoEventoSeeder extends Seeder
             foreach ($tipos as $nombre) {
                 TipoEvento::firstOrCreate(
                     ['grupo_evento_id' => $grupo->id, 'nombre' => $nombre],
-                    // "Otros" no siempre ocurre frente a una cámara.
-                    ['requiere_ubicacion' => $requiereUbicacion && $nombre !== 'Otros'],
+                    [
+                        // "Otros" no siempre ocurre frente a una cámara.
+                        'requiere_ubicacion' => $requiereUbicacion && $nombre !== 'Otros',
+                        'es_cuantificable' => ! ($codigo === 'internos' && in_array($nombre, self::INTERNOS_NO_CUANTIFICABLES, true)),
+                    ],
                 );
             }
         }

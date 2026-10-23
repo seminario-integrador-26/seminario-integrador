@@ -37,6 +37,11 @@ están en **Desvíos respecto del doc** y el avance real en **Estado**.
 
 ## Próximos pasos (continuar desde acá)
 
+> **2026-10-23 — siguiente trabajo:** rediseño del Libro de guardia (grupos
+> Policía / Guardia Local / Internos, turnos como eventos, eventos internos
+> notificados por Telegram). Decisiones, pendientes y plan en
+> **`docs/rediseno-libro-guardia.md`**.
+
 Implementar las decisiones de arriba, en este orden, un commit por punto:
 
 1. ✅ **Usuarios:** blanquear clave / reset por email limpian `bloqueado_hasta` e
@@ -82,7 +87,7 @@ Leyenda: ✅ hecho · 🟡 parcial · ⬜ no empezado (solo stubs o nada)
 | 013 | Export Excel | ✅ | botón en Eventos: todos los registros filtrados, DD/MM/AAAA, columna Observación (informativo / sin ubicación), `Eventos_CMU_[desde]_[hasta].xlsx` o `.xls` (dos botones; .xls hasta 65.535 eventos), confirmación, auditado |
 | 014 | Estadísticas mensuales/anuales | ✅ | mes o año; total, por grupo de evento, por tipo, por tipo de PM (RN11), top 10 PMs, evolución semanal/mensual; tablas + gráficos. Informativos (no cuantificables) fuera del total, informados aparte — confirmar vs doc |
 | 015 | Dashboard KPIs | ✅ | sección Análisis: eventos del mes y del año con variación % vs. mismo tramo anterior, % por categoría del período, últimos 6 meses por categoría (pequeños múltiplos), período elegible |
-| 016 | Mapa de eventos | ✅ | sección Mapa: un marcador por evento en la posición de su PM (color = categoría, como el Panel: Policía rojo, Seguridad Ciudadana ámbar, Oficios cian; forma = tipo de PM: círculo municipal, rombo provincial, triángulo alarma), varios en el mismo PM se abren en anillo; popup con tipo, categoría, fecha y hora, descripción, PM y enlace al detalle; respeta los filtros; hasta 2000 marcadores (aviso si hay más). Capas aparte: calor, PMs con cantidad y todos los PMs |
+| 016 | Mapa de eventos | ✅ | sección Mapa: un marcador por evento en la posición de su PM (color = categoría, como el Panel: Policía rojo, Guardia Local ámbar, Internos cian; forma = tipo de PM: círculo municipal, rombo provincial, triángulo alarma), varios en el mismo PM se abren en anillo; popup con tipo, categoría, fecha y hora, descripción, PM y enlace al detalle; respeta los filtros; hasta 2000 marcadores (aviso si hay más). Capas aparte: calor, PMs con cantidad y todos los PMs |
 | 017 | Heatmap | ✅ | leaflet.heat sobre OSM, filtrable por categoría/tipo/fechas, capa activable aparte, clic en zona → PM más cercano → eventos (drill-down), sin informativos ni sin ubicación |
 | 018 | Tendencias temporales | ✅ | línea por día/semana/mes, presets (mes, 3 meses, año) o rango personalizado, desglose por categoría en pequeños múltiplos (en vez de líneas de colores, por la paleta), drill-down por tramo |
 | 019 | Ranking zonas | ✅ | top 10 por PM o por barrio con % y barra, drill-down a Eventos filtrado. Los 498 PMs del CSV ya traen barrio |

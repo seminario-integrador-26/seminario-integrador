@@ -46,7 +46,7 @@ class ValoresVigentesTest extends TestCase
 
         $this->administrativo = User::factory()->create()->assignRole('Administrativo');
         $this->robo = TipoEvento::factory()->delGrupo('policia')->create(['nombre' => 'Robo']);
-        $this->ruidos = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create(['nombre' => 'Ruidos']);
+        $this->ruidos = TipoEvento::factory()->delGrupo('guardia_local')->create(['nombre' => 'Ruidos']);
         $this->plaza = PuntoMonitoreo::factory()->delTipo('municipal')->create(['codigo' => 'PM-M-001']);
         $this->ruta = PuntoMonitoreo::factory()->delTipo('provincial')->create(['codigo' => 'PM-P-001']);
 
@@ -86,7 +86,7 @@ class ValoresVigentesTest extends TestCase
 
         $this->assertSame(0, $setiembre['total']);
         $this->assertSame(1, $octubre['total']);
-        $this->assertSame([['nombre' => 'Ruidos', 'categoria' => 'Seguridad Ciudadana', 'cantidad' => 1]], $octubre['por_tipo']);
+        $this->assertSame([['nombre' => 'Ruidos', 'categoria' => 'Guardia Local', 'cantidad' => 1]], $octubre['por_tipo']);
     }
 
     public function test_el_mapa_ubica_el_evento_en_el_pm_corregido(): void

@@ -71,10 +71,9 @@ interface Exportacion {
 
 const categoriaBadge: Record<string, string> = {
     Policía: 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
-    'Seguridad Ciudadana':
+    'Guardia Local':
         'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
-    'Oficios Recepcionados':
-        'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
+    Internos: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
 };
 
 const filtrosVacios: Filtros = {

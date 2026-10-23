@@ -53,7 +53,7 @@ class NotificacionTest extends TestCase
 
         $this->supervisor = User::factory()->create()->assignRole('Supervisor');
 
-        $this->tipo = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create([
+        $this->tipo = TipoEvento::factory()->delGrupo('guardia_local')->create([
             'nombre' => 'Ruidos molestos',
         ]);
 
@@ -127,7 +127,7 @@ class NotificacionTest extends TestCase
     {
         Queue::fake();
 
-        $informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('oficios_recepcionados')->create();
+        $informativo = TipoEvento::factory()->sinUbicacion()->delGrupo('internos')->create();
 
         app(NotificacionService::class)->notificarEvento($this->evento(['tipo_evento_id' => $informativo->id]));
 
@@ -146,7 +146,7 @@ class NotificacionTest extends TestCase
             $this->evento(['punto_monitoreo_id' => $punto->id]),
         );
 
-        $this->assertStringContainsString('Seguridad Ciudadana: Ruidos molestos', $mensaje);
+        $this->assertStringContainsString('Guardia Local: Ruidos molestos', $mensaje);
         $this->assertStringContainsString('Fecha: 14/10/2026', $mensaje);
         $this->assertStringContainsString('Horario: 14:30:15', $mensaje);
         $this->assertStringContainsString('PM-012 — Bv. España y Mendoza (Municipal)', $mensaje);

@@ -77,7 +77,7 @@ class ApiPublicaTest extends TestCase
     public function test_filtra_por_fecha_categoria_y_pm(): void
     {
         $robo = TipoEvento::factory()->delGrupo('policia')->create();
-        $ruidos = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create();
+        $ruidos = TipoEvento::factory()->delGrupo('guardia_local')->create();
         $punto = PuntoMonitoreo::factory()->create(['codigo' => 'PM-P-009']);
 
         Evento::factory()->create(['tipo_evento_id' => $robo->id, 'punto_monitoreo_id' => $punto->id, 'fecha_hora' => '2026-10-05 10:00:00']);

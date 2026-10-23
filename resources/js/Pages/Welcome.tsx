@@ -133,7 +133,7 @@ export default function Welcome({ auth }: PageProps) {
                                     [ Clasificación obligatoria ]
                                 </div>
                                 <h2 className="mb-2 font-mono text-base font-bold uppercase text-white">
-                                    Policía · Seguridad Ciudadana · Oficios
+                                    Policía · Guardia Local · Internos
                                 </h2>
                                 <p className="font-sans text-xs leading-relaxed text-atalaya-text-muted">
                                     Cada evento se clasifica al registrarse y se

@@ -39,7 +39,7 @@ const badgeDeCategoria = (categoria: string) => {
     switch (categoria) {
         case 'Policía':
             return 'text-atalaya-crimson border-atalaya-crimson bg-atalaya-crimson/10';
-        case 'Seguridad Ciudadana':
+        case 'Guardia Local':
             return 'text-atalaya-amber border-atalaya-amber bg-atalaya-amber/10';
         default:
             return 'text-atalaya-cyan border-atalaya-cyan bg-atalaya-cyan/10';
@@ -154,10 +154,10 @@ export default function Dashboard({
                                         ● {conteoPorCategoria['Policía'] ?? 0} POL
                                     </span>
                                     <span className="text-atalaya-amber">
-                                        ● {conteoPorCategoria['Seguridad Ciudadana'] ?? 0} SEG
+                                        ● {conteoPorCategoria['Guardia Local'] ?? 0} GL
                                     </span>
                                     <span className="text-atalaya-cyan">
-                                        ● {conteoPorCategoria['Oficios Recepcionados'] ?? 0} OFI
+                                        ● {conteoPorCategoria['Internos'] ?? 0} INT
                                     </span>
                                     {eventos.length - cuantificables > 0 && (
                                         <span className="font-normal text-atalaya-text-dim">
@@ -315,13 +315,13 @@ export default function Dashboard({
                                 <div className="flex items-center gap-2">
                                     <span className="inline-block h-2.5 w-2.5 border border-atalaya-amber bg-atalaya-amber/50"></span>
                                     <span className="text-atalaya-text-muted">
-                                        Seguridad Ciudadana
+                                        Guardia Local
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="inline-block h-2.5 w-2.5 border border-atalaya-cyan bg-atalaya-cyan/50"></span>
                                     <span className="text-atalaya-text-muted">
-                                        Oficios Recepcionados
+                                        Internos
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -334,12 +334,12 @@ export default function Dashboard({
                         </div>
                     </div>
 
-                    {/* Feed de eventos */}
+                    {/* Libro de guardia */}
                     <div className="swiss-panel flex flex-col border-t border-atalaya-border lg:col-span-5 lg:border-t-0 xl:col-span-4">
                         <div className="space-y-2 border-b border-atalaya-border bg-atalaya-surface px-4 py-2.5">
                             <div className="flex items-center justify-between gap-2">
                                 <span className="font-mono text-xs font-bold uppercase tracking-widest text-white">
-                                    + Feed de eventos registrados
+                                    + Libro de guardia
                                 </span>
                                 {esSupervisor ? (
                                     <Link

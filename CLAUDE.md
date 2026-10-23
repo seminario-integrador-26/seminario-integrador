@@ -40,9 +40,9 @@ por email vía el flujo estándar de reseteo).
    Para leer los valores corregidos (estadísticas, mapa, exportaciones, API)
    usar `Evento::vigentes()` (vista `eventos_vigentes`), no `Evento::query()`.
 2. **Clasificación obligatoria.** Todo evento se clasifica al registrarse por su
-   TipoEvento, que pertenece a un **GrupoEvento**: Policía, Seguridad Ciudadana
-   u Oficios Recepcionados (catálogo real del "Registro de Intervenciones",
-   `TipoEventoSeeder`).
+   TipoEvento, que pertenece a un **GrupoEvento**: Policía, Guardia Local
+   o Internos (catálogo real del "Registro de Intervenciones" más los eventos
+   internos del libro de guardia, `TipoEventoSeeder`).
 3. **Ubicación condicional.** La ubicación (PuntoMonitoreo) es opcional y
    depende del tipo (`TipoEvento.requiere_ubicacion`).
 4. Hay tipos **no cuantificables** que no entran en estadísticas

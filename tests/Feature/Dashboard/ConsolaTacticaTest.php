@@ -111,7 +111,7 @@ class ConsolaTacticaTest extends TestCase
         $turno = $this->turnoAbierto();
 
         $cuantificable = TipoEvento::factory()->delGrupo('policia')->create(['es_cuantificable' => true]);
-        $noCuantificable = TipoEvento::factory()->delGrupo('oficios_recepcionados')->create(['es_cuantificable' => false]);
+        $noCuantificable = TipoEvento::factory()->delGrupo('internos')->create(['es_cuantificable' => false]);
 
         $this->evento($turno, ['tipo_evento_id' => $cuantificable->id]);
         $this->evento($turno, ['tipo_evento_id' => $noCuantificable->id]);
@@ -122,7 +122,7 @@ class ConsolaTacticaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('eventos', 2)
                 ->where('conteoPorCategoria.Policía', 1)
-                ->where('conteoPorCategoria.Oficios Recepcionados', 0)
+                ->where('conteoPorCategoria.Internos', 0)
             );
     }
 

@@ -39,7 +39,7 @@ class MapaTest extends TestCase
 
         $this->administrativo = User::factory()->create()->assignRole('Administrativo');
         $this->robo = TipoEvento::factory()->delGrupo('policia')->create();
-        $this->ruidos = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create();
+        $this->ruidos = TipoEvento::factory()->delGrupo('guardia_local')->create();
         $this->plaza = PuntoMonitoreo::factory()->delTipo('municipal')->create(['codigo' => 'PM-M-001', 'latitud' => -32.41, 'longitud' => -63.24]);
         $this->ruta = PuntoMonitoreo::factory()->delTipo('provincial')->create(['codigo' => 'PM-P-001', 'latitud' => -32.40, 'longitud' => -63.25]);
     }
@@ -76,7 +76,7 @@ class MapaTest extends TestCase
 
     public function test_excluye_eventos_sin_ubicacion_e_informativos(): void
     {
-        $informativo = TipoEvento::factory()->delGrupo('oficios_recepcionados')->create(['es_cuantificable' => false]);
+        $informativo = TipoEvento::factory()->delGrupo('internos')->create(['es_cuantificable' => false]);
         $this->evento($this->robo, $this->plaza);
         $this->evento($this->robo, null);
         $this->evento($informativo, $this->plaza);
@@ -90,7 +90,7 @@ class MapaTest extends TestCase
 
     public function test_us016_un_marcador_por_evento_con_categoria_y_tipo_de_pm(): void
     {
-        $informativo = TipoEvento::factory()->delGrupo('oficios_recepcionados')->create(['es_cuantificable' => false]);
+        $informativo = TipoEvento::factory()->delGrupo('internos')->create(['es_cuantificable' => false]);
         $this->evento($this->robo, $this->plaza, '2026-10-10 10:00:00');
         $this->evento($this->ruidos, $this->ruta, '2026-10-11 09:30:00');
         $this->evento($this->robo, null, '2026-10-11 11:00:00');       // sin ubicación
@@ -105,7 +105,7 @@ class MapaTest extends TestCase
                 // Del más reciente al más antiguo.
                 ->where('eventos.items.0.fecha', '11/10/2026')
                 ->where('eventos.items.0.hora', '09:30')
-                ->where('eventos.items.0.categoria', 'seguridad_ciudadana')
+                ->where('eventos.items.0.categoria', 'guardia_local')
                 ->where('eventos.items.0.tipo_punto', 'provincial')
                 ->where('eventos.items.0.latitud', -32.4)
                 ->where('eventos.items.1.categoria', 'policia')

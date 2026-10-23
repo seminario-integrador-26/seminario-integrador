@@ -36,7 +36,7 @@ class AnalisisTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-15 12:00:00'));
 
         $this->robo = TipoEvento::factory()->delGrupo('policia')->create();
-        $this->ruidos = TipoEvento::factory()->delGrupo('seguridad_ciudadana')->create();
+        $this->ruidos = TipoEvento::factory()->delGrupo('guardia_local')->create();
     }
 
     private function evento(string $fechaHora, ?TipoEvento $tipo = null, ?PuntoMonitoreo $punto = null): void
@@ -79,7 +79,7 @@ class AnalisisTest extends TestCase
 
     public function test_porcentaje_por_categoria_del_periodo_excluye_informativos(): void
     {
-        $informativo = TipoEvento::factory()->delGrupo('oficios_recepcionados')->create(['es_cuantificable' => false]);
+        $informativo = TipoEvento::factory()->delGrupo('internos')->create(['es_cuantificable' => false]);
         $this->evento('2026-10-10 10:00:00', $this->robo);
         $this->evento('2026-10-11 10:00:00', $this->robo);
         $this->evento('2026-10-12 10:00:00', $this->robo);
@@ -90,7 +90,7 @@ class AnalisisTest extends TestCase
         $porcentajes = collect($k['por_categoria'])->pluck('porcentaje', 'clave')->all();
 
         $this->assertSame(4, $k['periodo']);
-        $this->assertSame(['policia' => 75.0, 'seguridad_ciudadana' => 25.0, 'oficios_recepcionados' => 0.0], $porcentajes);
+        $this->assertSame(['policia' => 75.0, 'guardia_local' => 25.0, 'internos' => 0.0], $porcentajes);
     }
 
     public function test_ultimos_seis_meses_por_categoria(): void
@@ -104,7 +104,7 @@ class AnalisisTest extends TestCase
         $this->assertCount(6, $meses);
         $this->assertSame('2026-05', $meses[0]['clave']);
         $this->assertSame(1, $meses[0]['policia']);
-        $this->assertSame(1, $meses[5]['seguridad_ciudadana']);
+        $this->assertSame(1, $meses[5]['guardia_local']);
         $this->assertSame('2026-10-31', $meses[5]['hasta']);
     }
 
@@ -171,7 +171,7 @@ class AnalisisTest extends TestCase
 
         $a = $this->calcular([
             'periodo' => 'personalizado', 'desde' => '2026-08-01', 'hasta' => '2026-08-31',
-            'categorias' => ['seguridad_ciudadana'],
+            'categorias' => ['guardia_local'],
         ]);
 
         $this->assertSame(1, $a['kpis']['periodo']);
