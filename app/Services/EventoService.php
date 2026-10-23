@@ -105,6 +105,7 @@ class EventoService
                 'nombre' => $t->nombre,
                 'categoria' => $t->grupoEvento->codigo,
                 'requiere_ubicacion' => $t->requiere_ubicacion,
+                'sin_camara' => $t->sinCamara(),
             ])
             ->toBase();
     }

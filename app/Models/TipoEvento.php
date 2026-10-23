@@ -33,6 +33,12 @@ class TipoEvento extends Model
     public const CIERRE_TURNO = 'Cierre de turno';
 
     /**
+     * Tipos Internos sin cámara asociada: no llevan punto de monitoreo ni
+     * timestamp del video.
+     */
+    public const SIN_CAMARA = [self::APERTURA_TURNO, self::CIERRE_TURNO];
+
+    /**
      * Constancia que crea el sistema al cargar una fe de errata: no se
      * registra a mano ni se le hace errata.
      */
@@ -48,6 +54,15 @@ class TipoEvento extends Model
         return static::where('nombre', $nombre)
             ->whereHas('grupoEvento', fn ($q) => $q->where('codigo', GrupoEvento::INTERNOS))
             ->value('id');
+    }
+
+    /**
+     * Apertura o Cierre de turno (del grupo Internos): sin PM ni video.
+     */
+    public function sinCamara(): bool
+    {
+        return in_array($this->nombre, self::SIN_CAMARA, true)
+            && $this->grupoEvento?->codigo === GrupoEvento::INTERNOS;
     }
 
     protected function casts(): array

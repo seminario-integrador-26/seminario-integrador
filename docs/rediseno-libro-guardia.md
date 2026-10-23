@@ -72,6 +72,9 @@
    del evento bloqueados; no se cambia ningún valor (`campo_corregido` en null,
    migración `2026_10_23_000003`). Las erratas anteriores con campo y valores
    se conservan y siguen aplicando en `eventos_vigentes`.
+2. **Apertura y Cierre de turno no tienen cámara:** el formulario no muestra
+   punto de monitoreo ni timestamp del video, y el backend los descarta si
+   llegan (`TipoEvento::SIN_CAMARA`). Nota y Otros siguen con PM opcional.
 
 ## Impacto relevado (≈50 archivos)
 

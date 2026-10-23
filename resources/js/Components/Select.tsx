@@ -306,6 +306,10 @@ function SelectBuscable({
                             return opcion && opcion.valor !== '' ? textoDe(opcion.etiqueta) : '';
                         }}
                         onChange={(e) => setBusqueda(e.target.value)}
+                        // Al enfocar (o volver a hacer clic) se selecciona el texto: lo
+                        // que se escribe reemplaza a la opción elegida.
+                        onFocus={(e) => e.currentTarget.select()}
+                        onClick={(e) => e.currentTarget.select()}
                         className="block w-full rounded-none border border-atalaya-border bg-atalaya-canvas py-2 pe-9 ps-3 font-mono text-xs text-white placeholder-atalaya-text-muted focus:border-atalaya-cyan focus:outline-none focus:ring-1 focus:ring-atalaya-cyan data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
                     />
                     <ComboboxButton className="absolute inset-y-0 end-0 w-9" aria-label="Ver opciones">

@@ -312,6 +312,30 @@ class RegistroEventoTest extends TestCase
         Event::assertDispatchedTimes(EventoRegistrado::class, 2);
     }
 
+    public function test_apertura_y_cierre_de_turno_no_llevan_punto_ni_timestamp(): void
+    {
+        Event::fake([EventoRegistrado::class]);
+        $this->seed(TipoEventoSeeder::class);
+
+        // Aunque lleguen un PM y un timestamp (o un timestamp inválido), se descartan.
+        foreach ([TipoEvento::APERTURA_TURNO, TipoEvento::CIERRE_TURNO] as $tipo) {
+            $this->actingAs($this->supervisor)
+                ->post(route('eventos.store'), $this->datosValidos([
+                    'tipo_evento_id' => TipoEvento::interno($tipo),
+                    'timestamp_video' => 'x',
+                ]))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(0, Evento::whereNotNull('punto_monitoreo_id')->orWhereNotNull('timestamp_video')->count());
+
+        $this->actingAs($this->supervisor)
+            ->get(route('eventos.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('tipos', fn ($tipos) => collect($tipos)->firstWhere('nombre', TipoEvento::APERTURA_TURNO)['sin_camara'] === true
+                    && collect($tipos)->firstWhere('id', $this->tipo->id)['sin_camara'] === false));
+    }
+
     public function test_el_evento_registrado_es_inmutable(): void
     {
         $evento = Evento::factory()->create();

@@ -95,6 +95,8 @@ export interface TipoEventoOpcion {
     /** Código del GrupoEvento (clave de `categorias`). */
     categoria: string;
     requiere_ubicacion: boolean;
+    /** Apertura / Cierre de turno: sin PM ni timestamp del video. */
+    sin_camara: boolean;
 }
 
 export type EstadoNotificacion = 'pendiente' | 'enviada' | 'fallida';

@@ -22,6 +22,11 @@ trait ValidaDatosDeEvento
             'hora' => $this->conSegundos($this->input('hora')),
             'timestamp_video' => $this->conSegundos($this->input('timestamp_video')),
         ]);
+
+        // Apertura y Cierre de turno no tienen cámara: sin PM ni timestamp.
+        if ($this->tipoEvento()?->sinCamara()) {
+            $this->merge(['punto_monitoreo_id' => null, 'timestamp_video' => null]);
+        }
     }
 
     /**

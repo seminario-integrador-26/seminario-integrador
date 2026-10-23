@@ -77,6 +77,8 @@ export default function Create({
         (t) => String(t.id) === String(data.tipo_evento_id),
     );
     const requiereUbicacion = Boolean(tipoSeleccionado?.requiere_ubicacion);
+    // Apertura y Cierre de turno no tienen cámara: no se pide PM ni timestamp.
+    const sinCamara = Boolean(tipoSeleccionado?.sin_camara);
     const hayPunto = data.punto_monitoreo_id !== null;
     // Apertura y Cierre de turno se registran como cualquier evento: lo que
     // antes pedía la tarjeta de turno va en la descripción.
@@ -140,9 +142,19 @@ export default function Create({
                                     buscable
                                     className="mt-1"
                                     value={data.tipo_evento_id}
-                                    onChange={(e) =>
-                                        setData('tipo_evento_id', e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        const tipo = tipos.find(
+                                            (t) => String(t.id) === e.target.value,
+                                        );
+                                        setData((d) => ({
+                                            ...d,
+                                            tipo_evento_id: e.target.value,
+                                            ...(tipo?.sin_camara && {
+                                                punto_monitoreo_id: null,
+                                                timestamp_video: '',
+                                            }),
+                                        }));
+                                    }}
                                 >
                                     <option value="">Seleccioná un tipo…</option>
                                     {Object.entries(categorias).map(
@@ -221,62 +233,66 @@ export default function Create({
                                 </div>
                             </div>
 
-                            <div>
-                                <InputLabel htmlFor="punto_monitoreo_id">
-                                    Punto de monitoreo
-                                    {requiereUbicacion ? (
-                                        <Obligatorio />
-                                    ) : (
-                                        <span className="font-normal text-atalaya-text-dim">
-                                            {' '}
-                                            (opcional)
-                                        </span>
-                                    )}
-                                </InputLabel>
-                                <SelectorPuntoMonitoreo
-                                    id="punto_monitoreo_id"
-                                    puntos={puntos}
-                                    tiposPunto={tiposPunto}
-                                    value={data.punto_monitoreo_id}
-                                    onChange={seleccionarPunto}
-                                />
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.punto_monitoreo_id}
-                                />
-                                <p className="mt-1 text-xs text-atalaya-text-dim">
-                                    Buscalo por código o dirección, o hacé clic en
-                                    el mapa.
-                                </p>
-                            </div>
-
-                            <div>
-                                <InputLabel htmlFor="timestamp_video">
-                                    Timestamp del video (hh:mm:ss)
-                                    {hayPunto && <Obligatorio />}
-                                </InputLabel>
-                                <TextInput
-                                    id="timestamp_video"
-                                    type="time"
-                                    step="1"
-                                    disabled={!hayPunto}
-                                    className="mt-1 block w-full disabled:bg-atalaya-canvas"
-                                    value={data.timestamp_video}
-                                    onChange={(e) =>
-                                        setData('timestamp_video', e.target.value)
-                                    }
-                                />
-                                {!hayPunto && (
+                            {!sinCamara && (
+                                <>
+                                <div>
+                                    <InputLabel htmlFor="punto_monitoreo_id">
+                                        Punto de monitoreo
+                                        {requiereUbicacion ? (
+                                            <Obligatorio />
+                                        ) : (
+                                            <span className="font-normal text-atalaya-text-dim">
+                                                {' '}
+                                                (opcional)
+                                            </span>
+                                        )}
+                                    </InputLabel>
+                                    <SelectorPuntoMonitoreo
+                                        id="punto_monitoreo_id"
+                                        puntos={puntos}
+                                        tiposPunto={tiposPunto}
+                                        value={data.punto_monitoreo_id}
+                                        onChange={seleccionarPunto}
+                                    />
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.punto_monitoreo_id}
+                                    />
                                     <p className="mt-1 text-xs text-atalaya-text-dim">
-                                        Seleccioná un punto de monitoreo para
-                                        indicar el momento exacto del video.
+                                        Buscalo por código o dirección, o hacé clic en
+                                        el mapa.
                                     </p>
-                                )}
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.timestamp_video}
-                                />
-                            </div>
+                                </div>
+
+                                <div>
+                                    <InputLabel htmlFor="timestamp_video">
+                                        Timestamp del video (hh:mm:ss)
+                                        {hayPunto && <Obligatorio />}
+                                    </InputLabel>
+                                    <TextInput
+                                        id="timestamp_video"
+                                        type="time"
+                                        step="1"
+                                        disabled={!hayPunto}
+                                        className="mt-1 block w-full disabled:bg-atalaya-canvas"
+                                        value={data.timestamp_video}
+                                        onChange={(e) =>
+                                            setData('timestamp_video', e.target.value)
+                                        }
+                                    />
+                                    {!hayPunto && (
+                                        <p className="mt-1 text-xs text-atalaya-text-dim">
+                                            Seleccioná un punto de monitoreo para
+                                            indicar el momento exacto del video.
+                                        </p>
+                                    )}
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.timestamp_video}
+                                    />
+                                </div>
+                                </>
+                            )}
 
                             <div>
                                 <InputLabel htmlFor="descripcion">
@@ -306,7 +322,7 @@ export default function Create({
                             <MapaPuntosMonitoreo
                                 puntos={puntos}
                                 seleccionadoId={data.punto_monitoreo_id}
-                                onSelect={seleccionarPunto}
+                                onSelect={sinCamara ? undefined : seleccionarPunto}
                                 className="h-[420px] w-full border border-atalaya-border lg:h-auto lg:min-h-[560px] lg:flex-1"
                             />
                         </div>
