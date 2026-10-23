@@ -118,7 +118,13 @@ export default function Dashboard({
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
                 {/* 1. Barra de telemetría (compacta: el protagonista es el mapa) */}
                 <section className="border-b border-atalaya-border bg-atalaya-surface">
-                    <div className="swiss-grid grid-cols-2 lg:grid-cols-4">
+                    {/* Sin Reportes (Supervisor) quedan tres cajas: la guardia ocupa el ancho en celular. */}
+                    <div
+                        className={
+                            'swiss-grid grid-cols-2 ' +
+                            (puedeExportar ? 'lg:grid-cols-4' : 'lg:grid-cols-3')
+                        }
+                    >
                         {/* Eventos del turno */}
                         <div className="swiss-panel flex items-center gap-3 px-4 py-2">
                             <span className="font-mono text-xl font-black leading-none text-white">
@@ -167,7 +173,12 @@ export default function Dashboard({
                         </div>
 
                         {/* Turno vigente */}
-                        <div className="swiss-panel flex min-w-0 flex-col justify-center px-4 py-2 font-mono">
+                        <div
+                            className={
+                                'swiss-panel flex min-w-0 flex-col justify-center px-4 py-2 font-mono ' +
+                                (puedeExportar ? '' : 'col-span-2 lg:col-span-1')
+                            }
+                        >
                             <div className="flex items-center justify-between text-[10px] uppercase text-atalaya-text-muted">
                                 <span>Guardia vigente</span>
                                 {turno ? (
@@ -187,24 +198,17 @@ export default function Dashboard({
                             </div>
                         </div>
 
-                        {/* Acciones */}
-                        <div className="swiss-panel flex items-center gap-2 px-4 py-2 font-mono text-[10px]">
-                            <Link
-                                href={route('eventos.index')}
-                                className="flex-1 border border-atalaya-border bg-atalaya-elevated px-2 py-1 text-center font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-border"
-                            >
-                                Consultar
-                            </Link>
-                            {/* Libro de guardia en PDF (US-012); el Excel se exporta desde Consultar (US-013). */}
-                            {puedeExportar && (
+                        {/* Libro de guardia en PDF (US-012). Eventos y su Excel se consultan desde el menú. */}
+                        {puedeExportar && (
+                            <div className="swiss-panel flex items-center px-4 py-2 font-mono text-[10px]">
                                 <Link
                                     href={route('reportes.index')}
                                     className="flex-1 border border-atalaya-border bg-atalaya-elevated px-2 py-1 text-center font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-border"
                                 >
                                     Reportes
                                 </Link>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </section>
 
