@@ -142,18 +142,6 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="timestamp_video" value="Timestamp del video (hh:mm:ss)" />
-                                    <TextInput
-                                        id="timestamp_video"
-                                        type="time"
-                                        step="1"
-                                        className={'mt-1 block w-full ' + bloqueadoClass}
-                                        value={evento.timestamp_video ?? ''}
-                                        readOnly
-                                    />
-                                </div>
-
-                                <div>
                                     <InputLabel htmlFor="descripcion" value="Descripción" />
                                     <textarea
                                         id="descripcion"

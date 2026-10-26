@@ -75,7 +75,6 @@ class ReporteService
                 'categoria' => $e->tipoEvento->grupoEvento->nombre,
                 'descripcion' => $e->descripcion,
                 'punto' => $e->ubicacion(),
-                'timestamp_video' => $e->timestamp_video,
             ])->all(),
             'resumen' => $eventos
                 ->groupBy(fn (Evento $e) => $e->tipoEvento->nombre)

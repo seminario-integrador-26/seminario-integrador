@@ -35,7 +35,6 @@ type FormEvento = {
     fecha: string;
     hora: string;
     punto_monitoreo_id: number | null;
-    timestamp_video: string;
     /** Sin PM: barrio y dirección a mano. */
     barrio_id: string;
     direccion: string;
@@ -73,7 +72,6 @@ export default function Create({
         hora: '',
         // Precargado cuando se llega desde un PM del mapa del panel.
         punto_monitoreo_id: puntoInicial,
-        timestamp_video: '',
         barrio_id: '',
         direccion: '',
         descripcion: '',
@@ -85,7 +83,7 @@ export default function Create({
         (t) => String(t.id) === String(data.tipo_evento_id),
     );
     const requiereUbicacion = Boolean(tipoSeleccionado?.requiere_ubicacion);
-    // Apertura y Cierre de turno no tienen cámara: no se pide PM ni timestamp.
+    // Apertura y Cierre de turno no tienen cámara: no se pide PM.
     const sinCamara = Boolean(tipoSeleccionado?.sin_camara);
     const hayPunto = data.punto_monitoreo_id !== null;
     // Apertura y Cierre de turno se registran como cualquier evento: lo que
@@ -96,7 +94,6 @@ export default function Create({
         setData((d) => ({
             ...d,
             punto_monitoreo_id: id,
-            timestamp_video: id ? d.timestamp_video : '',
             // Con PM, el barrio sale del PM.
             barrio_id: id ? '' : d.barrio_id,
             direccion: id ? '' : d.direccion,
@@ -162,7 +159,6 @@ export default function Create({
                                             tipo_evento_id: e.target.value,
                                             ...(tipo?.sin_camara && {
                                                 punto_monitoreo_id: null,
-                                                timestamp_video: '',
                                                 barrio_id: '',
                                                 direccion: '',
                                             }),
@@ -281,34 +277,6 @@ export default function Create({
                                         Buscalo por código o dirección, o hacé clic en
                                         el mapa.
                                     </p>
-                                </div>
-
-                                <div>
-                                    <InputLabel htmlFor="timestamp_video">
-                                        Timestamp del video (hh:mm:ss)
-                                        {hayPunto && <Obligatorio />}
-                                    </InputLabel>
-                                    <TextInput
-                                        id="timestamp_video"
-                                        type="time"
-                                        step="1"
-                                        disabled={!hayPunto}
-                                        className="mt-1 block w-full disabled:bg-atalaya-canvas"
-                                        value={data.timestamp_video}
-                                        onChange={(e) =>
-                                            setData('timestamp_video', e.target.value)
-                                        }
-                                    />
-                                    {!hayPunto && (
-                                        <p className="mt-1 text-xs text-atalaya-text-dim">
-                                            Seleccioná un punto de monitoreo para
-                                            indicar el momento exacto del video.
-                                        </p>
-                                    )}
-                                    <InputError
-                                        className="mt-2"
-                                        message={errors.timestamp_video}
-                                    />
                                 </div>
 
                                 {!hayPunto && (

@@ -79,7 +79,6 @@
                     <th style="width: 38mm">Tipo</th>
                     <th>Descripción</th>
                     <th style="width: 40mm">PM</th>
-                    <th style="width: 18mm">Video</th>
                 </tr>
             </thead>
             <tbody>
@@ -89,7 +88,6 @@
                         <td>{{ $e['tipo'] }}<br><span class="muted">{{ $e['categoria'] }}</span></td>
                         <td>{{ $e['descripcion'] ?: '—' }}</td>
                         <td>{{ $e['punto'] ?? 'Sin ubicación' }}</td>
-                        <td class="mono">{{ $e['timestamp_video'] ?? '—' }}</td>
                     </tr>
                 @endforeach
             </tbody>

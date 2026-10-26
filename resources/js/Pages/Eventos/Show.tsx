@@ -156,13 +156,14 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             <Dato etiqueta="Horario del hecho">
                                 <span className="font-mono">{evento.hora}</span>
                             </Dato>
-                            <Dato etiqueta="Timestamp del video">
-                                {evento.timestamp_video && (
+                            {/* Ya no se carga: solo eventos anteriores lo tienen. */}
+                            {evento.timestamp_video && (
+                                <Dato etiqueta="Timestamp del video">
                                     <span className="font-mono">
                                         {evento.timestamp_video}
                                     </span>
-                                )}
-                            </Dato>
+                                </Dato>
+                            )}
                             <Dato
                                 etiqueta="Descripción"
                                 className="sm:col-span-3"

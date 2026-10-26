@@ -54,7 +54,6 @@ class RegistroEventoTest extends TestCase
             'fecha' => '2026-09-13',
             'hora' => '14:30:00',
             'punto_monitoreo_id' => $this->punto->id,
-            'timestamp_video' => '14:29:47',
             'descripcion' => 'Dos personas forcejean en la esquina.',
             ...$cambios,
         ];
@@ -121,7 +120,8 @@ class RegistroEventoTest extends TestCase
         $this->assertSame($this->punto->id, $evento->punto_monitoreo_id);
         $this->assertSame($this->supervisor->id, $evento->usuario_id);
         $this->assertSame('2026-09-13 14:30:00', $evento->fecha_hora->format('Y-m-d H:i:s'));
-        $this->assertSame('14:29:47', $evento->timestamp_video);
+        // El timestamp del video ya no se carga.
+        $this->assertNull($evento->timestamp_video);
         $this->assertSame('Dos personas forcejean en la esquina.', $evento->descripcion);
         $this->assertNotNull($evento->created_at);
 
@@ -178,29 +178,13 @@ class RegistroEventoTest extends TestCase
             ->assertSessionHasErrors('tipo_evento_id');
     }
 
-    public function test_el_timestamp_del_video_es_obligatorio_cuando_hay_punto_de_monitoreo(): void
-    {
-        $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['timestamp_video' => '']))
-            ->assertSessionHasErrors('timestamp_video');
-
-        $this->assertSame(0, Evento::count());
-    }
-
-    public function test_el_timestamp_del_video_debe_tener_formato_hh_mm_ss(): void
-    {
-        $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['timestamp_video' => '25:61:00']))
-            ->assertSessionHasErrors('timestamp_video');
-    }
-
     public function test_acepta_horas_sin_segundos_del_input_time(): void
     {
         $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['hora' => '14:30', 'timestamp_video' => '14:29']))
+            ->post(route('eventos.store'), $this->datosValidos(['hora' => '14:30']))
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('14:29:00', Evento::sole()->timestamp_video);
+        $this->assertSame('14:30:00', Evento::sole()->fecha_hora->format('H:i:s'));
     }
 
     public function test_el_tipo_que_requiere_ubicacion_sin_pm_exige_barrio_y_direccion(): void
@@ -314,24 +298,6 @@ class RegistroEventoTest extends TestCase
             ->assertSessionHasErrors(['descripcion' => 'La descripción no puede estar vacía.']);
 
         $this->assertDatabaseCount('eventos', 0);
-    }
-
-    public function test_el_timestamp_del_video_no_puede_ser_posterior_al_hecho(): void
-    {
-        $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['hora' => '14:30:00', 'timestamp_video' => '14:31:00']))
-            ->assertSessionHasErrors('timestamp_video');
-
-        $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['hora' => '14:30:00', 'timestamp_video' => '14:30:00']))
-            ->assertSessionHasNoErrors();
-    }
-
-    public function test_el_timestamp_puede_ser_del_dia_anterior_si_el_hecho_es_pasada_la_medianoche(): void
-    {
-        $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['hora' => '00:05:00', 'timestamp_video' => '23:58:30']))
-            ->assertSessionHasNoErrors();
     }
 
     public function test_se_registra_sin_una_apertura_de_turno_vigente(): void

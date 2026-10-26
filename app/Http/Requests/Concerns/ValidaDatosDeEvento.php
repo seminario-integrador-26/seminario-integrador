@@ -20,13 +20,12 @@ trait ValidaDatosDeEvento
     {
         $this->merge([
             'hora' => $this->conSegundos($this->input('hora')),
-            'timestamp_video' => $this->conSegundos($this->input('timestamp_video')),
             'direccion' => is_string($d = $this->input('direccion')) ? trim($d) : $d,
         ]);
 
         // Apertura y Cierre de turno no tienen cámara ni ubicación.
         if ($this->tipoEvento()?->sinCamara()) {
-            $this->merge(['punto_monitoreo_id' => null, 'timestamp_video' => null, 'barrio_id' => null, 'direccion' => null]);
+            $this->merge(['punto_monitoreo_id' => null, 'barrio_id' => null, 'direccion' => null]);
         }
     }
 
@@ -62,12 +61,6 @@ trait ValidaDatosDeEvento
                 'string',
                 'max:255',
             ],
-            'timestamp_video' => [
-                // Sin PM no hay video asociado: el campo se descarta.
-                Rule::excludeIf(fn () => blank($this->input('punto_monitoreo_id'))),
-                'required',
-                'date_format:H:i:s',
-            ],
             // US-005: la descripción no puede estar vacía.
             'descripcion' => ['required', 'string', 'max:5000'],
         ];
@@ -90,14 +83,6 @@ trait ValidaDatosDeEvento
                 if ($fechaHora->isFuture()) {
                     $validator->errors()->add('fecha', 'La fecha y hora del hecho no pueden ser posteriores al momento actual.');
                 }
-
-                $timestamp = $this->input('timestamp_video');
-
-                if (filled($this->input('punto_monitoreo_id')) && is_string($timestamp)
-                    && ! $validator->errors()->has('timestamp_video')
-                    && ! $this->timestampCoherente($this->input('hora'), $timestamp)) {
-                    $validator->errors()->add('timestamp_video', 'El timestamp del video no puede ser posterior al horario del hecho.');
-                }
             },
         ];
     }
@@ -113,26 +98,8 @@ trait ValidaDatosDeEvento
             'barrio_id.required' => 'Sin punto de monitoreo, indicá el barrio.',
             'barrio_id.exists' => 'El barrio seleccionado no existe.',
             'direccion.required' => 'Sin punto de monitoreo, indicá la dirección.',
-            'timestamp_video.required' => 'El timestamp del video es obligatorio cuando se indica un punto de monitoreo.',
-            'timestamp_video.date_format' => 'El timestamp del video debe tener el formato hh:mm:ss.',
             'descripcion.required' => 'La descripción no puede estar vacía.',
         ];
-    }
-
-    /**
-     * US-005: el momento del video (lo que muestra la grabación) no puede ser
-     * posterior al horario del hecho. Excepción: hecho en la primera hora del
-     * día y video en la última del anterior (la grabación cruzó la medianoche).
-     *
-     * // TODO: confirmar con el informante la tolerancia exacta a medianoche.
-     */
-    private function timestampCoherente(string $hora, string $timestamp): bool
-    {
-        if ($timestamp <= $hora) {
-            return true;
-        }
-
-        return $hora < '01:00:00' && $timestamp >= '23:00:00';
     }
 
     private function tipoEvento(): ?TipoEvento

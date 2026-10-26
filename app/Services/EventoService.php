@@ -39,7 +39,7 @@ class EventoService
      * abierto: abrir y cerrar el turno también son eventos (Apertura de turno /
      * Cierre de turno, ver LibroGuardiaService).
      *
-     * @param  array{tipo_evento_id: int, fecha: string, hora: string, punto_monitoreo_id?: int|null, timestamp_video?: string, descripcion?: string|null}  $datos
+     * @param  array{tipo_evento_id: int, fecha: string, hora: string, punto_monitoreo_id?: int|null, descripcion?: string|null}  $datos
      */
     public function registrar(array $datos, User $autor): Evento
     {
@@ -53,7 +53,6 @@ class EventoService
             'direccion' => $puntoMonitoreoId ? null : (($datos['direccion'] ?? null) ?: null),
             'usuario_id' => $autor->id,
             'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
-            'timestamp_video' => $puntoMonitoreoId ? $datos['timestamp_video'] : null,
             'descripcion' => $datos['descripcion'] ?? null,
         ]);
 

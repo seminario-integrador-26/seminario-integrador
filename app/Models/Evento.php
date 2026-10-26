@@ -17,7 +17,7 @@ use LogicException;
  *
  * Campos: tipo_evento_id, punto_monitoreo_id (nullable, ver requiere_ubicacion),
  * usuario_id (Supervisor autor), fecha_hora (del hecho),
- * timestamp_video (hh:mm:ss, obligatorio con PM), descripcion, created_at.
+ * timestamp_video (hh:mm:ss; ya no se carga, solo eventos anteriores), descripcion, created_at.
  * Sin PM: barrio_id y direccion (obligatorios si el tipo exige ubicación).
  */
 #[Fillable([
