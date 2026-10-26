@@ -21,19 +21,27 @@ use Illuminate\Support\Facades\DB;
  */
 class ErrataService
 {
-    public function __construct(private readonly EventoService $eventos) {}
+    public function __construct(
+        private readonly EventoService $eventos,
+        private readonly LibroGuardiaService $libro,
+    ) {}
 
     /**
      * Fe de errata desde la UI: registra la errata y, en la misma
      * transacción, la constancia (evento interno Errata) que la deja en el
      * libro de guardia y se notifica según la matriz.
      *
-     * @throws DomainException si el evento es una constancia.
+     * @throws DomainException si el evento es una constancia o no hay un
+     *                         turno abierto (la constancia debe caer en uno).
      */
     public function corregir(Evento $evento, string $motivo, User $autor): Errata
     {
         if ($this->eventos->esConstancia($evento)) {
             throw new DomainException('Las constancias de errata las registra el sistema: no se corrigen.');
+        }
+
+        if (! $this->libro->aperturaVigente()) {
+            throw new DomainException('No hay un turno abierto: registrá primero la Apertura de turno.');
         }
 
         return DB::transaction(function () use ($evento, $motivo, $autor) {

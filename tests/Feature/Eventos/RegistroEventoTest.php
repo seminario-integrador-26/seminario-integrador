@@ -11,6 +11,7 @@ use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\TipoEventoSeeder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -31,16 +32,37 @@ class RegistroEventoTest extends TestCase
 
     private PuntoMonitoreo $punto;
 
+    private Evento $apertura;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->seed(RoleSeeder::class);
+        $this->seed([RoleSeeder::class, TipoEventoSeeder::class]);
         $this->travelTo(Carbon::parse('2026-09-13 15:00:00'));
 
         $this->supervisor = User::factory()->create()->assignRole('Supervisor');
         $this->tipo = TipoEvento::factory()->create(['requiere_ubicacion' => true]);
         $this->punto = PuntoMonitoreo::factory()->create();
+        $this->apertura = Evento::factory()->aperturaDeTurno()->create(['fecha_hora' => '2026-09-13 06:00:00']);
+    }
+
+    /**
+     * Eventos registrados en el test (sin la Apertura de turno del setUp).
+     *
+     * @return Builder<Evento>
+     */
+    private function registrados(): Builder
+    {
+        return Evento::whereKeyNot($this->apertura->id);
+    }
+
+    private function cerrarTurno(): void
+    {
+        Evento::factory()->create([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::CIERRE_TURNO),
+            'fecha_hora' => '2026-09-13 07:00:00',
+        ]);
     }
 
     /**
@@ -68,10 +90,10 @@ class RegistroEventoTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Eventos/Create')
-                ->has('tipos', 1)
+                ->where('tipos', fn ($tipos) => collect($tipos)->contains('id', $this->tipo->id))
                 ->has('puntos', 3)
                 ->has('categorias', 3)
-                ->missing('turnoActivo'));
+                ->where('turno.id', $this->apertura->id));
     }
 
     public function test_el_formulario_precarga_el_punto_de_monitoreo_elegido_en_el_mapa(): void
@@ -97,7 +119,7 @@ class RegistroEventoTest extends TestCase
             $this->actingAs($usuario)->post(route('eventos.store'), $this->datosValidos())->assertForbidden();
         }
 
-        $this->assertSame(0, Evento::count());
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_un_invitado_es_redirigido_al_login(): void
@@ -114,7 +136,7 @@ class RegistroEventoTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('eventos.create'));
 
-        $evento = Evento::sole();
+        $evento = $this->registrados()->sole();
 
         $this->assertSame($this->tipo->id, $evento->tipo_evento_id);
         $this->assertSame($this->punto->id, $evento->punto_monitoreo_id);
@@ -135,7 +157,7 @@ class RegistroEventoTest extends TestCase
         $respuesta = $this->actingAs($this->supervisor)
             ->post(route('eventos.store'), $this->datosValidos());
 
-        $evento = Evento::sole();
+        $evento = $this->registrados()->sole();
 
         $respuesta->assertSessionHas('success', "Evento #{$evento->id} registrado correctamente.")
             ->assertSessionHas('eventoRegistrado', $evento->id);
@@ -148,7 +170,7 @@ class RegistroEventoTest extends TestCase
         $this->actingAs($this->supervisor)
             ->post(route('eventos.store'), $this->datosValidos(['usuario_id' => $otro->id, 'turno_id' => 999]));
 
-        $evento = Evento::sole();
+        $evento = $this->registrados()->sole();
         $this->assertSame($this->supervisor->id, $evento->usuario_id);
         $this->assertArrayNotHasKey('turno_id', $evento->getAttributes());
     }
@@ -159,7 +181,7 @@ class RegistroEventoTest extends TestCase
             ->post(route('eventos.store'), [])
             ->assertSessionHasErrors(['tipo_evento_id', 'fecha', 'hora']);
 
-        $this->assertSame(0, Evento::count());
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_el_punto_de_monitoreo_debe_existir(): void
@@ -168,7 +190,7 @@ class RegistroEventoTest extends TestCase
             ->post(route('eventos.store'), $this->datosValidos(['punto_monitoreo_id' => 99999]))
             ->assertSessionHasErrors(['punto_monitoreo_id' => 'El punto de monitoreo seleccionado no existe.']);
 
-        $this->assertSame(0, Evento::count());
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_el_tipo_de_evento_debe_existir(): void
@@ -184,7 +206,7 @@ class RegistroEventoTest extends TestCase
             ->post(route('eventos.store'), $this->datosValidos(['hora' => '14:30']))
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('14:30:00', Evento::sole()->fecha_hora->format('H:i:s'));
+        $this->assertSame('14:30:00', $this->registrados()->sole()->fecha_hora->format('H:i:s'));
     }
 
     public function test_el_tipo_que_requiere_ubicacion_sin_pm_exige_barrio_y_direccion(): void
@@ -200,7 +222,7 @@ class RegistroEventoTest extends TestCase
             ]))
             ->assertSessionHasErrors('direccion');
 
-        $this->assertSame(0, Evento::count());
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_el_tipo_que_requiere_ubicacion_se_registra_con_barrio_y_direccion_sin_pm(): void
@@ -216,7 +238,7 @@ class RegistroEventoTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $evento = Evento::sole();
+        $evento = $this->registrados()->sole();
         $this->assertNull($evento->punto_monitoreo_id);
         $this->assertNull($evento->timestamp_video);
         $this->assertSame($barrio->id, $evento->barrio_id);
@@ -245,8 +267,8 @@ class RegistroEventoTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $this->assertNull(Evento::sole()->barrio_id);
-        $this->assertNull(Evento::sole()->direccion);
+        $this->assertNull($this->registrados()->sole()->barrio_id);
+        $this->assertNull($this->registrados()->sole()->direccion);
     }
 
     public function test_tipo_con_ubicacion_opcional_acepta_barrio_y_direccion_opcionales(): void
@@ -261,8 +283,8 @@ class RegistroEventoTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('Ruta 9 km 560', Evento::sole()->direccion);
-        $this->assertNull(Evento::sole()->barrio_id);
+        $this->assertSame('Ruta 9 km 560', $this->registrados()->sole()->direccion);
+        $this->assertNull($this->registrados()->sole()->barrio_id);
     }
 
     public function test_tipo_sin_ubicacion_se_registra_sin_punto_ni_timestamp(): void
@@ -277,7 +299,7 @@ class RegistroEventoTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $evento = Evento::sole();
+        $evento = $this->registrados()->sole();
         $this->assertNull($evento->punto_monitoreo_id);
         $this->assertNull($evento->timestamp_video);
     }
@@ -288,7 +310,7 @@ class RegistroEventoTest extends TestCase
             ->post(route('eventos.store'), $this->datosValidos(['hora' => '15:30:00']))
             ->assertSessionHasErrors('fecha');
 
-        $this->assertSame(0, Evento::count());
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_la_descripcion_es_obligatoria(): void
@@ -297,23 +319,58 @@ class RegistroEventoTest extends TestCase
             ->post(route('eventos.store'), $this->datosValidos(['descripcion' => '']))
             ->assertSessionHasErrors(['descripcion' => 'La descripción no puede estar vacía.']);
 
-        $this->assertDatabaseCount('eventos', 0);
+        $this->assertSame(0, $this->registrados()->count());
     }
 
-    public function test_se_registra_sin_una_apertura_de_turno_vigente(): void
+    public function test_sin_turno_abierto_no_se_registran_eventos(): void
     {
-        Event::fake([EventoRegistrado::class]);
+        $this->cerrarTurno();
 
         $this->actingAs($this->supervisor)
             ->post(route('eventos.store'), $this->datosValidos())
+            ->assertSessionHasErrors(['tipo_evento_id' => 'No hay un turno abierto: registrá primero la Apertura de turno.']);
+
+        $this->assertSame(1, $this->registrados()->count());
+    }
+
+    public function test_sin_turno_abierto_se_puede_abrir_el_turno(): void
+    {
+        Event::fake([EventoRegistrado::class]);
+        $this->cerrarTurno();
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+                'punto_monitoreo_id' => null,
+            ]))
             ->assertSessionHasNoErrors();
 
-        $this->assertSame(1, Evento::count());
+        $this->assertSame(2, $this->registrados()->count());
+    }
+
+    public function test_no_se_abre_un_turno_con_otro_abierto(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+                'punto_monitoreo_id' => null,
+            ]))
+            ->assertSessionHasErrors('tipo_evento_id');
+
+        $this->assertSame(0, $this->registrados()->count());
+    }
+
+    public function test_el_hecho_no_puede_ser_anterior_a_la_apertura_del_turno(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos(['hora' => '05:59:59']))
+            ->assertSessionHasErrors('fecha');
+
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_la_constancia_errata_no_se_registra_a_mano(): void
     {
-        $this->seed(TipoEventoSeeder::class);
         $errata = TipoEvento::interno(TipoEvento::ERRATA);
 
         $this->actingAs($this->supervisor)
@@ -327,15 +384,14 @@ class RegistroEventoTest extends TestCase
             ->post(route('eventos.store'), $this->datosValidos(['tipo_evento_id' => $errata, 'punto_monitoreo_id' => null]))
             ->assertSessionHasErrors('tipo_evento_id');
 
-        $this->assertSame(0, Evento::count());
+        $this->assertSame(0, $this->registrados()->count());
     }
 
     public function test_apertura_y_cierre_de_turno_se_registran_como_cualquier_evento(): void
     {
         Event::fake([EventoRegistrado::class]);
-        $this->seed(TipoEventoSeeder::class);
 
-        foreach ([TipoEvento::APERTURA_TURNO, TipoEvento::CIERRE_TURNO] as $tipo) {
+        foreach ([TipoEvento::CIERRE_TURNO, TipoEvento::APERTURA_TURNO] as $tipo) {
             $this->actingAs($this->supervisor)
                 ->post(route('eventos.store'), $this->datosValidos([
                     'tipo_evento_id' => TipoEvento::interno($tipo),
@@ -345,17 +401,16 @@ class RegistroEventoTest extends TestCase
                 ->assertSessionHasNoErrors();
         }
 
-        $this->assertSame(2, Evento::count());
+        $this->assertSame(2, $this->registrados()->count());
         Event::assertDispatchedTimes(EventoRegistrado::class, 2);
     }
 
     public function test_apertura_y_cierre_de_turno_no_llevan_punto_ni_timestamp(): void
     {
         Event::fake([EventoRegistrado::class]);
-        $this->seed(TipoEventoSeeder::class);
 
         // Aunque lleguen un PM y un timestamp (o un timestamp inválido), se descartan.
-        foreach ([TipoEvento::APERTURA_TURNO, TipoEvento::CIERRE_TURNO] as $tipo) {
+        foreach ([TipoEvento::CIERRE_TURNO, TipoEvento::APERTURA_TURNO] as $tipo) {
             $this->actingAs($this->supervisor)
                 ->post(route('eventos.store'), $this->datosValidos([
                     'tipo_evento_id' => TipoEvento::interno($tipo),
@@ -364,7 +419,7 @@ class RegistroEventoTest extends TestCase
                 ->assertSessionHasNoErrors();
         }
 
-        $this->assertSame(0, Evento::whereNotNull('punto_monitoreo_id')->orWhereNotNull('timestamp_video')->count());
+        $this->assertSame(0, $this->registrados()->where(fn ($q) => $q->whereNotNull('punto_monitoreo_id')->orWhereNotNull('timestamp_video'))->count());
 
         $this->actingAs($this->supervisor)
             ->get(route('eventos.create'))

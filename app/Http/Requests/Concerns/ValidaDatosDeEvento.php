@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Concerns;
 
 use App\Models\TipoEvento;
+use App\Services\LibroGuardiaService;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -82,6 +83,25 @@ trait ValidaDatosDeEvento
                 // US-005: el hecho no puede ser posterior al momento de la carga.
                 if ($fechaHora->isFuture()) {
                     $validator->errors()->add('fecha', 'La fecha y hora del hecho no pueden ser posteriores al momento actual.');
+                }
+            },
+            // Todo evento pertenece a un turno: sin Apertura vigente solo se
+            // puede abrir el turno, y con una abierta no se abre otra.
+            function (Validator $validator) {
+                if ($validator->errors()->has('tipo_evento_id')) {
+                    return;
+                }
+
+                $apertura = app(LibroGuardiaService::class)->aperturaVigente();
+                $esApertura = $this->tipoEvento()?->id === TipoEvento::interno(TipoEvento::APERTURA_TURNO);
+
+                if (! $apertura && ! $esApertura) {
+                    $validator->errors()->add('tipo_evento_id', 'No hay un turno abierto: registrá primero la Apertura de turno.');
+                } elseif ($apertura && $esApertura) {
+                    $validator->errors()->add('tipo_evento_id', "Ya hay un turno abierto (Apertura #{$apertura->id}): registrá el Cierre de turno antes de abrir otro.");
+                } elseif ($apertura && ! $validator->errors()->hasAny(['fecha', 'hora'])
+                    && "{$this->input('fecha')} {$this->input('hora')}" < $apertura->fecha_hora->format('Y-m-d H:i:s')) {
+                    $validator->errors()->add('fecha', 'El hecho no puede ser anterior a la apertura del turno ('.$apertura->fecha_hora->format('d/m/Y H:i:s').').');
                 }
             },
         ];

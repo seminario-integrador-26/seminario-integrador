@@ -79,7 +79,8 @@ Tablas: `grupos_evento`, `tipos_evento`, `puntos_monitoreo`, `eventos`, `erratas
 3. Las correcciones **siempre** vía Errata; el Evento original nunca se
    sobreescribe.
 4. El turno vigente es la última **Apertura de turno** sin un **Cierre de
-   turno** posterior; se puede registrar sin turno vigente. El Libro de
+   turno** posterior; sin turno vigente solo se registra la Apertura (no hay
+   eventos sin turno). El Libro de
    guardia en PDF va de una Apertura al Cierre siguiente.
 
 <!-- TODO: tipos de dato exactos e índices -->

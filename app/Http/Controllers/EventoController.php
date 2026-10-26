@@ -17,6 +17,7 @@ use App\Models\TipoPuntoMonitoreo;
 use App\Services\Auth\AuditoriaAccesoService;
 use App\Services\ErrataService;
 use App\Services\EventoService;
+use App\Services\LibroGuardiaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -73,8 +74,10 @@ class EventoController extends Controller
     /**
      * US-003: formulario de registro de evento (Supervisor).
      */
-    public function create(Request $request): Response
+    public function create(Request $request, LibroGuardiaService $libro): Response
     {
+        // Sin turno abierto solo se puede registrar la Apertura de turno.
+        $apertura = $libro->aperturaVigente();
         $puntos = $this->eventos->puntosMonitoreo();
 
         // Registro desde un PM del mapa: ?punto_monitoreo_id=X precarga la ubicación.
@@ -88,6 +91,10 @@ class EventoController extends Controller
             'puntoInicial' => $puntoInicial,
             'tiposPunto' => TipoPuntoMonitoreo::opciones(),
             'barrios' => Barrio::orderBy('nombre')->get(['id', 'nombre']),
+            'turno' => $apertura ? [
+                'id' => $apertura->id,
+                'desde' => $apertura->fecha_hora->format('d/m/Y H:i'),
+            ] : null,
         ]);
     }
 

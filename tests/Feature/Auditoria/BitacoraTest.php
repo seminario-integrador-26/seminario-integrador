@@ -3,11 +3,13 @@
 namespace Tests\Feature\Auditoria;
 
 use App\Models\AuditoriaAcceso;
+use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Database\Seeders\TipoEventoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -54,6 +56,8 @@ class BitacoraTest extends TestCase
         $supervisor = User::factory()->create()->assignRole('Supervisor');
         $tipo = TipoEvento::factory()->create(['requiere_ubicacion' => true]);
         $punto = PuntoMonitoreo::factory()->create();
+        $this->seed(TipoEventoSeeder::class);
+        Evento::factory()->aperturaDeTurno()->create(['fecha_hora' => now()->subDays(2)]);
 
         $this->actingAs($supervisor)
             ->post(route('eventos.store'), [
@@ -61,7 +65,6 @@ class BitacoraTest extends TestCase
                 'fecha' => now()->subDay()->toDateString(),
                 'hora' => '10:00:00',
                 'punto_monitoreo_id' => $punto->id,
-                'timestamp_video' => '10:00:00',
                 'descripcion' => 'Prueba',
             ])
             ->assertSessionHasNoErrors();

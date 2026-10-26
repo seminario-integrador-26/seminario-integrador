@@ -54,9 +54,11 @@ por email vía el flujo estándar de reseteo).
    // TODO: confirmar con el equipo cuáles; hoy la planilla real los cuenta a todos.
 5. **Libro de guardia sin turnos.** No hay tabla de turnos: el turno se abre y
    se cierra registrando un evento interno (Apertura de turno / Cierre de
-   turno, grupo Internos) y se puede registrar sin una apertura vigente. El
-   turno vigente es la última Apertura sin Cierre posterior
-   (`LibroGuardiaService`). Cada fe de errata deja además una constancia
+   turno, grupo Internos). **No hay eventos sin turno** (decisión 2026-10-26):
+   sin una Apertura vigente solo se puede registrar la Apertura (ni eventos
+   ni fe de errata), con una abierta no se abre otra, y el hecho no puede ser
+   anterior a la Apertura. El turno vigente es la última Apertura sin Cierre
+   posterior (`LibroGuardiaService`). Cada fe de errata deja además una constancia
    (evento interno Errata) en el libro. Ver `docs/rediseno-libro-guardia.md`.
 6. **Sin derivación ni seguimiento.** El sistema registra, clasifica, localiza,
    notifica y consulta; **no** deriva al área ni hace seguimiento posterior del

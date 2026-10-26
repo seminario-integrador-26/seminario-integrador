@@ -35,6 +35,8 @@ class ErrataTest extends TestCase
 
     private Evento $evento;
 
+    private Evento $apertura;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,6 +48,7 @@ class ErrataTest extends TestCase
         $this->robo = TipoEvento::factory()->create(['nombre' => 'Robo', 'requiere_ubicacion' => true]);
         $this->plaza = PuntoMonitoreo::factory()->create(['codigo' => 'PM-M-001', 'nombre' => 'Plaza']);
 
+        $this->apertura = Evento::factory()->aperturaDeTurno()->create(['fecha_hora' => '2026-10-15 06:00:00']);
         $this->evento = Evento::factory()->create([
             'tipo_evento_id' => $this->robo->id,
             'punto_monitoreo_id' => $this->plaza->id,
@@ -163,7 +166,7 @@ class ErrataTest extends TestCase
             ->assertSessionHasErrors('motivo'); // mínimo 5 caracteres
 
         $this->assertDatabaseCount('erratas', 0);
-        $this->assertSame(1, Evento::count());
+        $this->assertSame(1, Evento::whereKeyNot($this->apertura->id)->count());
     }
 
     public function test_solo_el_supervisor_puede_corregir(): void
@@ -216,7 +219,8 @@ class ErrataTest extends TestCase
         $this->actingAs($otroSupervisor)
             ->get(route('eventos.index'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->where('eventos.total', 1));
+            // El evento y la Apertura de turno.
+            ->assertInertia(fn (Assert $page) => $page->where('eventos.total', 2));
     }
 
     // --- Constancia en el libro de guardia (evento interno Errata) ----------

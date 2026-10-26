@@ -28,6 +28,8 @@ interface Props {
     puntoInicial?: number | null;
     tiposPunto: Opciones;
     barrios: ItemCatalogo[];
+    /** Apertura de turno vigente; sin ella solo se puede abrir el turno. */
+    turno: { id: number; desde: string } | null;
 }
 
 type FormEvento = {
@@ -58,13 +60,17 @@ const AYUDA_DESCRIPCION: Record<string, string> = {
     'Cierre de turno': 'Novedades pendientes para el turno siguiente.',
 };
 
+const esApertura = (t: TipoEventoOpcion) =>
+    t.sin_camara && t.nombre === 'Apertura de turno';
+
 export default function Create({
-    tipos,
+    tipos: todosLosTipos,
     categorias,
     puntos,
     puntoInicial = null,
     tiposPunto,
     barrios,
+    turno,
 }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm<FormEvento>({
         tipo_evento_id: '',
@@ -78,6 +84,12 @@ export default function Create({
     });
 
     const { flash } = usePage<PageProps>().props;
+
+    // Todo evento pertenece a un turno: sin turno abierto solo se puede
+    // registrar la Apertura, y con uno abierto no se abre otro.
+    const tipos = todosLosTipos.filter((t) =>
+        turno ? !esApertura(t) : esApertura(t),
+    );
 
     const tipoSeleccionado = tipos.find(
         (t) => String(t.id) === String(data.tipo_evento_id),
@@ -133,6 +145,17 @@ export default function Create({
                         </Alert>
                     ) : (
                         <FlashMessages />
+                    )}
+
+                    {turno ? (
+                        <p className="font-mono text-xs text-atalaya-text-dim">
+                            Turno abierto desde el {turno.desde} (Apertura #{turno.id}).
+                        </p>
+                    ) : (
+                        <Alert variant="info">
+                            No hay un turno abierto: registrá la Apertura de turno
+                            para empezar a cargar eventos.
+                        </Alert>
                     )}
 
                     <form

@@ -23,4 +23,13 @@ class EventoFactory extends Factory
             'descripcion' => fake()->sentence(),
         ];
     }
+
+    /**
+     * Apertura de turno (requiere TipoEventoSeeder): sin ella no se registran
+     * eventos.
+     */
+    public function aperturaDeTurno(): static
+    {
+        return $this->state(fn () => ['tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO)]);
+    }
 }

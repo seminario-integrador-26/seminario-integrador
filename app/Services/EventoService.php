@@ -35,9 +35,9 @@ class EventoService
     public const ALCANCES = ['con_ubicacion', 'sin_ubicacion', 'informativos', 'sin_informativos'];
 
     /**
-     * US-003: registra un evento a nombre de su autor. No hace falta un turno
-     * abierto: abrir y cerrar el turno también son eventos (Apertura de turno /
-     * Cierre de turno, ver LibroGuardiaService).
+     * US-003: registra un evento a nombre de su autor. Que haya un turno
+     * abierto lo valida StoreEventoRequest: abrir y cerrar el turno también
+     * son eventos (Apertura de turno / Cierre de turno, ver LibroGuardiaService).
      *
      * @param  array{tipo_evento_id: int, fecha: string, hora: string, punto_monitoreo_id?: int|null, descripcion?: string|null}  $datos
      */

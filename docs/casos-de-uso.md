@@ -12,7 +12,8 @@
 
 ## CU02 — Registrar evento (Supervisor)
 - **Actor:** Supervisor.
-- **Precondición:** autenticado con rol Supervisor (no hace falta un turno abierto).
+- **Precondición:** autenticado con rol Supervisor y un turno abierto (Apertura de turno
+  vigente); sin turno solo puede registrar la Apertura.
 - **Flujo principal:** carga tipo, fecha/horario, ubicación (si el tipo la
   requiere), descripción; el sistema guarda el evento (inmutable), lo asocia al
   turno activo y dispara la notificación por WhatsApp al grupo correspondiente.

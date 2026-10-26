@@ -15,8 +15,11 @@
    la tarjeta (`AbrirTurnoModal`) que se abre sola al Supervisor sin turno abierto.
    Abrir y cerrar el turno pasa a ser **registrar un evento** de tipo Apertura
    de turno o Cierre de turno.
-3. **Se puede registrar sin una apertura vigente:** la apertura y el cierre son
-   eventos más del libro y no bloquean nada (desaparece `SinTurnoActivoException`).
+3. **No hay eventos sin turno** (cambio del 2026-10-26; antes se podía
+   registrar sin una apertura vigente): sin Apertura vigente solo se registra
+   la Apertura de turno, con una abierta no se abre otra, el hecho no puede
+   ser anterior a la Apertura y la fe de errata también pide turno abierto
+   (su constancia cae en el libro).
 4. **PDF del Libro de guardia (US-012):** se elige una Apertura de turno y el
    PDF incluye todo lo registrado hasta el Cierre de turno siguiente.
 5. **Datos de producción:** los turnos cargados se **descartan**. Los eventos
