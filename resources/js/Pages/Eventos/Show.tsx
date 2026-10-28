@@ -40,7 +40,6 @@ interface EventoDetalle {
         latitud: number | null;
         longitud: number | null;
     } | null;
-    timestamp_video: string | null;
     /** Sin PM: barrio y dirección cargados a mano. */
     barrio: string | null;
     direccion: string | null;
@@ -85,7 +84,7 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
             header={
                 <div className="flex items-center justify-between gap-4">
                     <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                        Evento #{evento.id}
+                        Novedad #{evento.id}
                     </h2>
                     <div className="flex items-center gap-4">
                         {puedeCorregir && (
@@ -100,13 +99,13 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             href={route('eventos.index')}
                             className="font-mono text-xs font-bold uppercase text-atalaya-cyan hover:underline"
                         >
-                            ← Volver a eventos
+                            ← Volver a novedades
                         </Link>
                     </div>
                 </div>
             }
         >
-            <Head title={`Evento #${evento.id}`} />
+            <Head title={`Novedad #${evento.id}`} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-4xl space-y-4 px-4 sm:px-6 lg:px-8">
@@ -114,7 +113,7 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
 
                     {evento.erratas.length > 0 && (
                         <p className="border border-atalaya-amber/50 bg-atalaya-amber/10 px-4 py-2 text-sm text-amber-100">
-                            Este evento tiene {evento.erratas.length} fe(s) de
+                            Esta novedad tiene {evento.erratas.length} fe(s) de
                             errata; el detalle está al final.
                         </p>
                     )}
@@ -152,18 +151,10 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                         </div>
 
                         <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
-                            <Dato etiqueta="Fecha del hecho">{evento.fecha}</Dato>
-                            <Dato etiqueta="Horario del hecho">
+                            <Dato etiqueta="Fecha de la novedad">{evento.fecha}</Dato>
+                            <Dato etiqueta="Horario de la novedad">
                                 <span className="font-mono">{evento.hora}</span>
                             </Dato>
-                            {/* Ya no se carga: solo eventos anteriores lo tienen. */}
-                            {evento.timestamp_video && (
-                                <Dato etiqueta="Timestamp del video">
-                                    <span className="font-mono">
-                                        {evento.timestamp_video}
-                                    </span>
-                                </Dato>
-                            )}
                             <Dato
                                 etiqueta="Descripción"
                                 className="sm:col-span-3"
@@ -187,6 +178,11 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                                 <Dato etiqueta="Tipo de PM">
                                     {evento.punto.tipo}
                                 </Dato>
+                                {evento.direccion && (
+                                    <Dato etiqueta="Dirección">
+                                        {evento.direccion}
+                                    </Dato>
+                                )}
                                 <Dato etiqueta="Barrio / cuadrante">
                                     {[evento.punto.barrio, evento.punto.cuadrante].filter(Boolean).join(' · ') || '—'}
                                 </Dato>
@@ -214,7 +210,7 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             </>
                         ) : (
                             <p className="mt-4 text-sm text-atalaya-text-muted">
-                                Evento sin ubicación: no se incluye en las
+                                Novedad sin ubicación: no se incluye en las
                                 estadísticas por ubicación.
                             </p>
                         )}

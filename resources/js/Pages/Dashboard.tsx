@@ -132,7 +132,7 @@ export default function Dashboard({
                             </span>
                             <div className="min-w-0 font-mono">
                                 <div className="truncate text-[10px] uppercase text-atalaya-text-muted">
-                                    {turno ? 'Eventos en turno' : 'Últimos eventos'}{' '}
+                                    {turno ? 'Novedades en turno' : 'Últimas novedades'}{' '}
                                     <span className="text-atalaya-cyan">· En vivo</span>
                                 </div>
                                 <div className="flex flex-wrap gap-x-2 text-[10px] font-bold">
@@ -339,7 +339,7 @@ export default function Dashboard({
                                 )}
                             </div>
                             <Select
-                                aria-label="Filtrar por tipo de evento"
+                                aria-label="Filtrar por tipo de novedad"
                                 buscable
                                 value={filtroTipo}
                                 onChange={(e) => setFiltroTipo(e.target.value)}
@@ -358,7 +358,7 @@ export default function Dashboard({
                         <div className="max-h-[580px] flex-1 divide-y divide-atalaya-border overflow-y-auto">
                             {eventosFiltrados.length === 0 && (
                                 <div className="p-6 text-center font-mono text-xs text-atalaya-text-muted">
-                                    Sin eventos registrados
+                                    Sin novedades registradas
                                     {(filtro !== TODAS || filtroTipo) &&
                                         ' para este filtro'}
                                     .
@@ -462,16 +462,6 @@ export default function Dashboard({
                                                 {Number(
                                                     seleccionado.longitud,
                                                 ).toFixed(4)}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {seleccionado.timestamp_video && (
-                                        <div>
-                                            <span className="text-atalaya-text-muted">
-                                                TIMESTAMP VIDEO:{' '}
-                                            </span>
-                                            <span className="text-white">
-                                                {seleccionado.timestamp_video}
                                             </span>
                                         </div>
                                     )}

@@ -11,6 +11,11 @@ Videovigilancia del Centro de Monitoreo de la Municipalidad de Villa María
 notificación y consulta. Reemplaza el triple registro actual (libro de guardia
 a mano, sistema de conteo, WhatsApp) por un único registro centralizado.
 
+**Vocabulario (decisión 2026-10-28).** En todo texto visible (UI, PDF,
+exportaciones, notificaciones, mensajes de validación) se dice **Novedad**,
+nunca "evento" ni "hecho". En el código, la base y la API pública sigue siendo
+`Evento` / `eventos`.
+
 ## Usuarios (tres roles)
 
 Roles vía `spatie/laravel-permission` — **solo estos tres**:
@@ -48,7 +53,9 @@ por email vía el flujo estándar de reseteo).
 3. **Ubicación condicional.** La ubicación (PuntoMonitoreo) es opcional y
    depende del tipo (`TipoEvento.requiere_ubicacion`). Sin PM se cargan
    **barrio y dirección** (obligatorios si el tipo exige ubicación, opcionales
-   si no). Apertura y Cierre de turno no llevan ubicación.
+   si no). Con PM el barrio sale del PM y la dirección es opcional (dónde fue
+   exactamente; decisión 2026-10-28). Apertura, Cierre de turno y Nota no llevan
+   ubicación (`TipoEvento::SIN_CAMARA`).
 4. Hay tipos **no cuantificables** que no entran en estadísticas
    (`TipoEvento.es_cuantificable`). Independiente del punto 3.
    // TODO: confirmar con el equipo cuáles; hoy la planilla real los cuenta a todos.
@@ -58,7 +65,9 @@ por email vía el flujo estándar de reseteo).
    sin una Apertura vigente solo se puede registrar la Apertura (ni eventos
    ni fe de errata), con una abierta no se abre otra, y el hecho no puede ser
    anterior a la Apertura. El turno vigente es la última Apertura sin Cierre
-   posterior (`LibroGuardiaService`). Cada fe de errata deja además una constancia
+   posterior (`LibroGuardiaService`); `EventoService` lo vuelve a chequear con
+   lock para dos Aperturas simultáneas. Apertura, Cierre y Nota se notifican
+   (Telegram/WhatsApp) a todos los grupos por defecto (decisión 2026-10-28). Cada fe de errata deja además una constancia
    (evento interno Errata) en el libro. Ver `docs/rediseno-libro-guardia.md`.
 6. **Sin derivación ni seguimiento.** El sistema registra, clasifica, localiza,
    notifica y consulta; **no** deriva al área ni hace seguimiento posterior del

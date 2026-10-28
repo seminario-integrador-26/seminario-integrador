@@ -67,7 +67,6 @@ export interface EventoPanel {
     fecha: string;
     /** hh:mm:ss */
     hora: string;
-    timestamp_video: string | null;
     descripcion: string | null;
     autor: string | null;
 }
@@ -95,7 +94,7 @@ export interface TipoEventoOpcion {
     /** Código del GrupoEvento (clave de `categorias`). */
     categoria: string;
     requiere_ubicacion: boolean;
-    /** Apertura / Cierre de turno: sin PM ni timestamp del video. */
+    /** Apertura / Cierre de turno: sin PM. */
     sin_camara: boolean;
 }
 

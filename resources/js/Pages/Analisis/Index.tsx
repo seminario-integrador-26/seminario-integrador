@@ -1,4 +1,4 @@
-import TextInput from '@/Components/TextInput';
+import FechaInput from '@/Components/FechaInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { Opciones } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -200,11 +200,11 @@ function TooltipOscuro({ active, payload, label, sufijo = '' }: TooltipProps<Val
         <div className="border border-atalaya-border bg-atalaya-canvas px-3 py-2 text-xs shadow-lg">
             <p className="font-mono font-bold text-white">{label ?? fila.etiqueta}</p>
             <p className="text-atalaya-text-muted">
-                {payload[0].value} evento(s)
+                {payload[0].value} novedad(es)
                 {fila.porcentaje !== undefined && ` · ${fila.porcentaje}%`}
                 {sufijo}
             </p>
-            <p className="mt-1 text-[10px] text-atalaya-cyan">Clic para ver los eventos</p>
+            <p className="mt-1 text-[10px] text-atalaya-cyan">Clic para ver las novedades</p>
         </div>
     );
 }
@@ -318,15 +318,15 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                         </div>
                         {periodo === 'personalizado' && (
                             <div className="flex items-end gap-2">
-                                <TextInput
-                                    type="date"
+                                <FechaInput
+
                                     value={rango.desde}
                                     max={hoy}
                                     onChange={(e) => setRango((r) => ({ ...r, desde: e.target.value }))}
                                     onBlur={() => filtrar({ desde: rango.desde, hasta: rango.hasta })}
                                 />
-                                <TextInput
-                                    type="date"
+                                <FechaInput
+
                                     value={rango.hasta}
                                     max={hoy}
                                     onChange={(e) => setRango((r) => ({ ...r, hasta: e.target.value }))}
@@ -383,8 +383,8 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                     {/* US-015: KPIs (clic = desglose en la consulta de eventos). */}
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         {([
-                            ['Eventos del mes', a.kpis.mes, 'vs. mismo tramo del mes anterior', { desde: inicioMes, hasta: hoy }],
-                            ['Eventos del año', a.kpis.anio, 'vs. mismo tramo del año anterior', { desde: inicioAnio, hasta: hoy }],
+                            ['Novedades del mes', a.kpis.mes, 'vs. mismo tramo del mes anterior', { desde: inicioMes, hasta: hoy }],
+                            ['Novedades del año', a.kpis.anio, 'vs. mismo tramo del año anterior', { desde: inicioAnio, hasta: hoy }],
                         ] as const).map(([titulo, k, nota, rangoKpi]) => (
                             <button
                                 key={titulo}
@@ -401,7 +401,7 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                         ))}
                         <div className="border border-atalaya-border bg-atalaya-surface p-5">
                             <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-atalaya-text-dim">
-                                Período elegido · {a.kpis.periodo} eventos
+                                Período elegido · {a.kpis.periodo} novedades
                             </p>
                             <ul className="mt-2 space-y-1.5">
                                 {a.kpis.por_categoria.map((c) => (
@@ -423,7 +423,7 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                     </div>
 
                     {/* US-015: últimos 6 meses por categoría (pequeños múltiplos). */}
-                    <Panel titulo="Eventos por categoría · últimos 6 meses" nota="Un gráfico por categoría. Clic en una barra para ver esos eventos.">
+                    <Panel titulo="Novedades por categoría · últimos 6 meses" nota="Un gráfico por categoría. Clic en una barra para ver esas novedades.">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                             {Object.entries(categorias).map(([clave, nombre]) => (
                                 <div key={clave}>
@@ -451,7 +451,7 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                     {/* US-018: tendencias. */}
                     <Panel
                         titulo="Tendencia temporal"
-                        nota={`${a.periodo.desde.split('-').reverse().join('/')} al ${a.periodo.hasta.split('-').reverse().join('/')} · clic en un punto para ver los eventos de ese tramo.`}
+                        nota={`${a.periodo.desde.split('-').reverse().join('/')} al ${a.periodo.hasta.split('-').reverse().join('/')} · clic en un punto para ver las novedades de ese tramo.`}
                         acciones={
                             <div className="flex flex-wrap items-center gap-3">
                                 <Segmentado opciones={GRANULARIDADES} valor={a.granularidad} onChange={(g) => filtrar({ granularidad: g })} />
@@ -505,7 +505,7 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                         {/* US-019: ranking de zonas críticas. */}
                         <Panel
                             titulo="Zonas críticas · top 10"
-                            nota="Del período elegido. No incluye eventos sin ubicación."
+                            nota="Del período elegido. No incluye novedades sin ubicación."
                             acciones={
                                 <Segmentado
                                     opciones={[
@@ -520,8 +520,8 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                             {ranking.length === 0 ? (
                                 <p className="text-sm text-atalaya-text-dim">
                                     {vistaRanking === 'barrio'
-                                        ? 'Sin datos: los PMs con eventos todavía no tienen barrio cargado (Puntos → editar).'
-                                        : 'Sin eventos con ubicación en el período.'}
+                                        ? 'Sin datos: los PMs con novedades todavía no tienen barrio cargado (Puntos → editar).'
+                                        : 'Sin novedades con ubicación en el período.'}
                                 </p>
                             ) : (
                                 <ol className="space-y-2.5">
@@ -559,7 +559,7 @@ export default function Index({ filtros, analisis: a, categorias, intervaloRefre
                         {/* US-020: franja horaria. */}
                         <Panel
                             titulo="Distribución por hora del día"
-                            nota="Resaltadas las 3 horas de mayor incidencia. Clic en una barra para ver esos eventos."
+                            nota="Resaltadas las 3 horas de mayor incidencia. Clic en una barra para ver esas novedades."
                         >
                             <ResponsiveContainer width="100%" height={260}>
                                 <BarChart

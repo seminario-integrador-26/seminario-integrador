@@ -68,9 +68,9 @@
         <tr><td class="etiqueta">Cierre</td><td>{{ $turno['cierre'] ?: '—' }}</td></tr>
     </table>
 
-    <h2>Eventos del turno ({{ count($eventos) }})</h2>
+    <h2>Novedades del turno ({{ count($eventos) }})</h2>
     @if (count($eventos) === 0)
-        <div class="vacio">No se registraron eventos en este turno.</div>
+        <div class="vacio">No se registraron novedades en este turno.</div>
     @else
         <table class="eventos">
             <thead>
@@ -94,9 +94,9 @@
         </table>
     @endif
 
-    <h2>Resumen por tipo de evento</h2>
+    <h2>Resumen por tipo de novedad</h2>
     @if (count($resumen) === 0)
-        <div class="vacio">Sin eventos.</div>
+        <div class="vacio">Sin novedades.</div>
     @else
         <table class="resumen">
             <thead>

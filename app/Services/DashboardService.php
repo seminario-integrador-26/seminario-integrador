@@ -83,7 +83,6 @@ class DashboardService
                 'longitud' => $e->puntoMonitoreo?->longitud,
                 'fecha' => $e->fecha_hora->format('d/m/Y'),
                 'hora' => $e->fecha_hora->format('H:i:s'),
-                'timestamp_video' => $e->timestamp_video,
                 'descripcion' => $e->descripcion,
                 'autor' => $e->usuario?->name,
             ])

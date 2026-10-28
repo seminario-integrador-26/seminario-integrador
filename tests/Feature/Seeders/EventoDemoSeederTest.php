@@ -34,9 +34,9 @@ class EventoDemoSeederTest extends TestCase
         $this->assertGreaterThan(1000, Evento::count());
         $this->assertGreaterThan(0, Errata::count());
 
-        // Ubicación condicional y timestamp de video solo con PM.
+        // Ubicación condicional; el timestamp del video ya no se carga.
         $this->assertSame(0, Evento::whereHas('tipoEvento', fn ($q) => $q->where('requiere_ubicacion', true))->whereNull('punto_monitoreo_id')->count());
-        $this->assertSame(0, Evento::whereNotNull('punto_monitoreo_id')->whereNull('timestamp_video')->count());
+        $this->assertSame(0, Evento::whereNotNull('timestamp_video')->count());
         $this->assertSame(0, Evento::where('fecha_hora', '>=', today())->count());
 
         Event::assertNotDispatched(EventoRegistrado::class);

@@ -24,8 +24,8 @@ class Errata extends Model
      * Campos que corregían las erratas anteriores (columna => etiqueta).
      */
     public const CAMPOS = [
-        'tipo_evento_id' => 'Tipo de evento',
-        'fecha_hora' => 'Fecha y horario del hecho',
+        'tipo_evento_id' => 'Tipo de novedad',
+        'fecha_hora' => 'Fecha y horario de la novedad',
         'punto_monitoreo_id' => 'Punto de monitoreo',
         'timestamp_video' => 'Timestamp del video',
         'descripcion' => 'Descripción',

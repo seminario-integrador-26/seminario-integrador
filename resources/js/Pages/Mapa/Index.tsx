@@ -1,5 +1,5 @@
 import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
+import FechaInput from '@/Components/FechaInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { colorGrupo } from '@/catalogos';
@@ -368,11 +368,11 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
         <AuthenticatedLayout
             header={
                 <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                    Mapa de eventos
+                    Mapa de novedades
                 </h2>
             }
         >
-            <Head title="Mapa de eventos" />
+            <Head title="Mapa de novedades" />
 
             <div className="flex flex-col gap-4 p-4 lg:h-[calc(100vh-7.5rem)] lg:flex-row">
                 <aside className="space-y-4 border border-atalaya-border bg-atalaya-surface p-4 lg:w-80 lg:shrink-0 lg:overflow-y-auto">
@@ -424,9 +424,8 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <InputLabel htmlFor="desde" value="Desde" />
-                            <TextInput
+                            <FechaInput
                                 id="desde"
-                                type="date"
                                 className="mt-1 block w-full"
                                 value={filtros.desde}
                                 onChange={(e) => e.target.value && filtrar({ desde: e.target.value })}
@@ -434,9 +433,8 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                         </div>
                         <div>
                             <InputLabel htmlFor="hasta" value="Hasta" />
-                            <TextInput
+                            <FechaInput
                                 id="hasta"
-                                type="date"
                                 className="mt-1 block w-full"
                                 value={filtros.hasta}
                                 onChange={(e) => e.target.value && filtrar({ hasta: e.target.value })}
@@ -456,13 +454,13 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                             activo={capas.eventos}
                             onChange={(v) => setCapas((c) => ({ ...c, eventos: v }))}
                         >
-                            Eventos (uno por marcador)
+                            Novedades (una por marcador)
                         </Interruptor>
                         <Interruptor
                             activo={capas.puntos}
                             onChange={(v) => setCapas((c) => ({ ...c, puntos: v }))}
                         >
-                            Puntos con eventos (cantidad)
+                            Puntos con novedades (cantidad)
                         </Interruptor>
                         <Interruptor
                             activo={capas.todos}
@@ -477,22 +475,22 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                             <span className="font-mono text-lg font-bold text-white">
                                 {densidad.total}
                             </span>{' '}
-                            eventos en {densidad.puntos.length} PM.
+                            novedades en {densidad.puntos.length} PM.
                         </p>
                         <p className="text-atalaya-text-dim">
-                            No se incluyen {densidad.sin_ubicacion} evento(s)
-                            sin ubicación ni los de tipos no cuantificables.
+                            No se incluyen {densidad.sin_ubicacion} novedad(es)
+                            sin ubicación ni las de tipos no cuantificables.
                         </p>
                         {eventos.total > eventos.items.length && (
                             <p className="text-atalaya-amber">
-                                Se dibujan los {eventos.items.length} eventos más
+                                Se dibujan las {eventos.items.length} novedades más
                                 recientes de {eventos.total}: acotá el período
                                 o la categoría para verlos todos.
                             </p>
                         )}
                         {densidad.sin_coordenadas > 0 && (
                             <p className="text-atalaya-amber">
-                                Tampoco {densidad.sin_coordenadas} evento(s) de
+                                Tampoco {densidad.sin_coordenadas} novedad(es) de
                                 PMs sin coordenadas: cargalas en Puntos de
                                 monitoreo para verlos en el mapa.
                             </p>
@@ -500,7 +498,7 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
 
                         <div className="space-y-1.5 pt-2">
                             <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-atalaya-text-dim">
-                                Referencias · eventos
+                                Referencias · novedades
                             </p>
                             {Object.entries(categorias).map(([clave, nombre]) => (
                                 <p key={clave} className="flex items-center gap-2">
@@ -524,7 +522,7 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                                 ))}
                             </p>
                             <p className="pt-2 font-mono text-[10px] font-bold uppercase tracking-widest text-atalaya-text-dim">
-                                Referencias · puntos con eventos
+                                Referencias · puntos con novedades
                             </p>
                             <p className="flex items-center gap-2">
                                 <span className="inline-block h-3 w-3 rounded-full border-2 border-atalaya-cyan bg-atalaya-cyan/70" />
@@ -540,8 +538,8 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                             </p>
                             <p className="text-atalaya-text-dim">
                                 El tamaño del círculo indica la cantidad de
-                                eventos. Clic en una zona o en un punto para
-                                ver sus eventos.
+                                novedades. Clic en una zona o en un punto para
+                                ver sus novedades.
                             </p>
                             <div className="pt-1">
                                 <div
@@ -553,7 +551,7 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                                 />
                                 <div className="mt-0.5 flex justify-between text-[10px] text-atalaya-text-dim">
                                     <span>Menos</span>
-                                    <span>Más eventos</span>
+                                    <span>Más novedades</span>
                                 </div>
                             </div>
                         </div>
@@ -613,13 +611,13 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                                                     PM {p.tipo_nombre}
                                                 </div>
                                                 <div className="mt-1 text-white">
-                                                    {p.cantidad} evento(s) en el período
+                                                    {p.cantidad} novedad(es) en el período
                                                 </div>
                                                 <Link
                                                     href={verEventos(p)}
                                                     className="mt-2 block border border-atalaya-cyan bg-atalaya-cyan/10 px-2 py-1 text-center text-[10px] font-bold uppercase !text-atalaya-cyan hover:bg-atalaya-cyan/25"
                                                 >
-                                                    Ver eventos
+                                                    Ver novedades
                                                 </Link>
                                             </div>
                                         </Popup>
@@ -640,7 +638,7 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
 
                     {densidad.puntos.length === 0 && (
                         <div className="pointer-events-none absolute inset-x-0 top-4 z-[500] mx-auto w-fit border border-atalaya-border bg-atalaya-surface px-4 py-2 font-mono text-xs text-atalaya-text-muted">
-                            Sin eventos con ubicación para estos filtros.
+                            Sin novedades con ubicación para estos filtros.
                         </div>
                     )}
                 </div>

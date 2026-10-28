@@ -2,8 +2,10 @@ import EstadoNotificaciones from '@/Components/EstadoNotificaciones';
 import FlashMessages from '@/Components/FlashMessages';
 import { Cabecera, Celda, CeldaAcciones, Cuerpo, Encabezado, Fila, FilaVacia, Insignia, Paginacion, Tabla } from '@/Components/Tabla';
 import InputError from '@/Components/InputError';
+import HoraInput from '@/Components/HoraInput';
 import InputLabel from '@/Components/InputLabel';
 import SecondaryButton from '@/Components/SecondaryButton';
+import FechaInput from '@/Components/FechaInput';
 import TextInput from '@/Components/TextInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -22,7 +24,6 @@ interface EventoFila {
     informativo: boolean;
     /** "CODIGO — Nombre" o null si no tiene ubicación. */
     punto: string | null;
-    timestamp_video: string | null;
     descripcion: string | null;
     autor: string | null;
     notificaciones: Notificacion[];
@@ -213,7 +214,7 @@ export default function Index({
 
             setExportacion({
                 estado: 'ok',
-                mensaje: `Exportación completada: ${nombre} (${respuesta.headers.get('X-Cantidad-Eventos')} eventos).`,
+                mensaje: `Exportación completada: ${nombre} (${respuesta.headers.get('X-Cantidad-Eventos')} novedades).`,
             });
         } catch {
             setExportacion({
@@ -233,11 +234,11 @@ export default function Index({
         <AuthenticatedLayout
             header={
                 <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                    Eventos
+                    Novedades
                 </h2>
             }
         >
-            <Head title="Eventos" />
+            <Head title="Novedades" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
@@ -382,9 +383,8 @@ export default function Index({
 
                             <div>
                                 <InputLabel htmlFor="desde" value="Fecha desde" />
-                                <TextInput
+                                <FechaInput
                                     id="desde"
-                                    type="date"
                                     className="mt-1 block w-full"
                                     value={form.desde}
                                     onChange={cambiar('desde')}
@@ -394,9 +394,8 @@ export default function Index({
 
                             <div>
                                 <InputLabel htmlFor="hasta" value="Fecha hasta" />
-                                <TextInput
+                                <FechaInput
                                     id="hasta"
-                                    type="date"
                                     className="mt-1 block w-full"
                                     value={form.hasta}
                                     onChange={cambiar('hasta')}
@@ -409,9 +408,8 @@ export default function Index({
                                     htmlFor="hora_desde"
                                     value="Hora desde"
                                 />
-                                <TextInput
+                                <HoraInput
                                     id="hora_desde"
-                                    type="time"
                                     className="mt-1 block w-full"
                                     value={form.hora_desde}
                                     onChange={cambiar('hora_desde')}
@@ -424,9 +422,8 @@ export default function Index({
                                     htmlFor="hora_hasta"
                                     value="Hora hasta"
                                 />
-                                <TextInput
+                                <HoraInput
                                     id="hora_hasta"
-                                    type="time"
                                     className="mt-1 block w-full"
                                     value={form.hora_hasta}
                                     onChange={cambiar('hora_hasta')}
@@ -518,7 +515,7 @@ export default function Index({
                         <p className="text-sm text-atalaya-text-muted">
                             {eventos.total === 0
                                 ? 'Sin resultados.'
-                                : `Mostrando ${eventos.from}–${eventos.to} de ${eventos.total} eventos.`}
+                                : `Mostrando ${eventos.from}–${eventos.to} de ${eventos.total} novedades.`}
                         </p>
                         {puedeExportar && (
                             <div className="flex items-center gap-2">
@@ -572,7 +569,7 @@ export default function Index({
                         </Cabecera>
                         <Cuerpo>
                             {eventos.data.length === 0 && (
-                                <FilaVacia columnas={columnas.length}>No hay eventos registrados con esos filtros.</FilaVacia>
+                                <FilaVacia columnas={columnas.length}>No hay novedades registradas con esos filtros.</FilaVacia>
                             )}
                             {eventos.data.map((e) => (
                                 <Fila key={e.id} onClick={() => router.visit(route('eventos.show', e.id))}>
@@ -606,9 +603,6 @@ export default function Index({
                                     <Celda tono="tenue">
                                         {e.punto ?? (
                                             <Insignia color="border-atalaya-cyan/60 text-atalaya-cyan">Sin ubicación</Insignia>
-                                        )}
-                                        {e.timestamp_video && (
-                                            <div className="font-mono text-xs text-atalaya-text-dim">Video {e.timestamp_video}</div>
                                         )}
                                     </Celda>
                                     <Celda className="max-w-md">{e.descripcion ?? '—'}</Celda>

@@ -2,7 +2,7 @@ import FlashMessages from '@/Components/FlashMessages';
 import InputLabel from '@/Components/InputLabel';
 import { Accion, Cabecera, Celda, CeldaAcciones, Cuerpo, Encabezado, Fila, FilaVacia, Paginacion, Tabla } from '@/Components/Tabla';
 import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
+import FechaInput from '@/Components/FechaInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { Paginador } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -51,10 +51,9 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<Guardia>;
                     <div className="flex flex-wrap items-end gap-4 border border-atalaya-border bg-atalaya-surface p-4">
                         <div>
                             <InputLabel htmlFor="fecha" value="Fecha del turno" />
-                            <TextInput
+                            <FechaInput
                                 id="fecha"
-                                type="date"
-                                className="mt-1 block"
+                                className="mt-1 w-40"
                                 value={filtros.fecha ?? ''}
                                 onChange={(e) => filtrarPorFecha(e.target.value)}
                             />
@@ -77,7 +76,7 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<Guardia>;
                             <Encabezado>Fecha</Encabezado>
                             <Encabezado>Horario</Encabezado>
                             <Encabezado>Supervisor</Encabezado>
-                            <Encabezado alinear="derecha">Eventos</Encabezado>
+                            <Encabezado alinear="derecha">Novedades</Encabezado>
                             <Encabezado alinear="derecha">Acciones</Encabezado>
                         </Cabecera>
                         <Cuerpo>

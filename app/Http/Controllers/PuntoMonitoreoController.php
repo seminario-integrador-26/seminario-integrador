@@ -118,7 +118,7 @@ class PuntoMonitoreoController extends Controller
     public function destroy(Request $request, PuntoMonitoreo $punto): RedirectResponse
     {
         if ($punto->eventos()->exists()) {
-            return back()->with('error', "El PM {$punto->codigo} tiene eventos registrados: no se puede eliminar.");
+            return back()->with('error', "El PM {$punto->codigo} tiene novedades registradas: no se puede eliminar.");
         }
 
         $punto->delete();

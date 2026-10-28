@@ -202,7 +202,7 @@ return [
         'hora_fin' => 'hora de fin',
         'descripcion' => 'descripción',
         'motivo' => 'motivo',
-        'tipo_evento_id' => 'tipo de evento',
+        'tipo_evento_id' => 'tipo de novedad',
         'punto_monitoreo_id' => 'punto de monitoreo',
         'turno_id' => 'turno',
     ],

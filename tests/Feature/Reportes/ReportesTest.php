@@ -224,21 +224,21 @@ class ReportesTest extends TestCase
         $respuesta = $this->actingAs($this->administrativo)
             ->get(route('reportes.eventos.planilla', ['formato' => 'xlsx', 'desde' => '2026-10-01', 'hasta' => '2026-10-31', 'orden' => 'fecha_hora', 'direccion' => 'asc']))
             ->assertOk()
-            ->assertDownload('Eventos_CMU_01-10-2026_31-10-2026.xlsx')
+            ->assertDownload('Novedades_CMU_01-10-2026_31-10-2026.xlsx')
             ->assertHeader('X-Cantidad-Eventos', '3');
 
         $hoja = $this->leerXlsx($respuesta->getContent());
 
         $this->assertSame(
-            ['ID', 'Fecha', 'Horario', 'Categoría', 'Tipo', 'PM código', 'PM nombre', 'Tipo PM', 'Barrio', 'Dirección', 'Timestamp video', 'Descripción', 'Registró', 'Observación'],
+            ['ID', 'Fecha', 'Horario', 'Categoría', 'Tipo', 'PM código', 'PM nombre', 'Tipo PM', 'Barrio', 'Dirección', 'Descripción', 'Registró', 'Observación'],
             $hoja[0],
         );
         $this->assertCount(4, $hoja); // encabezado + 3 eventos
-        $this->assertSame(['03/10/2026', '21:05:09', 'Policía', 'Robo', 'PM-M-007', 'Plaza Centenario', 'Municipal', null, null, '21:04:50'], array_slice($hoja[1], 1, 10));
-        $this->assertSame('Arrebato de cartera en la esquina de Ñandubay', $hoja[1][11]); // UTF-8
-        $this->assertNull($hoja[1][13]);
-        $this->assertSame('Evento sin ubicación', $hoja[2][13]);
-        $this->assertSame('Evento informativo', $hoja[3][13]);
+        $this->assertSame(['03/10/2026', '21:05:09', 'Policía', 'Robo', 'PM-M-007', 'Plaza Centenario', 'Municipal', null, null], array_slice($hoja[1], 1, 9));
+        $this->assertSame('Arrebato de cartera en la esquina de Ñandubay', $hoja[1][10]); // UTF-8
+        $this->assertNull($hoja[1][12]);
+        $this->assertSame('Novedad sin ubicación', $hoja[2][12]);
+        $this->assertSame('Novedad informativa', $hoja[3][12]);
 
         $this->assertDatabaseHas('auditoria_accesos', [
             'evento' => AuditoriaAcceso::EVENTO_EXPORTACION,
@@ -265,7 +265,7 @@ class ReportesTest extends TestCase
         $respuesta = $this->actingAs($this->administrativo)
             ->get(route('reportes.eventos.planilla', ['formato' => 'xls', 'desde' => '2026-10-01', 'hasta' => '2026-10-31']))
             ->assertOk()
-            ->assertDownload('Eventos_CMU_01-10-2026_31-10-2026.xls')
+            ->assertDownload('Novedades_CMU_01-10-2026_31-10-2026.xls')
             ->assertHeader('Content-Type', 'application/vnd.ms-excel')
             ->assertHeader('X-Cantidad-Eventos', '1');
 
@@ -275,11 +275,11 @@ class ReportesTest extends TestCase
         $hoja = $this->leerXlsx($respuesta->getContent());
         $this->assertSame('Fecha', $hoja[0][1]);
         $this->assertSame('03/10/2026', $hoja[1][1]);
-        $this->assertSame('Arrebato en Ñandubay y Güemes', $hoja[1][11]); // Unicode
+        $this->assertSame('Arrebato en Ñandubay y Güemes', $hoja[1][10]); // Unicode
 
         $this->assertDatabaseHas('auditoria_accesos', [
             'evento' => AuditoriaAcceso::EVENTO_EXPORTACION,
-            'descripcion' => 'Exportación .xls de 1 evento(s). Filtros: {"desde":"2026-10-01","hasta":"2026-10-31"}',
+            'descripcion' => 'Exportación .xls de 1 novedad(es). Filtros: {"desde":"2026-10-01","hasta":"2026-10-31"}',
         ]);
     }
 
@@ -297,6 +297,6 @@ class ReportesTest extends TestCase
 
         $this->actingAs($this->administrativo)
             ->get(route('reportes.eventos.planilla', ['formato' => 'xlsx']))
-            ->assertDownload('Eventos_CMU_02-08-2026_09-10-2026.xlsx');
+            ->assertDownload('Novedades_CMU_02-08-2026_09-10-2026.xlsx');
     }
 }

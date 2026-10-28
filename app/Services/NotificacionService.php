@@ -63,17 +63,18 @@ class NotificacionService
         $punto = $evento->puntoMonitoreo;
 
         $ubicacion = $punto
-            ? "{$punto->codigo} — {$punto->nombre} ({$punto->tipoPuntoMonitoreo->nombre})"
+            ? "{$punto->codigo} — {$punto->nombre} ({$punto->tipoPuntoMonitoreo->nombre})".($evento->direccion ? ", {$evento->direccion}" : '')
             : ($evento->ubicacion() ?? 'Sin ubicación');
 
-        return implode("\n", [
+        return implode("\n", array_filter([
             "ATALAYA — {$categoria}: {$tipo->nombre}",
             'Fecha: '.$evento->fecha_hora->format('d/m/Y'),
             'Horario: '.$evento->fecha_hora->format('H:i:s'),
-            "Ubicación: {$ubicacion}",
+            // Apertura, Cierre de turno y Nota no tienen ubicación.
+            $tipo->sinCamara() ? null : "Ubicación: {$ubicacion}",
             'Descripción: '.Str::limit((string) $evento->descripcion, 200),
-            "Evento #{$evento->id}",
-        ]);
+            "Novedad #{$evento->id}",
+        ]));
     }
 
     public function marcarEnviada(Notificacion $notificacion): void
@@ -102,7 +103,7 @@ class NotificacionService
             AuditoriaAcceso::EVENTO_NOTIF_FALLIDA,
             'sistema',
             descripcion: Str::limit(
-                "Notificación #{$notificacion->id} del evento #{$notificacion->evento_id} "
+                "Notificación #{$notificacion->id} de la novedad #{$notificacion->evento_id} "
                 ."a {$notificacion->grupoInteresado->nombre} falló tras {$notificacion->intentos} intento(s): "
                 .$error->getMessage(),
                 500,
@@ -132,7 +133,7 @@ class NotificacionService
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_NOTIF_REENVIO,
             $actor,
-            "Notificación #{$notificacion->id} del evento #{$notificacion->evento_id} "
+            "Notificación #{$notificacion->id} de la novedad #{$notificacion->evento_id} "
             ."reenviada a {$notificacion->grupoInteresado->nombre}.",
         );
 

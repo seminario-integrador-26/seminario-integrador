@@ -116,7 +116,7 @@ class ConsultaAuditoriaTest extends TestCase
 
         $this->assertSame(['Fecha y hora', 'Usuario', 'Email', 'Rol', 'Acción', 'IP', 'Detalle'], $hoja[0]);
         $this->assertCount(3, $hoja);
-        $this->assertSame('Evento registrado', $hoja[1][4]);
+        $this->assertSame('Novedad registrada', $hoja[1][4]);
 
         $this->assertDatabaseHas('auditoria_accesos', ['evento' => AuditoriaAcceso::EVENTO_EXPORTACION, 'user_id' => $this->admin->id]);
     }

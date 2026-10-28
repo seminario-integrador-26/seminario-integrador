@@ -239,7 +239,7 @@ export default function TacticalMap({
                                         })}
                                         className="mt-2 block border border-atalaya-cyan bg-atalaya-cyan/10 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider !text-atalaya-cyan transition hover:bg-atalaya-cyan/25"
                                     >
-                                        [ + Registrar evento aquí ]
+                                        [ + Registrar novedad aquí ]
                                     </Link>
                                 )}
                             </div>

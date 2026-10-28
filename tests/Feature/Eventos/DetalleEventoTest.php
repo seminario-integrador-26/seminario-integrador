@@ -66,7 +66,7 @@ class DetalleEventoTest extends TestCase
                 ->where('evento.categoria', 'Policía')
                 ->where('evento.fecha', '10/10/2026')
                 ->where('evento.hora', '22:15:30')
-                ->where('evento.timestamp_video', '22:15:12')
+                ->missing('evento.timestamp_video')
                 ->where('evento.descripcion', 'Sustracción de un celular.')
                 ->where('evento.punto.codigo', 'PM-P-010')
                 ->where('evento.punto.tipo', 'Provincial')

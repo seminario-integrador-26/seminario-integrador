@@ -120,7 +120,7 @@ export default function Index({
                             <Encabezado>Grupo</Encabezado>
                             <Encabezado>Destino</Encabezado>
                             <Encabezado alinear="derecha">Contactos</Encabezado>
-                            <Encabezado alinear="derecha">Tipos de evento</Encabezado>
+                            <Encabezado alinear="derecha">Tipos de novedad</Encabezado>
                             <Encabezado alinear="derecha">Notificaciones</Encabezado>
                             <Encabezado alinear="derecha">Acciones</Encabezado>
                         </Cabecera>
@@ -164,7 +164,7 @@ export default function Index({
                     </Tabla>
 
                     <Tabla
-                        titulo="Correspondencias tipo de evento → grupo"
+                        titulo="Correspondencias tipo de novedad → grupo"
                         acciones={
                             <div className="flex items-center gap-3">
                                 {cambios > 0 && (
@@ -182,14 +182,14 @@ export default function Index({
                         }
                     >
                         <Cabecera>
-                            <Encabezado>Tipo de evento</Encabezado>
+                            <Encabezado>Tipo de novedad</Encabezado>
                             {grupos.map((g) => (
                                 <Encabezado key={g.id} alinear="centro">{g.nombre}</Encabezado>
                             ))}
                         </Cabecera>
                         <Cuerpo>
                             {grupos.length === 0 && (
-                                <FilaVacia columnas={1}>Creá un grupo para asignarle tipos de evento.</FilaVacia>
+                                <FilaVacia columnas={1}>Creá un grupo para asignarle tipos de novedad.</FilaVacia>
                             )}
                             {grupos.length > 0 &&
                                 porCategoria.map(({ cat, etiqueta, tipos: delGrupo }) => [
@@ -228,7 +228,7 @@ export default function Index({
                         </Cuerpo>
                     </Tabla>
                     <p className="text-xs text-atalaya-text-dim">
-                        Los cambios rigen desde el próximo evento registrado; las
+                        Los cambios rigen desde la próxima novedad registrada; las
                         notificaciones ya enviadas no se modifican. Cada cambio
                         queda en el log de auditoría.
                     </p>

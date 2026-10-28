@@ -8,6 +8,7 @@ use App\Models\Evento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
 use App\Models\User;
+use App\Services\EventoService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\TipoEventoSeeder;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use LogicException;
 use Tests\TestCase;
@@ -159,7 +161,7 @@ class RegistroEventoTest extends TestCase
 
         $evento = $this->registrados()->sole();
 
-        $respuesta->assertSessionHas('success', "Evento #{$evento->id} registrado correctamente.")
+        $respuesta->assertSessionHas('success', "Novedad #{$evento->id} registrada correctamente.")
             ->assertSessionHas('eventoRegistrado', $evento->id);
     }
 
@@ -258,7 +260,7 @@ class RegistroEventoTest extends TestCase
                 ->where('eventos.data.0.punto', 'San Martín 1234, barrio Centro'));
     }
 
-    public function test_con_pm_se_descartan_barrio_y_direccion(): void
+    public function test_con_pm_se_descarta_el_barrio_y_se_guarda_la_direccion(): void
     {
         $this->actingAs($this->supervisor)
             ->post(route('eventos.store'), $this->datosValidos([
@@ -267,7 +269,18 @@ class RegistroEventoTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $this->assertNull($this->registrados()->sole()->barrio_id);
+        $evento = $this->registrados()->sole();
+        $this->assertNull($evento->barrio_id);
+        $this->assertSame('San Martín 1234', $evento->direccion);
+        $this->assertStringEndsWith('(San Martín 1234)', $evento->ubicacion());
+    }
+
+    public function test_con_pm_la_direccion_es_opcional_aunque_el_tipo_exija_ubicacion(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos(['direccion' => '']))
+            ->assertSessionHasNoErrors();
+
         $this->assertNull($this->registrados()->sole()->direccion);
     }
 
@@ -428,6 +441,44 @@ class RegistroEventoTest extends TestCase
                     && collect($tipos)->firstWhere('id', $this->tipo->id)['sin_camara'] === false));
     }
 
+    public function test_la_nota_no_lleva_ubicacion_ni_cuenta_en_estadisticas(): void
+    {
+        Event::fake([EventoRegistrado::class]);
+        $nota = TipoEvento::find(TipoEvento::interno(TipoEvento::NOTA));
+
+        // Aunque lleguen un PM, barrio y dirección, se descartan.
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => $nota->id,
+                'barrio_id' => Barrio::create(['nombre' => 'Centro'])->id,
+                'direccion' => 'San Martín 1234',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $evento = $this->registrados()->sole();
+        $this->assertNull($evento->punto_monitoreo_id);
+        $this->assertNull($evento->barrio_id);
+        $this->assertNull($evento->direccion);
+        $this->assertTrue($nota->sinCamara());
+        $this->assertFalse($nota->es_cuantificable);
+        Event::assertDispatched(EventoRegistrado::class);
+    }
+
+    public function test_sin_turno_abierto_no_se_puede_cerrar_de_nuevo(): void
+    {
+        Evento::factory()->create([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::CIERRE_TURNO),
+            'fecha_hora' => '2026-09-13 07:00:00',
+        ]);
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => TipoEvento::interno(TipoEvento::CIERRE_TURNO),
+                'punto_monitoreo_id' => null,
+            ]))
+            ->assertSessionHasErrors('tipo_evento_id');
+    }
+
     public function test_el_evento_registrado_es_inmutable(): void
     {
         $evento = Evento::factory()->create();
@@ -444,5 +495,40 @@ class RegistroEventoTest extends TestCase
         $this->expectException(LogicException::class);
 
         $evento->delete();
+    }
+
+    /**
+     * Dos Aperturas enviadas a la vez pasan las dos la validación del
+     * request: el service vuelve a chequear el turno bajo lock.
+     */
+    public function test_el_service_no_abre_un_turno_con_otro_abierto_aunque_pase_la_validacion(): void
+    {
+        try {
+            app(EventoService::class)->registrar([
+                'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+                'fecha' => '2026-09-13',
+                'hora' => '08:00:00',
+                'descripcion' => 'Personal presente: Ana.',
+            ], $this->supervisor);
+            $this->fail('Se abrió un segundo turno.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('tipo_evento_id', $e->errors());
+        }
+
+        $this->assertSame(0, $this->registrados()->count());
+    }
+
+    public function test_el_service_no_cierra_un_turno_que_no_esta_abierto(): void
+    {
+        $this->cerrarTurno();
+
+        $this->expectException(ValidationException::class);
+
+        app(EventoService::class)->registrar([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::CIERRE_TURNO),
+            'fecha' => '2026-09-13',
+            'hora' => '08:00:00',
+            'descripcion' => 'Sin novedades pendientes.',
+        ], $this->supervisor);
     }
 }

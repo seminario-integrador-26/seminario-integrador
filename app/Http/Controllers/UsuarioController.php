@@ -124,7 +124,7 @@ class UsuarioController extends Controller
 
         // Los eventos son inmutables y referencian a su autor: no se puede borrar.
         if ($usuario->eventos()->exists()) {
-            return back()->with('error', 'No se puede eliminar un usuario con eventos registrados.');
+            return back()->with('error', 'No se puede eliminar un usuario con novedades registradas.');
         }
 
         $emailEliminado = $usuario->email;

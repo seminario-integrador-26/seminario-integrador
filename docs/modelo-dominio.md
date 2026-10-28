@@ -24,7 +24,7 @@ esta tabla deja registradas las diferencias.
 | `PuntoMonitoreo.descripcion` | `PuntoMonitoreo.codigo` + `nombre` | El código identifica al PM en el listado oficial (US-024). |
 | `Grupo` asociado a `Evento` | — | No hay agrupación de eventos. ¿Qué representa? |
 | `Evento.eventoPrecedente` (0..1) | — | No implementado: ¿encadenar eventos relacionados? |
-| — | `Evento.timestamp_video` | Ya no se carga (decisión 2026-10-26); queda solo en eventos anteriores. |
+| — | `Evento.timestamp_video` | Ya no se carga (decisión 2026-10-26) ni se muestra ni se exporta (2026-10-28); la columna queda solo con los datos anteriores. El alta la registra el sistema en `created_at`. |
 | `GrupoEvento` 1 — `TipoEvento` | `TipoEvento.categoria` (Prevención, Convivencia Urbana, Seguridad Pública, Informativo) | Equivalente; en el código es un campo con valores fijos. |
 | `TipoEvento.notifica` (bool) | `TipoEvento` N:M `GrupoInteresado` | Se notifica si el tipo tiene grupos asociados (US-006/US-028). |
 | — | `TipoEvento.requiere_ubicacion`, `es_cuantificable` | Reglas 3 y 4 de CLAUDE.md. Faltan en el diagrama. |

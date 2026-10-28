@@ -19,6 +19,7 @@ use App\Services\Notificadores\TelegramNotificador;
 use App\Services\Notificadores\WhatsappNotificador;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Database\Seeders\TipoEventoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Carbon;
@@ -156,6 +157,57 @@ class NotificacionTest extends TestCase
         $mensaje = app(NotificacionService::class)->armarMensaje($this->evento());
 
         $this->assertStringContainsString('Ubicación: Sin ubicación', $mensaje);
+    }
+
+    public function test_el_mensaje_de_apertura_de_turno_no_lleva_ubicacion(): void
+    {
+        $this->seed(TipoEventoSeeder::class);
+
+        $mensaje = app(NotificacionService::class)->armarMensaje($this->evento([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+            'descripcion' => 'Personal presente: Ana y Luis.',
+        ]));
+
+        $this->assertStringContainsString('Internos: Apertura de turno', $mensaje);
+        $this->assertStringNotContainsString('Ubicación', $mensaje);
+        $this->assertStringContainsString('Personal presente: Ana y Luis.', $mensaje);
+    }
+
+    public function test_la_apertura_de_turno_se_notifica_a_los_grupos_que_la_reciben(): void
+    {
+        Queue::fake();
+        $this->seed(TipoEventoSeeder::class);
+        $this->guardiaLocal->tiposEvento()->attach(TipoEvento::sinCamaraIds());
+
+        $notificaciones = app(NotificacionService::class)->notificarEvento($this->evento([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+        ]));
+
+        $this->assertCount(1, $notificaciones);
+        Queue::assertPushed(EnviarNotificacionWhatsapp::class);
+    }
+
+    public function test_la_nota_no_lleva_ubicacion_en_el_mensaje(): void
+    {
+        $this->seed(TipoEventoSeeder::class);
+
+        $mensaje = app(NotificacionService::class)->armarMensaje($this->evento([
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::NOTA),
+        ]));
+
+        $this->assertStringContainsString('Internos: Nota', $mensaje);
+        $this->assertStringNotContainsString('Ubicación', $mensaje);
+    }
+
+    public function test_un_grupo_nuevo_trae_marcados_la_apertura_el_cierre_de_turno_y_la_nota(): void
+    {
+        $this->seed(TipoEventoSeeder::class);
+        $admin = User::factory()->create()->assignRole('Administrador de sistema');
+
+        $this->actingAs($admin)
+            ->get(route('grupos.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('tiposPorDefecto', TipoEvento::sinCamaraIds()));
     }
 
     // --- Envío (Job) --------------------------------------------------------

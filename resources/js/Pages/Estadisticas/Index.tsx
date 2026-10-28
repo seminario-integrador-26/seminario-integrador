@@ -122,7 +122,7 @@ function TooltipOscuro({ active, payload, label, desglose }: TooltipProps<number
                 {label ?? fila.nombre}
             </p>
             <p className="text-atalaya-text-muted">
-                {payload[0].value} evento(s)
+                {payload[0].value} novedad(es)
             </p>
             {desglose?.map(({ clave, nombre }) =>
                 fila[clave] > 0 ? (
@@ -239,7 +239,7 @@ export default function Index({ filtros, estadisticas: e }: { filtros: Filtros; 
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                        <Indicador etiqueta="Eventos" valor={e.total} />
+                        <Indicador etiqueta="Novedades" valor={e.total} />
                         <Indicador
                             etiqueta="Con ubicación"
                             valor={conUbicacion}
@@ -307,7 +307,7 @@ export default function Index({ filtros, estadisticas: e }: { filtros: Filtros; 
 
                         <Panel
                             titulo="Por tipo de PM"
-                            nota="Solo eventos con ubicación (RN11)."
+                            nota="Solo novedades con ubicación (RN11)."
                         >
                             <div className="grid grid-cols-3 gap-4">
                                 {e.por_tipo_punto.map((j) => (
@@ -323,14 +323,14 @@ export default function Index({ filtros, estadisticas: e }: { filtros: Filtros; 
                                         </p>
                                         <p className="text-xs text-atalaya-text-muted">
                                             {porcentaje(j.cantidad, conUbicacion)}{' '}
-                                            de los eventos con ubicación
+                                            de las novedades con ubicación
                                         </p>
                                     </div>
                                 ))}
                             </div>
                             <p className="mt-4 text-xs text-atalaya-text-dim">
                                 {e.por_punto.puntos_con_eventos} PM con al menos
-                                un evento en el período.
+                                una novedad en el período.
                             </p>
                         </Panel>
                     </div>
@@ -417,12 +417,12 @@ export default function Index({ filtros, estadisticas: e }: { filtros: Filtros; 
 
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         <Panel
-                            titulo="Puntos de monitoreo con más eventos"
-                            nota="Top 10 del período. No incluye eventos sin ubicación."
+                            titulo="Puntos de monitoreo con más novedades"
+                            nota="Top 10 del período. No incluye novedades sin ubicación."
                         >
                             {e.por_punto.ranking.length === 0 ? (
                                 <p className="text-sm text-atalaya-text-dim">
-                                    Sin eventos con ubicación en el período.
+                                    Sin novedades con ubicación en el período.
                                 </p>
                             ) : (
                                 <ol className="space-y-3">
@@ -457,10 +457,10 @@ export default function Index({ filtros, estadisticas: e }: { filtros: Filtros; 
                             )}
                         </Panel>
 
-                        <Panel titulo="Por tipo de evento">
+                        <Panel titulo="Por tipo de novedad">
                             {e.por_tipo.length === 0 ? (
                                 <p className="text-sm text-atalaya-text-dim">
-                                    Sin eventos en el período.
+                                    Sin novedades en el período.
                                 </p>
                             ) : (
                                 <table className="min-w-full text-sm">
@@ -468,7 +468,7 @@ export default function Index({ filtros, estadisticas: e }: { filtros: Filtros; 
                                         <tr className="text-left font-mono text-[10px] font-bold uppercase tracking-wider text-atalaya-text-muted">
                                             <th className="py-2 pr-4">Tipo</th>
                                             <th className="py-2 pr-4">Categoría</th>
-                                            <th className="py-2 text-right">Eventos</th>
+                                            <th className="py-2 text-right">Novedades</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-atalaya-border">

@@ -58,10 +58,13 @@ function Seccion({ titulo, acciones, children }: { titulo: ReactNode; acciones?:
  */
 export default function Form({
     grupo,
+    tiposPorDefecto,
     tipos,
     categorias,
 }: {
     grupo: GrupoEditable | null;
+    /** Tipos que un grupo nuevo trae marcados (Apertura, Cierre de turno y Nota). */
+    tiposPorDefecto: number[];
     tipos: TipoDestino[];
     categorias: Opciones;
 }) {
@@ -70,7 +73,7 @@ export default function Form({
         telegram_chat_id: grupo?.telegram_chat_id ?? '',
         identificador_whatsapp: grupo?.identificador_whatsapp ?? '',
         contactos: grupo?.contactos ?? [],
-        tipos_evento: grupo?.tipos_evento ?? [],
+        tipos_evento: grupo?.tipos_evento ?? tiposPorDefecto,
     });
 
     // Errores por contacto (contactos.N.campo): claves que el form no declara.
@@ -208,7 +211,7 @@ export default function Form({
 
                     <div className="space-y-6">
                         <Seccion
-                            titulo={`Tipos de evento que recibe (${data.tipos_evento.length}/${tipos.length})`}
+                            titulo={`Tipos de novedad que recibe (${data.tipos_evento.length}/${tipos.length})`}
                             acciones={
                                 <button
                                     type="button"

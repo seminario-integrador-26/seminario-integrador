@@ -79,7 +79,7 @@ class ReporteController extends Controller
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_EXPORTACION,
             $request->user(),
-            mb_substr("Exportación .{$formato} de {$planilla['cantidad']} evento(s). Filtros: "
+            mb_substr("Exportación .{$formato} de {$planilla['cantidad']} novedad(es). Filtros: "
                 .($filtros ? json_encode($filtros, JSON_UNESCAPED_UNICODE) : 'ninguno'), 0, 500),
         );
 

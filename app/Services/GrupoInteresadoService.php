@@ -88,7 +88,7 @@ class GrupoInteresadoService
             $tipos = $grupo->tiposEvento()->sync($datos['tipos_evento'] ?? []);
 
             if ($tipos['attached'] || $tipos['detached']) {
-                $cambios[] = 'tipos de evento ('.$this->describirTipos($tipos['attached'], $tipos['detached']).')';
+                $cambios[] = 'tipos de novedad ('.$this->describirTipos($tipos['attached'], $tipos['detached']).')';
                 $this->sincronizarNotifica();
             }
 

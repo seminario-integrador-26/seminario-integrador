@@ -1,6 +1,7 @@
 import InputLabel from '@/Components/InputLabel';
 import { Cabecera, Celda, Cuerpo, Encabezado, Fila, FilaVacia, Insignia, Paginacion, Tabla } from '@/Components/Tabla';
 import SecondaryButton from '@/Components/SecondaryButton';
+import FechaInput from '@/Components/FechaInput';
 import TextInput from '@/Components/TextInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -166,14 +167,14 @@ export default function Auditoria({ registros, filtros, usuarios, acciones }: Pr
                         </div>
                         <div>
                             <InputLabel htmlFor="desde" value="Desde" />
-                            <TextInput id="desde" type="date" className="mt-1 block w-full" value={form.desde} onChange={cambiar('desde')} />
+                            <FechaInput id="desde" className="mt-1 block w-full" value={form.desde} onChange={cambiar('desde')} />
                         </div>
                         <div>
                             <InputLabel htmlFor="hasta" value="Hasta" />
-                            <TextInput id="hasta" type="date" className="mt-1 block w-full" value={form.hasta} onChange={cambiar('hasta')} />
+                            <FechaInput id="hasta" className="mt-1 block w-full" value={form.hasta} onChange={cambiar('hasta')} />
                         </div>
                         <div className="md:col-span-2 lg:col-span-2">
-                            <InputLabel htmlFor="objeto" value="Objeto afectado (ID de evento, código de PM…)" />
+                            <InputLabel htmlFor="objeto" value="Objeto afectado (ID de novedad, código de PM…)" />
                             <TextInput
                                 id="objeto"
                                 type="search"

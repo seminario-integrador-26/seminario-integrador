@@ -32,11 +32,14 @@ class TipoEvento extends Model
 
     public const CIERRE_TURNO = 'Cierre de turno';
 
+    /** Nota de guardia: aviso interno, no cuenta en estadísticas. */
+    public const NOTA = 'Nota';
+
     /**
-     * Tipos Internos sin cámara asociada: no llevan punto de monitoreo ni
-     * timestamp del video.
+     * Tipos Internos sin cámara asociada: no llevan punto de monitoreo,
+     * barrio ni dirección. Se notifican a todos los grupos por defecto.
      */
-    public const SIN_CAMARA = [self::APERTURA_TURNO, self::CIERRE_TURNO];
+    public const SIN_CAMARA = [self::APERTURA_TURNO, self::CIERRE_TURNO, self::NOTA];
 
     /**
      * Constancia que crea el sistema al cargar una fe de errata: no se
@@ -57,7 +60,18 @@ class TipoEvento extends Model
     }
 
     /**
-     * Apertura o Cierre de turno (del grupo Internos): sin PM ni video.
+     * Ids de los tipos sin cámara (Apertura, Cierre de turno y Nota) que se
+     * notifican a todos los grupos por defecto.
+     *
+     * @return list<int>
+     */
+    public static function sinCamaraIds(): array
+    {
+        return array_values(array_filter(array_map(static::interno(...), self::SIN_CAMARA)));
+    }
+
+    /**
+     * Apertura, Cierre de turno o Nota (del grupo Internos): sin ubicación.
      */
     public function sinCamara(): bool
     {
@@ -89,6 +103,14 @@ class TipoEvento extends Model
      * tipo (US-028). `notifica` se deriva de acá: true si tiene al menos un
      * grupo (lo mantiene GrupoInteresadoService).
      */
+    /**
+     * Apertura o Cierre de turno (del grupo Internos).
+     */
+    public function esDeTurno(): bool
+    {
+        return $this->sinCamara() && $this->nombre !== self::NOTA;
+    }
+
     public function gruposInteresados(): BelongsToMany
     {
         return $this->belongsToMany(GrupoInteresado::class, 'grupo_interesado_tipo_evento');

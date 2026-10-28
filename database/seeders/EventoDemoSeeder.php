@@ -44,11 +44,11 @@ class EventoDemoSeeder extends Seeder
 
     private const DESCRIPCIONES = [
         'Se observa la situación por cámara y se da aviso.',
-        'Se sigue el hecho por cámara hasta que sale de cuadro.',
+        'Se sigue la novedad por cámara hasta que sale de cuadro.',
         'Se informa a la guardia y se realiza seguimiento visual.',
         'Detectado en recorrida de cámaras.',
         'Aviso recibido por llamada; se verifica por cámara.',
-        'Se constata el hecho; sin novedades posteriores.',
+        'Se constata la novedad; sin novedades posteriores.',
         'Se deja constancia para su registro.',
     ];
 
@@ -61,7 +61,7 @@ class EventoDemoSeeder extends Seeder
         }
 
         if (Evento::query()->exists()) {
-            $this->command?->warn('Ya hay eventos cargados: no se siembran los de prueba. Usá `php artisan migrate:fresh --seed` y volvé a correr este seeder.');
+            $this->command?->warn('Ya hay novedades cargadas: no se siembran las de prueba. Usá `php artisan migrate:fresh --seed` y volvé a correr este seeder.');
 
             return;
         }
@@ -76,7 +76,7 @@ class EventoDemoSeeder extends Seeder
         $puntos = PuntoMonitoreo::pluck('id');
 
         if ($supervisores->isEmpty() || $tipos->isEmpty() || $puntos->isEmpty() || ! $apertura || ! $cierre) {
-            $this->command?->error('Faltan supervisores, tipos de evento o PMs: corré primero `php artisan db:seed`.');
+            $this->command?->error('Faltan supervisores, tipos de novedad o PMs: corré primero `php artisan db:seed`.');
 
             return;
         }
@@ -125,7 +125,7 @@ class EventoDemoSeeder extends Seeder
                 }
             }
 
-            $this->command?->info("Eventos de prueba: {$total} en {$turnos} turnos cerrados.");
+            $this->command?->info("Novedades de prueba: {$total} en {$turnos} turnos cerrados.");
         });
     }
 
@@ -164,7 +164,6 @@ class EventoDemoSeeder extends Seeder
             'punto_monitoreo_id' => $puntoId,
             'usuario_id' => $autor->id,
             'fecha_hora' => $fechaHora,
-            'timestamp_video' => $puntoId ? $fechaHora->format('H:i:s') : null,
             'descripcion' => self::DESCRIPCIONES[array_rand(self::DESCRIPCIONES)],
         ]);
     }

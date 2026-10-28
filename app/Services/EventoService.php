@@ -11,6 +11,8 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Lógica de negocio del registro y consulta de eventos.
@@ -43,23 +45,63 @@ class EventoService
      */
     public function registrar(array $datos, User $autor): Evento
     {
-        $puntoMonitoreoId = $datos['punto_monitoreo_id'] ?? null;
+        $evento = DB::transaction(function () use ($datos, $autor) {
+            $this->bloquearTurno((int) $datos['tipo_evento_id']);
 
-        $evento = Evento::create([
-            'tipo_evento_id' => $datos['tipo_evento_id'],
-            'punto_monitoreo_id' => $puntoMonitoreoId,
-            // Sin PM: barrio y dirección cargados a mano (con PM, el barrio sale del PM).
-            'barrio_id' => $puntoMonitoreoId ? null : ($datos['barrio_id'] ?? null),
-            'direccion' => $puntoMonitoreoId ? null : (($datos['direccion'] ?? null) ?: null),
-            'usuario_id' => $autor->id,
-            'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
-            'descripcion' => $datos['descripcion'] ?? null,
-        ]);
+            return $this->crear($datos, $autor);
+        });
 
         // El listener en cola notifica (Observer).
         EventoRegistrado::dispatch($evento);
 
         return $evento;
+    }
+
+    /**
+     * Dos supervisores pueden enviar la Apertura (o el Cierre) a la vez y los
+     * dos pasar la validación. Con el lock sobre el tipo, el segundo espera al
+     * primero y vuelve a chequear el turno.
+     */
+    private function bloquearTurno(int $tipoId): void
+    {
+        $tipo = TipoEvento::whereKey($tipoId)->lockForUpdate()->first();
+
+        if (! $tipo?->esDeTurno()) {
+            return;
+        }
+
+        $abierto = app(LibroGuardiaService::class)->aperturaVigente() !== null;
+
+        if ($tipo->nombre === TipoEvento::APERTURA_TURNO && $abierto) {
+            throw ValidationException::withMessages([
+                'tipo_evento_id' => 'Ya hay un turno abierto: registrá el Cierre de turno antes de abrir otro.',
+            ]);
+        }
+
+        if ($tipo->nombre === TipoEvento::CIERRE_TURNO && ! $abierto) {
+            throw ValidationException::withMessages([
+                'tipo_evento_id' => 'No hay un turno abierto para cerrar.',
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $datos
+     */
+    private function crear(array $datos, User $autor): Evento
+    {
+        $puntoMonitoreoId = $datos['punto_monitoreo_id'] ?? null;
+
+        return Evento::create([
+            'tipo_evento_id' => $datos['tipo_evento_id'],
+            'punto_monitoreo_id' => $puntoMonitoreoId,
+            // Con PM, el barrio sale del PM; la dirección se guarda igual (opcional).
+            'barrio_id' => $puntoMonitoreoId ? null : ($datos['barrio_id'] ?? null),
+            'direccion' => ($datos['direccion'] ?? null) ?: null,
+            'usuario_id' => $autor->id,
+            'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
+            'descripcion' => $datos['descripcion'] ?? null,
+        ]);
     }
 
     /**

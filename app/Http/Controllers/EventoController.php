@@ -52,7 +52,6 @@ class EventoController extends Controller
             'informativo' => ! $e->tipoEvento->es_cuantificable,
             // PM o, sin PM, dirección y barrio cargados a mano.
             'punto' => $e->ubicacion(),
-            'timestamp_video' => $e->timestamp_video,
             'descripcion' => $e->descripcion,
             'autor' => $e->usuario?->name,
             'notificaciones' => $this->notificaciones($e),
@@ -105,11 +104,11 @@ class EventoController extends Controller
         $this->auditoria->registrarAccion(
             AuditoriaAcceso::EVENTO_REGISTRO_EVENTO,
             $request->user(),
-            "Evento #{$evento->id} registrado ({$evento->tipoEvento->nombre}).",
+            "Novedad #{$evento->id} registrada ({$evento->tipoEvento->nombre}).",
         );
 
         return redirect()->route('eventos.create')
-            ->with('success', "Evento #{$evento->id} registrado correctamente.")
+            ->with('success', "Novedad #{$evento->id} registrada correctamente.")
             ->with('eventoRegistrado', $evento->id);
     }
 
@@ -151,7 +150,6 @@ class EventoController extends Controller
                     'latitud' => $punto->latitud,
                     'longitud' => $punto->longitud,
                 ] : null,
-                'timestamp_video' => $vigentes['timestamp_video'],
                 // Sin PM: lo cargado a mano.
                 'barrio' => $evento->barrio?->nombre,
                 'direccion' => $evento->direccion,

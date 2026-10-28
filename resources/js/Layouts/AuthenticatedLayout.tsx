@@ -48,8 +48,8 @@ export default function AuthenticatedLayout({
         {
             titulo: 'Operación',
             items: [
-                puedeConsultarEventos && { etiqueta: 'Eventos', ruta: 'eventos.index', activo: actual('eventos.index', 'eventos.show', 'erratas.*') },
-                esSupervisor && { etiqueta: 'Registrar evento', ruta: 'eventos.create', activo: actual('eventos.create') },
+                puedeConsultarEventos && { etiqueta: 'Novedades', ruta: 'eventos.index', activo: actual('eventos.index', 'eventos.show', 'erratas.*') },
+                esSupervisor && { etiqueta: 'Registrar novedad', ruta: 'eventos.create', activo: actual('eventos.create') },
             ],
         },
         {

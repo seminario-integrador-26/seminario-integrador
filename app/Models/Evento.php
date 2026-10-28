@@ -19,6 +19,7 @@ use LogicException;
  * usuario_id (Supervisor autor), fecha_hora (del hecho),
  * timestamp_video (hh:mm:ss; ya no se carga, solo eventos anteriores), descripcion, created_at.
  * Sin PM: barrio_id y direccion (obligatorios si el tipo exige ubicación).
+ * Con PM: el barrio sale del PM; direccion opcional (dónde fue exactamente).
  */
 #[Fillable([
     'tipo_evento_id',
@@ -51,8 +52,8 @@ class Evento extends Model
      */
     protected static function booted(): void
     {
-        static::updating(fn () => throw new LogicException('Los eventos son inmutables: usar fe de errata.'));
-        static::deleting(fn () => throw new LogicException('Los eventos no se eliminan: usar fe de errata.'));
+        static::updating(fn () => throw new LogicException('Las novedades son inmutables: usar fe de errata.'));
+        static::deleting(fn () => throw new LogicException('Las novedades no se eliminan: usar fe de errata.'));
     }
 
     /**
@@ -97,14 +98,17 @@ class Evento extends Model
     }
 
     /**
-     * Ubicación legible: el PM ("PM-M-001 — Plaza") o, sin PM, la dirección y
+     * Ubicación legible: el PM ("PM-M-001 — Plaza", más la dirección si se
+     * cargó: "PM-M-001 — Plaza (San Martín 123)") o, sin PM, la dirección y
      * el barrio cargados a mano ("San Martín 123, barrio Centro"). Null si no
      * tiene ninguno. Requiere cargadas las relaciones puntoMonitoreo y barrio.
      */
     public function ubicacion(): ?string
     {
         if ($this->puntoMonitoreo) {
-            return "{$this->puntoMonitoreo->codigo} — {$this->puntoMonitoreo->nombre}";
+            $pm = "{$this->puntoMonitoreo->codigo} — {$this->puntoMonitoreo->nombre}";
+
+            return $this->direccion ? "{$pm} ({$this->direccion})" : $pm;
         }
 
         $partes = array_filter([

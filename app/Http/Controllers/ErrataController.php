@@ -47,7 +47,6 @@ class ErrataController extends Controller
                 'fecha' => $fechaHora->format('Y-m-d'),
                 'hora' => $fechaHora->format('H:i:s'),
                 'punto_monitoreo_id' => $vigentes['punto_monitoreo_id'] ? (int) $vigentes['punto_monitoreo_id'] : null,
-                'timestamp_video' => $vigentes['timestamp_video'],
                 'descripcion' => $vigentes['descripcion'],
                 // Sin PM: dirección y barrio cargados a mano.
                 'ubicacion' => $evento->load('barrio:id,nombre')->ubicacion(),
@@ -74,7 +73,7 @@ class ErrataController extends Controller
             $request->user(),
             // Autor del evento: deja a la vista correcciones sobre eventos
             // de otros supervisores.
-            "Fe de errata sobre el evento #{$evento->id}; cargado por {$evento->usuario->name}.",
+            "Fe de errata sobre la novedad #{$evento->id}; cargada por {$evento->usuario->name}.",
         );
 
         return redirect()->route('eventos.show', $evento)

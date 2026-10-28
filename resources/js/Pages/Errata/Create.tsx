@@ -1,9 +1,11 @@
 import Alert from '@/Components/Alert';
 import FlashMessages from '@/Components/FlashMessages';
 import InputError from '@/Components/InputError';
+import HoraInput from '@/Components/HoraInput';
 import InputLabel from '@/Components/InputLabel';
 import MapaPuntosMonitoreo, { EncabezadoMapaPuntos } from '@/Components/MapaPuntosMonitoreo';
 import PrimaryButton from '@/Components/PrimaryButton';
+import FechaInput from '@/Components/FechaInput';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { Opciones, PuntoMapa, TipoEventoOpcion } from '@/types';
@@ -19,7 +21,6 @@ interface EventoVigente {
     /** hh:mm:ss */
     hora: string;
     punto_monitoreo_id: number | null;
-    timestamp_video: string | null;
     descripcion: string | null;
     /** Dirección y barrio cuando no hay PM (Evento::ubicacion). */
     ubicacion: string | null;
@@ -64,25 +65,25 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
             header={
                 <div className="flex items-center justify-between gap-4">
                     <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                        Fe de errata · Evento #{evento.id}
+                        Fe de errata · Novedad #{evento.id}
                     </h2>
                     <Link
                         href={route('eventos.show', evento.id)}
                         className="font-mono text-xs font-bold uppercase text-atalaya-cyan hover:underline"
                     >
-                        ← Volver al evento
+                        ← Volver a la novedad
                     </Link>
                 </div>
             }
         >
-            <Head title={`Fe de errata · Evento #${evento.id}`} />
+            <Head title={`Fe de errata · Novedad #${evento.id}`} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
                     <FlashMessages />
 
                     <Alert variant="info">
-                        Los datos del evento no se modifican: la fe de errata
+                        Los datos de la novedad no se modifican: la fe de errata
                         registra el motivo de la corrección, con tu usuario y
                         la hora, y deja constancia en el libro de guardia.
                     </Alert>
@@ -94,7 +95,7 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                         <div className="space-y-6 lg:col-span-2">
                             <fieldset disabled className="space-y-6">
                                 <div>
-                                    <InputLabel htmlFor="tipo_evento_id" value="Tipo de evento" />
+                                    <InputLabel htmlFor="tipo_evento_id" value="Tipo de novedad" />
                                     <TextInput
                                         id="tipo_evento_id"
                                         className={'mt-1 block w-full ' + bloqueadoClass}
@@ -105,21 +106,19 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
 
                                 <div className="grid gap-6 sm:grid-cols-2">
                                     <div>
-                                        <InputLabel htmlFor="fecha" value="Fecha del hecho" />
-                                        <TextInput
+                                        <InputLabel htmlFor="fecha" value="Fecha de la novedad" />
+                                        <FechaInput
                                             id="fecha"
-                                            type="date"
                                             className={'mt-1 block w-full ' + bloqueadoClass}
                                             value={evento.fecha}
                                             readOnly
                                         />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="hora" value="Horario del hecho" />
-                                        <TextInput
+                                        <InputLabel htmlFor="hora" value="Horario de la novedad" />
+                                        <HoraInput
                                             id="hora"
-                                            type="time"
-                                            step="1"
+                                            segundos
                                             className={'mt-1 block w-full ' + bloqueadoClass}
                                             value={evento.hora}
                                             readOnly
@@ -163,7 +162,7 @@ export default function Create({ evento, tipos, categorias, puntos, tiposPunto }
                                     rows={4}
                                     maxLength={1000}
                                     autoFocus
-                                    placeholder="Ej.: se cargó el PM equivocado; el hecho fue en la esquina de enfrente (PM-M-045)."
+                                    placeholder="Ej.: se cargó el PM equivocado; la novedad fue en la esquina de enfrente (PM-M-045)."
                                     className={campoClass}
                                     value={data.motivo}
                                     onChange={(e) => setData('motivo', e.target.value)}

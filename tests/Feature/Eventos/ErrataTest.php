@@ -205,7 +205,7 @@ class ErrataTest extends TestCase
 
         $auditoria = AuditoriaAcceso::where('evento', AuditoriaAcceso::EVENTO_ERRATA)->latest('id')->firstOrFail();
         $this->assertSame($otroSupervisor->id, $auditoria->user_id);
-        $this->assertStringContainsString('cargado por Ana Supervisora', $auditoria->descripcion);
+        $this->assertStringContainsString('cargada por Ana Supervisora', $auditoria->descripcion);
 
         $this->actingAs($otroSupervisor)
             ->get(route('eventos.show', $this->evento))

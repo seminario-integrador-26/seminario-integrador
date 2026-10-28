@@ -237,7 +237,7 @@ export default function Index({ puntos, filtros, resumen, mapa, tiposPunto, barr
                             <Encabezado>Tipo</Encabezado>
                             <Encabezado>Barrio / cuadrante</Encabezado>
                             <Encabezado>Coordenadas</Encabezado>
-                            <Encabezado alinear="derecha">Eventos</Encabezado>
+                            <Encabezado alinear="derecha">Novedades</Encabezado>
                             <Encabezado alinear="derecha">Acciones</Encabezado>
                         </Cabecera>
                         <Cuerpo>
@@ -285,7 +285,7 @@ export default function Index({ puntos, filtros, resumen, mapa, tiposPunto, barr
                         ¿Eliminar el PM {porEliminar?.codigo}?
                     </h3>
                     <p className="text-sm text-atalaya-text-muted">
-                        Solo se pueden eliminar puntos sin eventos. La acción
+                        Solo se pueden eliminar puntos sin novedades. La acción
                         queda registrada en la auditoría.
                     </p>
                     <div className="flex justify-end gap-3">

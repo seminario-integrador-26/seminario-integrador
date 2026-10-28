@@ -24,7 +24,7 @@ trait ValidaDatosDeEvento
             'direccion' => is_string($d = $this->input('direccion')) ? trim($d) : $d,
         ]);
 
-        // Apertura y Cierre de turno no tienen cámara ni ubicación.
+        // Apertura, Cierre de turno y Nota no tienen cámara ni ubicación.
         if ($this->tipoEvento()?->sinCamara()) {
             $this->merge(['punto_monitoreo_id' => null, 'barrio_id' => null, 'direccion' => null]);
         }
@@ -47,7 +47,8 @@ trait ValidaDatosDeEvento
             'hora' => ['required', 'date_format:H:i:s'],
             'punto_monitoreo_id' => ['nullable', 'integer', 'exists:puntos_monitoreo,id'],
             // Regla de negocio 3: si el tipo exige ubicación, va un PM o, sin
-            // PM, barrio y dirección. Con PM se descartan (el barrio sale del PM).
+            // PM, barrio y dirección. Con PM el barrio sale del PM y la
+            // dirección es opcional (la novedad suele no estar justo en la cámara).
             'barrio_id' => [
                 Rule::excludeIf(fn () => filled($this->input('punto_monitoreo_id'))),
                 'nullable',
@@ -56,9 +57,9 @@ trait ValidaDatosDeEvento
                 'exists:barrios,id',
             ],
             'direccion' => [
-                Rule::excludeIf(fn () => filled($this->input('punto_monitoreo_id'))),
                 'nullable',
-                Rule::requiredIf(fn () => (bool) $this->tipoEvento()?->requiere_ubicacion),
+                Rule::requiredIf(fn () => blank($this->input('punto_monitoreo_id'))
+                    && (bool) $this->tipoEvento()?->requiere_ubicacion),
                 'string',
                 'max:255',
             ],
@@ -82,7 +83,7 @@ trait ValidaDatosDeEvento
 
                 // US-005: el hecho no puede ser posterior al momento de la carga.
                 if ($fechaHora->isFuture()) {
-                    $validator->errors()->add('fecha', 'La fecha y hora del hecho no pueden ser posteriores al momento actual.');
+                    $validator->errors()->add('fecha', 'La fecha y hora de la novedad no pueden ser posteriores al momento actual.');
                 }
             },
             // Todo evento pertenece a un turno: sin Apertura vigente solo se
@@ -101,7 +102,7 @@ trait ValidaDatosDeEvento
                     $validator->errors()->add('tipo_evento_id', "Ya hay un turno abierto (Apertura #{$apertura->id}): registrá el Cierre de turno antes de abrir otro.");
                 } elseif ($apertura && ! $validator->errors()->hasAny(['fecha', 'hora'])
                     && "{$this->input('fecha')} {$this->input('hora')}" < $apertura->fecha_hora->format('Y-m-d H:i:s')) {
-                    $validator->errors()->add('fecha', 'El hecho no puede ser anterior a la apertura del turno ('.$apertura->fecha_hora->format('d/m/Y H:i:s').').');
+                    $validator->errors()->add('fecha', 'La novedad no puede ser anterior a la apertura del turno ('.$apertura->fecha_hora->format('d/m/Y H:i:s').').');
                 }
             },
         ];

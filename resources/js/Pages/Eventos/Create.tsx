@@ -1,12 +1,14 @@
 import Alert from '@/Components/Alert';
 import FlashMessages from '@/Components/FlashMessages';
 import InputError from '@/Components/InputError';
+import HoraInput from '@/Components/HoraInput';
 import InputLabel from '@/Components/InputLabel';
 import MapaPuntosMonitoreo, {
     EncabezadoMapaPuntos,
 } from '@/Components/MapaPuntosMonitoreo';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SelectorPuntoMonitoreo from '@/Components/SelectorPuntoMonitoreo';
+import FechaInput from '@/Components/FechaInput';
 import TextInput from '@/Components/TextInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -98,6 +100,10 @@ export default function Create({
     // Apertura y Cierre de turno no tienen cámara: no se pide PM.
     const sinCamara = Boolean(tipoSeleccionado?.sin_camara);
     const hayPunto = data.punto_monitoreo_id !== null;
+    const puntoSeleccionado = puntos.find((p) => p.id === data.punto_monitoreo_id);
+    // Sin PM la dirección es obligatoria si el tipo exige ubicación; con PM es
+    // opcional (la novedad suele no estar justo donde está la cámara).
+    const direccionObligatoria = requiereUbicacion && !hayPunto;
     // Apertura y Cierre de turno se registran como cualquier evento: lo que
     // antes pedía la tarjeta de turno va en la descripción.
     const ayudaDescripcion = AYUDA_DESCRIPCION[tipoSeleccionado?.nombre ?? ''];
@@ -106,9 +112,8 @@ export default function Create({
         setData((d) => ({
             ...d,
             punto_monitoreo_id: id,
-            // Con PM, el barrio sale del PM.
+            // Con PM, el barrio sale del PM; la dirección se conserva.
             barrio_id: id ? '' : d.barrio_id,
-            direccion: id ? '' : d.direccion,
         }));
 
     const submit = (e: FormEvent) => {
@@ -125,11 +130,11 @@ export default function Create({
         <AuthenticatedLayout
             header={
                 <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                    Registrar evento
+                    Registrar novedad
                 </h2>
             }
         >
-            <Head title="Registrar evento" />
+            <Head title="Registrar novedad" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
@@ -140,7 +145,7 @@ export default function Create({
                                 href={route('eventos.show', flash.eventoRegistrado)}
                                 className="font-bold underline underline-offset-2 hover:text-white"
                             >
-                                Ver evento #{flash.eventoRegistrado}
+                                Ver novedad #{flash.eventoRegistrado}
                             </Link>
                         </Alert>
                     ) : (
@@ -154,7 +159,7 @@ export default function Create({
                     ) : (
                         <Alert variant="info">
                             No hay un turno abierto: registrá la Apertura de turno
-                            para empezar a cargar eventos.
+                            para empezar a cargar novedades.
                         </Alert>
                     )}
 
@@ -162,10 +167,11 @@ export default function Create({
                         onSubmit={submit}
                         className="grid gap-6 border border-atalaya-border bg-atalaya-surface p-6 lg:grid-cols-5"
                     >
-                        <div className="space-y-6 lg:col-span-2">
+                        {/* En pantalla ancha, la descripción crece hasta la base del mapa. */}
+                        <div className="space-y-6 lg:col-span-2 lg:flex lg:flex-col">
                             <div>
                                 <InputLabel htmlFor="tipo_evento_id">
-                                    Tipo de evento
+                                    Tipo de novedad
                                     <Obligatorio />
                                 </InputLabel>
                                 <Select
@@ -224,12 +230,11 @@ export default function Create({
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div>
                                     <InputLabel htmlFor="fecha">
-                                        Fecha del hecho
+                                        Fecha de la novedad
                                         <Obligatorio />
                                     </InputLabel>
-                                    <TextInput
+                                    <FechaInput
                                         id="fecha"
-                                        type="date"
                                         max={hoy()}
                                         className="mt-1 block w-full"
                                         value={data.fecha}
@@ -245,13 +250,12 @@ export default function Create({
 
                                 <div>
                                     <InputLabel htmlFor="hora">
-                                        Horario del hecho
+                                        Horario de la novedad
                                         <Obligatorio />
                                     </InputLabel>
-                                    <TextInput
+                                    <HoraInput
                                         id="hora"
-                                        type="time"
-                                        step="1"
+                                        segundos
                                         className="mt-1 block w-full"
                                         value={data.hora}
                                         onChange={(e) =>
@@ -302,8 +306,25 @@ export default function Create({
                                     </p>
                                 </div>
 
-                                {!hayPunto && (
-                                    <div className="grid gap-6 sm:grid-cols-2">
+                                <div className="grid gap-6 sm:grid-cols-2">
+                                        {hayPunto ? (
+                                            <div>
+                                                <InputLabel htmlFor="barrio_pm">
+                                                    Barrio
+                                                    <span className="font-normal text-atalaya-text-dim">
+                                                        {' '}
+                                                        (del punto de monitoreo)
+                                                    </span>
+                                                </InputLabel>
+                                                <TextInput
+                                                    id="barrio_pm"
+                                                    readOnly
+                                                    tabIndex={-1}
+                                                    className="mt-1 block w-full cursor-default opacity-70"
+                                                    value={puntoSeleccionado?.barrio ?? 'Sin barrio cargado'}
+                                                />
+                                            </div>
+                                        ) : (
                                         <div>
                                             <InputLabel htmlFor="barrio_id">
                                                 Barrio
@@ -337,10 +358,11 @@ export default function Create({
                                                 message={errors.barrio_id}
                                             />
                                         </div>
+                                        )}
                                         <div>
                                             <InputLabel htmlFor="direccion">
                                                 Dirección
-                                                {requiereUbicacion ? (
+                                                {direccionObligatoria ? (
                                                     <Obligatorio />
                                                 ) : (
                                                     <span className="font-normal text-atalaya-text-dim">
@@ -365,11 +387,10 @@ export default function Create({
                                             />
                                         </div>
                                     </div>
-                                )}
                                 </>
                             )}
 
-                            <div>
+                            <div className="lg:flex lg:flex-1 lg:flex-col">
                                 <InputLabel htmlFor="descripcion">
                                     Descripción
                                     <Obligatorio />
@@ -378,7 +399,7 @@ export default function Create({
                                     id="descripcion"
                                     rows={4}
                                     maxLength={5000}
-                                    className={campoClass}
+                                    className={`${campoClass} lg:flex-1`}
                                     value={data.descripcion}
                                     placeholder={ayudaDescripcion}
                                     onChange={(e) =>
@@ -405,13 +426,13 @@ export default function Create({
                         <div className="flex items-center justify-between gap-4 border-t border-atalaya-border pt-4 lg:col-span-5">
                             <p className="text-xs text-atalaya-text-dim">
                                 <span className="text-atalaya-crimson">*</span>{' '}
-                                Obligatorio. El evento no se puede editar una
-                                vez registrado.
+                                Obligatorio. La novedad no se puede editar una
+                                vez registrada.
                             </p>
                             <PrimaryButton
                                 disabled={processing}
                             >
-                                Registrar evento
+                                Registrar novedad
                             </PrimaryButton>
                         </div>
                     </form>

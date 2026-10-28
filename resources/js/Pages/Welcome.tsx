@@ -82,11 +82,11 @@ export default function Welcome({ auth }: PageProps) {
                         </div>
 
                         <h1 className="max-w-3xl font-mono text-3xl font-black uppercase leading-tight tracking-tight text-white sm:text-5xl">
-                            Plataforma de registro y telemetría de eventos
+                            Plataforma de registro y telemetría de novedades
                         </h1>
 
                         <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-atalaya-text-muted sm:text-base">
-                            Registro único y centralizado de los eventos
+                            Registro único y centralizado de las novedades
                             detectados por el Centro de Monitoreo de la Ciudad
                             de Villa María: clasificación, localización
                             cartográfica, notificación y consulta.
@@ -114,12 +114,12 @@ export default function Welcome({ auth }: PageProps) {
                                     [ Regla RN-01 ]
                                 </div>
                                 <h2 className="mb-2 font-mono text-base font-bold uppercase text-white">
-                                    Eventos inmutables y fe de errata
+                                    Novedades inmutables y fe de errata
                                 </h2>
                                 <p className="font-sans text-xs leading-relaxed text-atalaya-text-muted">
                                     Los registros no admiten edición ni borrado.
                                     Toda corrección se asienta como una fe de
-                                    errata que referencia al evento original.
+                                    errata que referencia a la novedad original.
                                 </p>
                             </div>
                             <div className="mt-4 border-t border-atalaya-border/40 pt-3 font-mono text-[11px] text-atalaya-text-dim">
@@ -136,7 +136,7 @@ export default function Welcome({ auth }: PageProps) {
                                     Policía · Guardia Local · Internos
                                 </h2>
                                 <p className="font-sans text-xs leading-relaxed text-atalaya-text-muted">
-                                    Cada evento se clasifica al registrarse y se
+                                    Cada novedad se clasifica al registrarse y se
                                     georreferencia con OpenStreetMap sobre los
                                     puntos de monitoreo cuando el tipo lo
                                     requiere.

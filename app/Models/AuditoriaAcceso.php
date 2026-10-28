@@ -93,7 +93,7 @@ class AuditoriaAcceso extends Model
         self::EVENTO_LOGIN_FALLIDO => 'Intento fallido',
         self::EVENTO_LOGOUT => 'Cierre de sesión',
         self::EVENTO_BLOQUEO => 'Cuenta bloqueada',
-        self::EVENTO_REGISTRO_EVENTO => 'Evento registrado',
+        self::EVENTO_REGISTRO_EVENTO => 'Novedad registrada',
         self::EVENTO_ALTA_USUARIO => 'Usuario creado',
         self::EVENTO_MOD_USUARIO => 'Usuario actualizado',
         self::EVENTO_BAJA_USUARIO => 'Usuario eliminado',

@@ -78,7 +78,7 @@ class GrupoInteresadoController extends Controller
     public function destroy(Request $request, GrupoInteresado $grupo): RedirectResponse
     {
         if ($grupo->notificaciones()->exists()) {
-            return back()->with('error', "El grupo {$grupo->nombre} ya recibió notificaciones: no se puede eliminar. Quitale los tipos de evento para que deje de recibirlas.");
+            return back()->with('error', "El grupo {$grupo->nombre} ya recibió notificaciones: no se puede eliminar. Quitale los tipos de novedad para que deje de recibirlas.");
         }
 
         $grupo->delete();
@@ -107,7 +107,7 @@ class GrupoInteresadoController extends Controller
 
         $this->auditar($request, AuditoriaAcceso::EVENTO_CORRESPONDENCIAS, $detalle);
 
-        return back()->with('success', 'Correspondencias guardadas: rigen desde el próximo evento.');
+        return back()->with('success', 'Correspondencias guardadas: rigen desde la próxima novedad.');
     }
 
     private function formulario(?GrupoInteresado $grupo): Response
@@ -123,6 +123,8 @@ class GrupoInteresadoController extends Controller
                 'contactos' => $grupo->contactos->map->only(['nombre', 'numero_whatsapp'])->values(),
                 'tipos_evento' => $grupo->tiposEvento->pluck('id'),
             ] : null,
+            // Un grupo nuevo recibe por defecto la Apertura, el Cierre de turno y la Nota.
+            'tiposPorDefecto' => TipoEvento::sinCamaraIds(),
             'tipos' => $this->tipos(),
             'categorias' => GrupoEvento::opciones(),
         ]);

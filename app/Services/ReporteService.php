@@ -116,7 +116,7 @@ class ReporteService
 
         if ($formato === 'xls' && $eventos->count() > XlsExportador::MAX_FILAS) {
             throw new DomainException(
-                "Son {$eventos->count()} eventos y el formato .xls admite hasta ".XlsExportador::MAX_FILAS
+                "Son {$eventos->count()} novedades y el formato .xls admite hasta ".XlsExportador::MAX_FILAS
                 .'. Exportá a .xlsx o acotá los filtros.'
             );
         }
@@ -132,7 +132,6 @@ class ReporteService
             $e->puntoMonitoreo?->tipoPuntoMonitoreo->nombre,
             $e->puntoMonitoreo?->barrio?->nombre ?? $e->barrio?->nombre,
             $e->direccion,
-            $e->timestamp_video,
             $e->descripcion,
             $e->usuario?->name,
             $this->observacion($e),
@@ -141,13 +140,13 @@ class ReporteService
         [$desde, $hasta] = $this->rangoDelArchivo($filtros, $eventos);
 
         return [
-            'nombre' => "Eventos_CMU_{$desde}_{$hasta}.{$formato}",
+            'nombre' => "Novedades_CMU_{$desde}_{$hasta}.{$formato}",
             'cantidad' => count($filas),
             'contenido' => $this->exportacion->exportar($formato, [
-                'titulo' => 'Eventos CMU',
+                'titulo' => 'Novedades CMU',
                 'columnas' => [
                     'ID', 'Fecha', 'Horario', 'Categoría', 'Tipo', 'PM código', 'PM nombre',
-                    'Tipo PM', 'Barrio', 'Dirección', 'Timestamp video', 'Descripción', 'Registró', 'Observación',
+                    'Tipo PM', 'Barrio', 'Dirección', 'Descripción', 'Registró', 'Observación',
                 ],
                 'filas' => $filas,
             ]),
@@ -157,14 +156,14 @@ class ReporteService
     private function observacion(Evento $evento): ?string
     {
         if (! $evento->tipoEvento->es_cuantificable) {
-            return 'Evento informativo';
+            return 'Novedad informativa';
         }
 
         if ($evento->punto_monitoreo_id) {
             return null;
         }
 
-        return $evento->barrio_id || $evento->direccion ? 'Evento sin PM' : 'Evento sin ubicación';
+        return $evento->barrio_id || $evento->direccion ? 'Novedad sin PM' : 'Novedad sin ubicación';
     }
 
     /**
