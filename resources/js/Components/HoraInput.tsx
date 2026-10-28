@@ -10,6 +10,8 @@ interface Props {
     onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
     /** Permite cargar segundos (HH:MM:SS); son opcionales al tipear. */
     segundos?: boolean;
+    /** Si está vacío, el reloj carga la hora actual al abrirse. */
+    ahoraAlAbrir?: boolean;
     readOnly?: boolean;
     disabled?: boolean;
     className?: string;
@@ -42,6 +44,7 @@ export default function HoraInput({
     onChange,
     onBlur,
     segundos = false,
+    ahoraAlAbrir = false,
     readOnly = false,
     disabled = false,
     className = '',
@@ -151,7 +154,12 @@ export default function HoraInput({
                 aria-label="Elegir hora"
                 aria-expanded={abierto}
                 disabled={bloqueado}
-                onClick={() => setAbierto((a) => !a)}
+                onClick={() => {
+                    if (!abierto && ahoraAlAbrir && !value) {
+                        onChange?.({ target: { value: new Date().toTimeString().slice(0, segundos ? 8 : 5) } });
+                    }
+                    setAbierto((a) => !a);
+                }}
                 className="absolute end-2 top-1/2 -translate-y-1/2 text-atalaya-text-muted hover:text-atalaya-cyan disabled:pointer-events-none"
             >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

@@ -291,6 +291,7 @@ export default function Create({
                                     <HoraInput
                                         id="hora"
                                         segundos
+                                        ahoraAlAbrir
                                         className="mt-1 block w-full"
                                         value={data.hora}
                                         onChange={(e) =>
