@@ -28,7 +28,8 @@ const esValida = (hora: string) =>
 
 /**
  * Campo de hora en formato 24 hs, sin depender del idioma del navegador
- * (el input type="time" muestra AM/PM con el navegador en inglés).
+ * (el input type="time" muestra AM/PM con el navegador en inglés). El reloj
+ * es solo indicativo: no abre el selector nativo, que traería el AM/PM.
  */
 export default function HoraInput({
     id,
@@ -54,23 +55,37 @@ export default function HoraInput({
     };
 
     return (
-        <TextInput
-            id={id}
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder={segundos ? 'hh:mm:ss' : 'hh:mm'}
-            maxLength={segundos ? 8 : 5}
-            readOnly={readOnly}
-            disabled={disabled}
-            value={texto}
-            onChange={(e) => escribir(e.target.value)}
-            onBlur={(e) => {
-                // Lo incompleto o inválido vuelve al último valor bueno.
-                setTexto(value);
-                onBlur?.(e);
-            }}
-            className={className}
-        />
+        <div className={'relative ' + className}>
+            <TextInput
+                id={id}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder={segundos ? 'hh:mm:ss' : 'hh:mm'}
+                maxLength={segundos ? 8 : 5}
+                readOnly={readOnly}
+                disabled={disabled}
+                value={texto}
+                onChange={(e) => escribir(e.target.value)}
+                onBlur={(e) => {
+                    // Lo incompleto o inválido vuelve al último valor bueno.
+                    setTexto(value);
+                    onBlur?.(e);
+                }}
+                className="block w-full pe-8"
+            />
+            <svg
+                className="pointer-events-none absolute end-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-atalaya-text-muted"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+            >
+                <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
+                    clipRule="evenodd"
+                />
+            </svg>
+        </div>
     );
 }
