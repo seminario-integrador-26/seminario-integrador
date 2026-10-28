@@ -93,7 +93,10 @@ class EventoController extends Controller
             'turno' => $apertura ? [
                 'id' => $apertura->id,
                 'desde' => $apertura->fecha_hora->format('d/m/Y H:i'),
+                'guardia' => $apertura->guardia(),
             ] : null,
+            'franjas' => Evento::FRANJAS,
+            'gruposGuardia' => Evento::GRUPOS_GUARDIA,
         ]);
     }
 
@@ -141,6 +144,7 @@ class EventoController extends Controller
                 'fecha' => $fechaHora->format('d/m/Y'),
                 'hora' => $fechaHora->format('H:i:s'),
                 'descripcion' => $vigentes['descripcion'],
+                'guardia' => $evento->guardia(),
                 'punto' => $punto ? [
                     'codigo' => $punto->codigo,
                     'nombre' => $punto->nombre,

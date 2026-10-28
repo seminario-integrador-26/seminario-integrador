@@ -85,6 +85,7 @@ class LibroGuardiaService
                     'fin' => $cierre?->fecha_hora->format('H:i'),
                     'fecha_fin' => $cierre?->fecha_hora->format('d/m/Y'),
                     'supervisor' => $apertura->usuario?->name,
+                    'guardia' => $apertura->guardia(),
                     'eventos' => $cierre ? $this->eventosDe($apertura, $cierre)->count() : null,
                 ];
             });

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\EnviarNotificacionWhatsapp;
 use App\Models\AuditoriaAcceso;
 use App\Models\Evento;
+use App\Models\GrupoEvento;
 use App\Models\GrupoInteresado;
 use App\Models\Notificacion;
 use App\Models\User;
@@ -54,27 +55,31 @@ class NotificacionService
     }
 
     /**
-     * Mensaje de US-006: tipo, fecha, horario, descripción resumida y PM si aplica.
+     * Mensaje de US-006, en el formato que ya usaba la guardia por WhatsApp
+     * (decisión 2026-10-28): una línea corta, fácil de leer y de buscar.
+     *
+     *   06.56hs - Se observa por cámara Nº 41 ...
+     *   26/10 06.56hs - ...                    (si no es de hoy)
+     *   07.00hs - Apertura de turno: ...      (tipos Internos)
      */
     public function armarMensaje(Evento $evento): string
     {
         $tipo = $evento->tipoEvento;
-        $categoria = $tipo->grupoEvento->nombre;
-        $punto = $evento->puntoMonitoreo;
+        $momento = $evento->fecha_hora->format('H.i').'hs';
 
-        $ubicacion = $punto
-            ? "{$punto->codigo} — {$punto->nombre} ({$punto->tipoPuntoMonitoreo->nombre})".($evento->direccion ? ", {$evento->direccion}" : '')
-            : ($evento->ubicacion() ?? 'Sin ubicación');
+        if (! $evento->fecha_hora->isToday()) {
+            $momento = $evento->fecha_hora->format('d/m').' '.$momento;
+        }
 
-        return implode("\n", array_filter([
-            "ATALAYA — {$categoria}: {$tipo->nombre}",
-            'Fecha: '.$evento->fecha_hora->format('d/m/Y'),
-            'Horario: '.$evento->fecha_hora->format('H:i:s'),
-            // Apertura, Cierre de turno y Nota no tienen ubicación.
-            $tipo->sinCamara() ? null : "Ubicación: {$ubicacion}",
-            'Descripción: '.Str::limit((string) $evento->descripcion, 200),
-            "Novedad #{$evento->id}",
-        ]));
+        // Los Internos (turno, Nota, Errata...) no se reconocen por la descripción.
+        // La Apertura suma franja y grupo: "Apertura de turno (Mañana · Grupo 2): ...".
+        $guardia = $evento->guardia() ? " ({$evento->guardia()})" : '';
+        $texto = $tipo->grupoEvento?->codigo === GrupoEvento::INTERNOS
+            ? "{$tipo->nombre}{$guardia}: {$evento->descripcion}"
+            : (string) $evento->descripcion;
+
+        // Telegram corta en 4096 caracteres.
+        return Str::limit("{$momento} - {$texto}", 4000);
     }
 
     public function marcarEnviada(Notificacion $notificacion): void

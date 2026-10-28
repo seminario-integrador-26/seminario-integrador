@@ -43,6 +43,8 @@ interface EventoDetalle {
     /** Sin PM: barrio y dirección cargados a mano. */
     barrio: string | null;
     direccion: string | null;
+    /** Apertura de turno: "Mañana · Grupo 2". */
+    guardia: string | null;
     erratas: ErrataDetalle[];
     autor: string | null;
     registrado: string | null;
@@ -155,6 +157,11 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             <Dato etiqueta="Horario de la novedad">
                                 <span className="font-mono">{evento.hora}</span>
                             </Dato>
+                            {evento.guardia && (
+                                <Dato etiqueta="Turno y grupo">
+                                    {evento.guardia}
+                                </Dato>
+                            )}
                             <Dato
                                 etiqueta="Descripción"
                                 className="sm:col-span-3"

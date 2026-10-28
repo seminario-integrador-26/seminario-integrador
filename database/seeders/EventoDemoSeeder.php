@@ -37,9 +37,9 @@ class EventoDemoSeeder extends Seeder
 
     /** [hora_inicio, hora_fin, peso de eventos del turno] */
     private const TURNOS = [
-        ['06:00:00', '14:00:00', 0.8],
-        ['14:00:00', '22:00:00', 1.4],
-        ['22:00:00', '06:00:00', 1.1],
+        ['06:00:00', '14:00:00', 0.8, 'manana'],
+        ['14:00:00', '22:00:00', 1.4, 'tarde'],
+        ['22:00:00', '06:00:00', 1.1, 'noche'],
     ];
 
     private const DESCRIPCIONES = [
@@ -94,7 +94,7 @@ class EventoDemoSeeder extends Seeder
                 // Más movimiento los fines de semana.
                 $factorDia = $dia->isWeekend() ? 1.3 : 1.0;
 
-                foreach (self::TURNOS as $i => [$inicio, $fin, $peso]) {
+                foreach (self::TURNOS as $i => [$inicio, $fin, $peso, $franja]) {
                     $cruza = $fin < $inicio;
                     if ($cruza && $d === 1) {
                         continue; // terminaría hoy: el turno de hoy lo abre el Supervisor.
@@ -105,7 +105,11 @@ class EventoDemoSeeder extends Seeder
                     $hasta = Carbon::parse(($cruza ? $dia->copy()->addDay() : $dia)->toDateString()." {$fin}");
 
                     $this->interno($apertura, $supervisor, $desde, 'Personal presente: Operador '
-                        .(($d + $i) % 6 + 1).', Operador '.(($d + $i + 3) % 6 + 1).'.');
+                        .(($d + $i) % 6 + 1).', Operador '.(($d + $i + 3) % 6 + 1).'.', [
+                            'franja' => $franja,
+                            // Los 4 grupos rotan por los turnos.
+                            'grupo_guardia' => ($d * 3 + $i) % 4 + 1,
+                        ]);
                     $turnos++;
 
                     $cantidad = $this->poisson(3 * $peso * $factorDia);
@@ -130,15 +134,19 @@ class EventoDemoSeeder extends Seeder
     }
 
     /**
-     * Apertura o cierre de turno (evento interno, sin ubicación).
+     * Apertura o cierre de turno (evento interno, sin ubicación). La Apertura
+     * lleva además franja y grupo de guardia.
+     *
+     * @param  array{franja?: string, grupo_guardia?: int}  $guardia
      */
-    private function interno(int $tipoId, User $autor, Carbon $fechaHora, string $descripcion): void
+    private function interno(int $tipoId, User $autor, Carbon $fechaHora, string $descripcion, array $guardia = []): void
     {
         Evento::create([
             'tipo_evento_id' => $tipoId,
             'usuario_id' => $autor->id,
             'fecha_hora' => $fechaHora,
             'descripcion' => $descripcion,
+            ...$guardia,
         ]);
     }
 

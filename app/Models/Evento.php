@@ -20,12 +20,15 @@ use LogicException;
  * timestamp_video (hh:mm:ss; ya no se carga, solo eventos anteriores), descripcion, created_at.
  * Sin PM: barrio_id y direccion (obligatorios si el tipo exige ubicación).
  * Con PM: el barrio sale del PM; direccion opcional (dónde fue exactamente).
+ * Solo la Apertura de turno: franja (manana/tarde/noche) y grupo_guardia (1 a 4).
  */
 #[Fillable([
     'tipo_evento_id',
     'punto_monitoreo_id',
     'barrio_id',
     'direccion',
+    'franja',
+    'grupo_guardia',
     'usuario_id',
     'fecha_hora',
     'timestamp_video',
@@ -38,12 +41,19 @@ class Evento extends Model
 
     public const UPDATED_AT = null;
 
+    /** Franjas del turno de guardia (código => etiqueta). */
+    public const FRANJAS = ['manana' => 'Mañana', 'tarde' => 'Tarde', 'noche' => 'Noche'];
+
+    /** Grupos de guardia que rotan en los turnos. */
+    public const GRUPOS_GUARDIA = [1, 2, 3, 4];
+
     protected $table = 'eventos';
 
     protected function casts(): array
     {
         return [
             'fecha_hora' => 'datetime',
+            'grupo_guardia' => 'integer',
         ];
     }
 
@@ -117,6 +127,20 @@ class Evento extends Model
         ]);
 
         return $partes ? implode(', ', $partes) : null;
+    }
+
+    /**
+     * Franja y grupo de una Apertura de turno ("Mañana · Grupo 2"). Null en
+     * los demás eventos.
+     */
+    public function guardia(): ?string
+    {
+        $partes = array_filter([
+            self::FRANJAS[$this->franja] ?? null,
+            $this->grupo_guardia ? "Grupo {$this->grupo_guardia}" : null,
+        ]);
+
+        return $partes ? implode(' · ', $partes) : null;
     }
 
     public function usuario(): BelongsTo

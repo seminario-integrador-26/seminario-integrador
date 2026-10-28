@@ -134,43 +134,39 @@ class NotificacionTest extends TestCase
         Queue::assertNothingPushed();
     }
 
-    public function test_el_mensaje_incluye_tipo_fecha_horario_ubicacion_y_descripcion(): void
+    public function test_el_mensaje_es_una_linea_con_horario_y_descripcion_como_en_whatsapp(): void
     {
-        $punto = PuntoMonitoreo::factory()->delTipo('municipal')->create([
-            'codigo' => 'PM-012',
-            'nombre' => 'Bv. España y Mendoza',
-        ]);
+        $this->travelTo('2026-10-14 15:00:00');
+        $punto = PuntoMonitoreo::factory()->delTipo('municipal')->create();
 
         $mensaje = app(NotificacionService::class)->armarMensaje(
             $this->evento(['punto_monitoreo_id' => $punto->id]),
         );
 
-        $this->assertStringContainsString('Guardia Local: Ruidos molestos', $mensaje);
-        $this->assertStringContainsString('Fecha: 14/10/2026', $mensaje);
-        $this->assertStringContainsString('Horario: 14:30:15', $mensaje);
-        $this->assertStringContainsString('PM-012 — Bv. España y Mendoza (Municipal)', $mensaje);
-        $this->assertStringContainsString('Música a alto volumen en la vereda.', $mensaje);
+        $this->assertSame('14.30hs - Música a alto volumen en la vereda.', $mensaje);
     }
 
-    public function test_el_mensaje_de_un_evento_sin_ubicacion_lo_indica(): void
+    public function test_el_mensaje_de_otro_dia_lleva_la_fecha(): void
     {
+        $this->travelTo('2026-10-15 08:00:00');
+
         $mensaje = app(NotificacionService::class)->armarMensaje($this->evento());
 
-        $this->assertStringContainsString('Ubicación: Sin ubicación', $mensaje);
+        $this->assertSame('14/10 14.30hs - Música a alto volumen en la vereda.', $mensaje);
     }
 
-    public function test_el_mensaje_de_apertura_de_turno_no_lleva_ubicacion(): void
+    public function test_el_mensaje_de_apertura_de_turno_lleva_el_tipo(): void
     {
         $this->seed(TipoEventoSeeder::class);
 
         $mensaje = app(NotificacionService::class)->armarMensaje($this->evento([
             'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+            'franja' => 'noche',
+            'grupo_guardia' => 4,
             'descripcion' => 'Personal presente: Ana y Luis.',
         ]));
 
-        $this->assertStringContainsString('Internos: Apertura de turno', $mensaje);
-        $this->assertStringNotContainsString('Ubicación', $mensaje);
-        $this->assertStringContainsString('Personal presente: Ana y Luis.', $mensaje);
+        $this->assertStringEndsWith('14.30hs - Apertura de turno (Noche · Grupo 4): Personal presente: Ana y Luis.', $mensaje);
     }
 
     public function test_la_apertura_de_turno_se_notifica_a_los_grupos_que_la_reciben(): void
@@ -187,7 +183,7 @@ class NotificacionTest extends TestCase
         Queue::assertPushed(EnviarNotificacionWhatsapp::class);
     }
 
-    public function test_la_nota_no_lleva_ubicacion_en_el_mensaje(): void
+    public function test_el_mensaje_de_la_nota_lleva_el_tipo(): void
     {
         $this->seed(TipoEventoSeeder::class);
 
@@ -195,8 +191,7 @@ class NotificacionTest extends TestCase
             'tipo_evento_id' => TipoEvento::interno(TipoEvento::NOTA),
         ]));
 
-        $this->assertStringContainsString('Internos: Nota', $mensaje);
-        $this->assertStringNotContainsString('Ubicación', $mensaje);
+        $this->assertStringEndsWith('14.30hs - Nota: Música a alto volumen en la vereda.', $mensaje);
     }
 
     public function test_un_grupo_nuevo_trae_marcados_la_apertura_el_cierre_de_turno_y_la_nota(): void

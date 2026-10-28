@@ -64,7 +64,9 @@ por email vía el flujo estándar de reseteo).
    turno, grupo Internos). **No hay eventos sin turno** (decisión 2026-10-26):
    sin una Apertura vigente solo se puede registrar la Apertura (ni eventos
    ni fe de errata), con una abierta no se abre otra, y el hecho no puede ser
-   anterior a la Apertura. El turno vigente es la última Apertura sin Cierre
+   anterior a la Apertura. Al abrir, el Supervisor indica franja (mañana
+   6–14, tarde 14–22, noche 22–6; se preselecciona por la hora) y grupo de guardia (1 a 4): `eventos.franja` /
+   `eventos.grupo_guardia`, solo en la Apertura. El turno vigente es la última Apertura sin Cierre
    posterior (`LibroGuardiaService`); `EventoService` lo vuelve a chequear con
    lock para dos Aperturas simultáneas. Apertura, Cierre y Nota se notifican
    (Telegram/WhatsApp) a todos los grupos por defecto (decisión 2026-10-28). Cada fe de errata deja además una constancia

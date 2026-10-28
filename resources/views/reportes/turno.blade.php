@@ -62,6 +62,7 @@
     <table class="datos">
         <tr><td class="etiqueta">Fecha del turno</td><td>{{ $turno['fecha'] }}</td></tr>
         <tr><td class="etiqueta">Horario</td><td>{{ $turno['inicio'] }} a {{ $turno['fin'] }} hs</td></tr>
+        <tr><td class="etiqueta">Turno</td><td>{{ $turno['guardia'] ?? '—' }}</td></tr>
         <tr><td class="etiqueta">Abrió</td><td>{{ $turno['supervisor'] ?? '—' }}</td></tr>
         <tr><td class="etiqueta">Apertura</td><td>{{ $turno['apertura'] ?: '—' }}</td></tr>
         <tr><td class="etiqueta">Cerró</td><td>{{ $turno['supervisor_cierre'] ?? '—' }}</td></tr>

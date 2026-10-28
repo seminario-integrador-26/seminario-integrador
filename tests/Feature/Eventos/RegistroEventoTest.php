@@ -78,6 +78,9 @@ class RegistroEventoTest extends TestCase
             'fecha' => '2026-09-13',
             'hora' => '14:30:00',
             'punto_monitoreo_id' => $this->punto->id,
+            // Solo los usa la Apertura de turno; en el resto se descartan.
+            'franja' => 'tarde',
+            'grupo_guardia' => 3,
             'descripcion' => 'Dos personas forcejean en la esquina.',
             ...$cambios,
         ];
@@ -359,6 +362,43 @@ class RegistroEventoTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertSame(2, $this->registrados()->count());
+        $apertura = $this->registrados()->latest('id')->first();
+        $this->assertSame('tarde', $apertura->franja);
+        $this->assertSame(3, $apertura->grupo_guardia);
+        $this->assertSame('Tarde · Grupo 3', $apertura->guardia());
+    }
+
+    public function test_la_apertura_exige_turno_y_grupo_validos(): void
+    {
+        $this->cerrarTurno();
+        $apertura = TipoEvento::interno(TipoEvento::APERTURA_TURNO);
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => $apertura,
+                'franja' => '',
+                'grupo_guardia' => '',
+            ]))
+            ->assertSessionHasErrors(['franja', 'grupo_guardia']);
+
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos([
+                'tipo_evento_id' => $apertura,
+                'franja' => 'madrugada',
+                'grupo_guardia' => 5,
+            ]))
+            ->assertSessionHasErrors(['franja', 'grupo_guardia']);
+    }
+
+    public function test_las_novedades_que_no_abren_turno_no_guardan_turno_ni_grupo(): void
+    {
+        $this->actingAs($this->supervisor)
+            ->post(route('eventos.store'), $this->datosValidos())
+            ->assertSessionHasNoErrors();
+
+        $evento = $this->registrados()->sole();
+        $this->assertNull($evento->franja);
+        $this->assertNull($evento->grupo_guardia);
     }
 
     public function test_no_se_abre_un_turno_con_otro_abierto(): void

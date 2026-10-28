@@ -19,6 +19,8 @@ interface Guardia {
     fin: string | null;
     fecha_fin: string | null;
     supervisor: string | null;
+    /** "Mañana · Grupo 2" */
+    guardia: string | null;
     eventos: number | null;
 }
 
@@ -75,13 +77,14 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<Guardia>;
                             <Encabezado>Apertura</Encabezado>
                             <Encabezado>Fecha</Encabezado>
                             <Encabezado>Horario</Encabezado>
+                            <Encabezado>Turno</Encabezado>
                             <Encabezado>Supervisor</Encabezado>
                             <Encabezado alinear="derecha">Novedades</Encabezado>
                             <Encabezado alinear="derecha">Acciones</Encabezado>
                         </Cabecera>
                         <Cuerpo>
                             {turnos.data.length === 0 && (
-                                <FilaVacia columnas={6}>
+                                <FilaVacia columnas={7}>
                                     No hay aperturas de turno{filtros.fecha ? ' en esa fecha' : ''}.
                                 </FilaVacia>
                             )}
@@ -95,6 +98,7 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<Guardia>;
                                             <span className="ml-1 text-xs text-atalaya-text-dim">({t.fecha_fin})</span>
                                         )}
                                     </Celda>
+                                    <Celda nowrap>{t.guardia ?? '—'}</Celda>
                                     <Celda>{t.supervisor}</Celda>
                                     <Celda alinear="derecha" mono>{t.eventos ?? '—'}</Celda>
                                     <CeldaAcciones>

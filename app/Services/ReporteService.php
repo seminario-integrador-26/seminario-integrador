@@ -63,6 +63,7 @@ class ReporteService
                     ? $cierre->fecha_hora->format('d/m/Y').' '
                     : '').$cierre->fecha_hora->format('H:i'),
                 'supervisor' => $apertura->usuario?->name,
+                'guardia' => $apertura->guardia(),
                 'supervisor_cierre' => $cierre->usuario?->name,
                 'apertura' => $apertura->descripcion,
                 'cierre' => $cierre->descripcion,

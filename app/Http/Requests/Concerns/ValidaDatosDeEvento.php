@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Concerns;
 
+use App\Models\Evento;
 use App\Models\TipoEvento;
 use App\Services\LibroGuardiaService;
 use Illuminate\Support\Carbon;
@@ -27,6 +28,11 @@ trait ValidaDatosDeEvento
         // Apertura, Cierre de turno y Nota no tienen cámara ni ubicación.
         if ($this->tipoEvento()?->sinCamara()) {
             $this->merge(['punto_monitoreo_id' => null, 'barrio_id' => null, 'direccion' => null]);
+        }
+
+        // Franja y grupo de guardia solo los lleva la Apertura de turno.
+        if (! $this->esApertura()) {
+            $this->merge(['franja' => null, 'grupo_guardia' => null]);
         }
     }
 
@@ -63,6 +69,8 @@ trait ValidaDatosDeEvento
                 'string',
                 'max:255',
             ],
+            'franja' => [Rule::requiredIf(fn () => $this->esApertura()), 'nullable', Rule::in(array_keys(Evento::FRANJAS))],
+            'grupo_guardia' => [Rule::requiredIf(fn () => $this->esApertura()), 'nullable', 'integer', Rule::in(Evento::GRUPOS_GUARDIA)],
             // US-005: la descripción no puede estar vacía.
             'descripcion' => ['required', 'string', 'max:5000'],
         ];
@@ -94,7 +102,7 @@ trait ValidaDatosDeEvento
                 }
 
                 $apertura = app(LibroGuardiaService::class)->aperturaVigente();
-                $esApertura = $this->tipoEvento()?->id === TipoEvento::interno(TipoEvento::APERTURA_TURNO);
+                $esApertura = $this->esApertura();
 
                 if (! $apertura && ! $esApertura) {
                     $validator->errors()->add('tipo_evento_id', 'No hay un turno abierto: registrá primero la Apertura de turno.');
@@ -120,6 +128,10 @@ trait ValidaDatosDeEvento
             'barrio_id.exists' => 'El barrio seleccionado no existe.',
             'direccion.required' => 'Sin punto de monitoreo, indicá la dirección.',
             'descripcion.required' => 'La descripción no puede estar vacía.',
+            'franja.required' => 'Indicá el turno: mañana, tarde o noche.',
+            'franja.in' => 'El turno debe ser mañana, tarde o noche.',
+            'grupo_guardia.required' => 'Indicá tu grupo de guardia.',
+            'grupo_guardia.in' => 'El grupo debe ser del 1 al 4.',
         ];
     }
 
@@ -128,6 +140,13 @@ trait ValidaDatosDeEvento
         $id = $this->input('tipo_evento_id');
 
         return is_numeric($id) ? TipoEvento::find($id) : null;
+    }
+
+    private function esApertura(): bool
+    {
+        $tipo = $this->tipoEvento();
+
+        return $tipo !== null && $tipo->id === TipoEvento::interno(TipoEvento::APERTURA_TURNO);
     }
 
     private function conSegundos(mixed $hora): mixed

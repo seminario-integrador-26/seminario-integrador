@@ -41,7 +41,7 @@ class EventoService
      * abierto lo valida StoreEventoRequest: abrir y cerrar el turno también
      * son eventos (Apertura de turno / Cierre de turno, ver LibroGuardiaService).
      *
-     * @param  array{tipo_evento_id: int, fecha: string, hora: string, punto_monitoreo_id?: int|null, descripcion?: string|null}  $datos
+     * @param  array{tipo_evento_id: int, fecha: string, hora: string, punto_monitoreo_id?: int|null, franja?: string|null, grupo_guardia?: int|null, descripcion?: string|null}  $datos
      */
     public function registrar(array $datos, User $autor): Evento
     {
@@ -98,6 +98,9 @@ class EventoService
             // Con PM, el barrio sale del PM; la dirección se guarda igual (opcional).
             'barrio_id' => $puntoMonitoreoId ? null : ($datos['barrio_id'] ?? null),
             'direccion' => ($datos['direccion'] ?? null) ?: null,
+            // Solo la Apertura de turno (lo filtra la validación).
+            'franja' => $datos['franja'] ?? null,
+            'grupo_guardia' => $datos['grupo_guardia'] ?? null,
             'usuario_id' => $autor->id,
             'fecha_hora' => Carbon::createFromFormat('Y-m-d H:i:s', "{$datos['fecha']} {$datos['hora']}"),
             'descripcion' => $datos['descripcion'] ?? null,

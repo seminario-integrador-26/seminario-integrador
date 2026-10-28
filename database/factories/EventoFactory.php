@@ -30,6 +30,10 @@ class EventoFactory extends Factory
      */
     public function aperturaDeTurno(): static
     {
-        return $this->state(fn () => ['tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO)]);
+        return $this->state(fn () => [
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+            'franja' => 'manana',
+            'grupo_guardia' => 1,
+        ]);
     }
 }

@@ -20,7 +20,7 @@ import type {
     TipoEventoOpcion,
 } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 
 interface Props {
     tipos: TipoEventoOpcion[];
@@ -31,7 +31,10 @@ interface Props {
     tiposPunto: Opciones;
     barrios: ItemCatalogo[];
     /** Apertura de turno vigente; sin ella solo se puede abrir el turno. */
-    turno: { id: number; desde: string } | null;
+    turno: { id: number; desde: string; guardia: string | null } | null;
+    /** Franjas del turno (manana => Mañana) y grupos de guardia (1 a 4). */
+    franjas: Opciones;
+    gruposGuardia: number[];
 }
 
 type FormEvento = {
@@ -42,6 +45,9 @@ type FormEvento = {
     /** Sin PM: barrio y dirección a mano. */
     barrio_id: string;
     direccion: string;
+    /** Solo la Apertura de turno: franja y grupo de guardia. */
+    franja: string;
+    grupo_guardia: string;
     descripcion: string;
 };
 
@@ -62,6 +68,20 @@ const AYUDA_DESCRIPCION: Record<string, string> = {
     'Cierre de turno': 'Novedades pendientes para el turno siguiente.',
 };
 
+/**
+ * Turno que corresponde a una hora (HH:MM): mañana de 6 a 14, tarde de 14 a
+ * 22 y noche de 22 a 6 del día siguiente.
+ */
+const franjaDeHora = (hora: string) => {
+    const h = Number(hora.slice(0, 2));
+    if (h >= 6 && h < 14) return 'manana';
+    if (h >= 14 && h < 22) return 'tarde';
+    return 'noche';
+};
+
+// Hora local actual (HH:MM).
+const horaActual = () => new Date().toTimeString().slice(0, 5);
+
 const esApertura = (t: TipoEventoOpcion) =>
     t.sin_camara && t.nombre === 'Apertura de turno';
 
@@ -72,6 +92,8 @@ export default function Create({
     puntoInicial = null,
     tiposPunto,
     barrios,
+    franjas,
+    gruposGuardia,
     turno,
 }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm<FormEvento>({
@@ -82,10 +104,15 @@ export default function Create({
         punto_monitoreo_id: puntoInicial,
         barrio_id: '',
         direccion: '',
+        franja: '',
+        grupo_guardia: '',
         descripcion: '',
     });
 
     const { flash } = usePage<PageProps>().props;
+
+    // El turno se preselecciona por la hora hasta que el Supervisor lo cambia a mano.
+    const [franjaElegida, setFranjaElegida] = useState(false);
 
     // Todo evento pertenece a un turno: sin turno abierto solo se puede
     // registrar la Apertura, y con uno abierto no se abre otro.
@@ -99,6 +126,7 @@ export default function Create({
     const requiereUbicacion = Boolean(tipoSeleccionado?.requiere_ubicacion);
     // Apertura y Cierre de turno no tienen cámara: no se pide PM.
     const sinCamara = Boolean(tipoSeleccionado?.sin_camara);
+    const abreTurno = tipoSeleccionado ? esApertura(tipoSeleccionado) : false;
     const hayPunto = data.punto_monitoreo_id !== null;
     const puntoSeleccionado = puntos.find((p) => p.id === data.punto_monitoreo_id);
     // Sin PM la dirección es obligatoria si el tipo exige ubicación; con PM es
@@ -122,7 +150,10 @@ export default function Create({
             // Con errores se queda donde está (al lado del campo); al registrar
             // vuelve arriba, donde aparece la confirmación.
             preserveScroll: (page) => Object.keys(page.props.errors).length > 0,
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset();
+                setFranjaElegida(false);
+            },
         });
     };
 
@@ -154,7 +185,8 @@ export default function Create({
 
                     {turno ? (
                         <p className="font-mono text-xs text-atalaya-text-dim">
-                            Turno abierto desde el {turno.desde} (Apertura #{turno.id}).
+                            Turno {turno.guardia ? `${turno.guardia} ` : ''}abierto desde el{' '}
+                            {turno.desde} (Apertura #{turno.id}).
                         </p>
                     ) : (
                         <Alert variant="info">
@@ -190,6 +222,9 @@ export default function Create({
                                                 punto_monitoreo_id: null,
                                                 barrio_id: '',
                                                 direccion: '',
+                                            }),
+                                            ...(tipo && esApertura(tipo) && !franjaElegida && {
+                                                franja: franjaDeHora(d.hora || horaActual()),
                                             }),
                                         }));
                                     }}
@@ -259,7 +294,13 @@ export default function Create({
                                         className="mt-1 block w-full"
                                         value={data.hora}
                                         onChange={(e) =>
-                                            setData('hora', e.target.value)
+                                            setData((d) => ({
+                                                ...d,
+                                                hora: e.target.value,
+                                                ...(abreTurno && !franjaElegida && e.target.value && {
+                                                    franja: franjaDeHora(e.target.value),
+                                                }),
+                                            }))
                                         }
                                     />
                                     <InputError
@@ -268,6 +309,62 @@ export default function Create({
                                     />
                                 </div>
                             </div>
+
+                            {abreTurno && (
+                                <div className="grid gap-6 sm:grid-cols-2">
+                                    <div>
+                                        <InputLabel htmlFor="franja">
+                                            Turno
+                                            <Obligatorio />
+                                        </InputLabel>
+                                        <Select
+                                            id="franja"
+                                            className="mt-1"
+                                            value={data.franja}
+                                            onChange={(e) => {
+                                                setFranjaElegida(true);
+                                                setData('franja', e.target.value);
+                                            }}
+                                        >
+                                            <option value="">Elegí el turno…</option>
+                                            {Object.entries(franjas).map(([codigo, etiqueta]) => (
+                                                <option key={codigo} value={codigo}>
+                                                    {etiqueta}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.franja}
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="grupo_guardia">
+                                            Grupo
+                                            <Obligatorio />
+                                        </InputLabel>
+                                        <Select
+                                            id="grupo_guardia"
+                                            className="mt-1"
+                                            value={data.grupo_guardia}
+                                            onChange={(e) =>
+                                                setData('grupo_guardia', e.target.value)
+                                            }
+                                        >
+                                            <option value="">Elegí tu grupo…</option>
+                                            {gruposGuardia.map((g) => (
+                                                <option key={g} value={g}>
+                                                    Grupo {g}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.grupo_guardia}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {!sinCamara && (
                                 <>
