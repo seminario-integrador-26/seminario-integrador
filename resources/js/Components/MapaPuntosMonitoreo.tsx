@@ -1,3 +1,4 @@
+import { COLOR_TIPO_PUNTO, TIPOS_PUNTO } from '@/catalogos';
 import type { PuntoConCoordenadas, PuntoMapa } from '@/types';
 import type { LatLngTuple } from 'leaflet';
 import { useEffect, useMemo } from 'react';
@@ -11,13 +12,10 @@ import {
 
 const CENTRO_VILLA_MARIA: LatLngTuple = [-32.4075, -63.2402];
 
-// Paleta Atalaya: cian para la red municipal, azul de operaciones para la
-// provincial, violeta para las alarmas comunitarias y naranja de alta
-// visibilidad para el punto seleccionado.
+// Colores por tipo de PM (@/catalogos) y naranja de alta visibilidad para el
+// punto seleccionado.
 const COLORES: Record<string, string> = {
-    municipal: '#00D2FF',
-    provincial: '#0284C7',
-    alarma: '#A855F7',
+    ...COLOR_TIPO_PUNTO,
     seleccionado: '#F97316',
 };
 
@@ -133,12 +131,7 @@ export default function MapaPuntosMonitoreo({
     );
 }
 
-const LEYENDA = [
-    ['municipal', 'Municipal'],
-    ['provincial', 'Provincial'],
-    ['alarma', 'Alarma'],
-    ['seleccionado', 'Seleccionado'],
-] as const;
+const LEYENDA = [...TIPOS_PUNTO, ['seleccionado', 'Seleccionado']] as const;
 
 /**
  * Título + leyenda de colores para poner arriba del mapa en los formularios

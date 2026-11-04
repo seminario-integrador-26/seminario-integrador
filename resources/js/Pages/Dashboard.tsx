@@ -1,7 +1,7 @@
-import { colorGrupo, estiloGrupo } from '@/catalogos';
+import { colorDeGrupo, colorGrupo, colorTipoPunto, estiloGrupo, TIPOS_PUNTO } from '@/catalogos';
 import BuscadorPuntoMapa from '@/Components/BuscadorPuntoMapa';
-import TacticalMap, { colorDeCategoria, type Enfoque, type EventoGeorreferenciado } from '@/Components/TacticalMap';
-import Select from '@/Components/Select';
+import TacticalMap, { type Enfoque } from '@/Components/TacticalMap';
+import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { EventoPanel, PageProps, PuntoMapa } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -27,17 +27,19 @@ interface Props {
     conteoPorCategoria: Record<string, number>;
     puntosMonitoreo: PuntoMapa[];
     /** por_tipo: código de TipoPuntoMonitoreo => cantidad. */
-    resumenPuntos: { total: number; por_tipo: Record<string, number> };
 }
 
 const TODAS = 'TODAS';
+
+/** Minúsculas y sin tildes, para buscar "policia" y encontrar "Policía". */
+const normalizar = (texto: string) =>
+    texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 export default function Dashboard({
     turno,
     eventos,
     conteoPorCategoria,
     puntosMonitoreo,
-    resumenPuntos,
 }: Props) {
     const { auth } = usePage<PageProps>().props;
     const esSupervisor = (auth.roles ?? []).includes('Supervisor');
@@ -47,7 +49,7 @@ export default function Dashboard({
     const [filtro, setFiltro] = useState(TODAS);
     const [seleccionado, setSeleccionado] = useState<EventoPanel | null>(null);
 
-    const [filtroTipo, setFiltroTipo] = useState('');
+    const [busqueda, setBusqueda] = useState('');
     // PM elegido en el buscador; `n` fuerza re-enfocar aunque sea el mismo PM.
     const [enfoque, setEnfoque] = useState<Enfoque | null>(null);
 
@@ -59,40 +61,27 @@ export default function Dashboard({
         [eventos, filtro],
     );
 
-    // Tipos presentes en el feed (dentro de la categoría elegida), con conteo.
-    const tiposDelFeed = useMemo(() => {
-        const conteo: Record<string, number> = {};
-        for (const ev of eventosDeCategoria) {
-            conteo[ev.tipo] = (conteo[ev.tipo] ?? 0) + 1;
+    // Búsqueda libre en el feed: código, tipo, grupo, ubicación, descripción y
+    // autor, sin distinguir mayúsculas ni tildes.
+    const eventosFiltrados = useMemo(() => {
+        const termino = normalizar(busqueda.trim());
+        if (!termino) {
+            return eventosDeCategoria;
         }
-        return Object.entries(conteo).sort(([a], [b]) => a.localeCompare(b));
-    }, [eventosDeCategoria]);
 
-    const eventosFiltrados = useMemo(
-        () =>
-            filtroTipo
-                ? eventosDeCategoria.filter((ev) => ev.tipo === filtroTipo)
-                : eventosDeCategoria,
-        [eventosDeCategoria, filtroTipo],
-    );
+        return eventosDeCategoria.filter((ev) =>
+            normalizar(
+                [ev.codigo, ev.tipo, ev.categoria, ev.ubicacion, ev.descripcion, ev.autor].join(' '),
+            ).includes(termino),
+        );
+    }, [eventosDeCategoria, busqueda]);
 
     const cambiarCategoria = (categoria: string) => {
         setFiltro(categoria);
-        setFiltroTipo('');
     };
 
     const enfocarPunto = (punto: PuntoMapa) =>
         setEnfoque((actual) => ({ punto, n: (actual?.n ?? 0) + 1 }));
-
-    // Sólo los eventos con punto de monitoreo se pueden dibujar (RN-03).
-    const eventosGeorreferenciados = useMemo(
-        () =>
-            eventosFiltrados.filter(
-                (ev): ev is EventoGeorreferenciado =>
-                    ev.latitud !== null && ev.longitud !== null,
-            ),
-        [eventosFiltrados],
-    );
 
     const categorias = Object.keys(conteoPorCategoria);
     const cuantificables = Object.values(conteoPorCategoria).reduce(
@@ -107,11 +96,11 @@ export default function Dashboard({
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
                 {/* 1. Barra de telemetría (compacta: el protagonista es el mapa) */}
                 <section className="border-b border-atalaya-border bg-atalaya-surface">
-                    {/* Sin Reportes (Supervisor) quedan tres cajas: la guardia ocupa el ancho en celular. */}
+                    {/* Sin Reportes (Supervisor) queda solo la caja de novedades, a todo el ancho. */}
                     <div
                         className={
-                            'swiss-grid grid-cols-2 ' +
-                            (puedeExportar ? 'lg:grid-cols-4' : 'lg:grid-cols-3')
+                            'swiss-grid ' +
+                            (puedeExportar ? 'grid-cols-1 sm:grid-cols-[3fr_1fr]' : 'grid-cols-1')
                         }
                     >
                         {/* Eventos del turno */}
@@ -140,50 +129,6 @@ export default function Dashboard({
                                         </span>
                                     )}
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Red de monitoreo */}
-                        <div className="swiss-panel flex items-center gap-3 px-4 py-2">
-                            <span className="font-mono text-xl font-black leading-none text-white">
-                                {resumenPuntos.total}
-                            </span>
-                            <div className="min-w-0 font-mono">
-                                <div className="text-[10px] uppercase text-atalaya-text-muted">
-                                    Puntos de monitoreo
-                                </div>
-                                <div className="truncate text-[10px] text-atalaya-cyan">
-                                    {Object.entries(resumenPuntos.por_tipo)
-                                        .map(([j, n]) => `${n} ${j}`)
-                                        .join(' · ')}
-                                </div>
-                            </div>
-                            {/* TODO: el modelo no releva estado operativo de cámara (en línea / mantenimiento). */}
-                        </div>
-
-                        {/* Turno vigente */}
-                        <div
-                            className={
-                                'swiss-panel flex min-w-0 flex-col justify-center px-4 py-2 font-mono ' +
-                                (puedeExportar ? '' : 'col-span-2 lg:col-span-1')
-                            }
-                        >
-                            <div className="flex items-center justify-between text-[10px] uppercase text-atalaya-text-muted">
-                                <span>Guardia vigente</span>
-                                {turno ? (
-                                    <span className="font-bold text-atalaya-orange">
-                                        Apertura #{turno.id}
-                                    </span>
-                                ) : (
-                                    <span className="font-bold text-atalaya-crimson">
-                                        Sin turno
-                                    </span>
-                                )}
-                            </div>
-                            <div className="truncate text-[11px] text-white">
-                                {turno
-                                    ? `Desde ${turno.hora_inicio} · ${turno.supervisor ?? 'Sin supervisor'} · ${turno.transcurrido}`
-                                    : 'Sin Apertura de turno vigente.'}
                             </div>
                         </div>
 
@@ -228,7 +173,7 @@ export default function Dashboard({
                                 </button>
                                 {categorias.map((categoria) => {
                                     const activo = filtro === categoria;
-                                    const color = colorDeCategoria(categoria);
+                                    const color = colorDeGrupo(categoria);
 
                                     return (
                                         <button
@@ -260,10 +205,7 @@ export default function Dashboard({
 
                         <div className="relative min-h-[480px] w-full flex-1">
                             <TacticalMap
-                                eventos={eventosGeorreferenciados}
                                 puntosMonitoreo={puntosMonitoreo}
-                                eventoSeleccionado={seleccionado}
-                                onSeleccionarEvento={setSeleccionado}
                                 enfoque={enfoque}
                                 puedeRegistrar={esSupervisor}
                             />
@@ -279,30 +221,14 @@ export default function Dashboard({
                                 <div className="mb-1 font-bold tracking-wider text-white">
                                     [ Leyenda ]
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2.5 w-2.5 border" style={{ borderColor: colorGrupo('policia'), backgroundColor: `${colorGrupo('policia')}80` }}></span>
-                                    <span className="text-atalaya-text-muted">
-                                        Policía
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2.5 w-2.5 border" style={{ borderColor: colorGrupo('guardia_local'), backgroundColor: `${colorGrupo('guardia_local')}80` }}></span>
-                                    <span className="text-atalaya-text-muted">
-                                        Guardia Local
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2.5 w-2.5 border" style={{ borderColor: colorGrupo('internos'), backgroundColor: `${colorGrupo('internos')}80` }}></span>
-                                    <span className="text-atalaya-text-muted">
-                                        Internos
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2 w-2 border border-atalaya-cyan bg-atalaya-cyan"></span>
-                                    <span className="text-atalaya-text-muted">
-                                        Punto de monitoreo
-                                    </span>
-                                </div>
+                                {TIPOS_PUNTO.map(([tipo, nombre]) => (
+                                    <div key={tipo} className="flex items-center gap-2">
+                                        <span className="inline-block h-2 w-2" style={{ backgroundColor: colorTipoPunto(tipo) }}></span>
+                                        <span className="text-atalaya-text-muted">
+                                            PM {nombre.toLowerCase()}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -327,28 +253,21 @@ export default function Dashboard({
                                     </span>
                                 )}
                             </div>
-                            <Select
-                                aria-label="Filtrar por tipo de novedad"
-                                buscable
-                                value={filtroTipo}
-                                onChange={(e) => setFiltroTipo(e.target.value)}
-                            >
-                                <option value="">
-                                    Todos los tipos ({eventosDeCategoria.length})
-                                </option>
-                                {tiposDelFeed.map(([tipo, n]) => (
-                                    <option key={tipo} value={tipo}>
-                                        {tipo} ({n})
-                                    </option>
-                                ))}
-                            </Select>
+                            <TextInput
+                                type="search"
+                                aria-label="Buscar en el libro de guardia"
+                                placeholder={`Buscar en ${eventosDeCategoria.length} novedades (tipo, lugar, código…)`}
+                                value={busqueda}
+                                onChange={(e) => setBusqueda(e.target.value)}
+                                className="block w-full"
+                            />
                         </div>
 
                         <div className="max-h-[580px] flex-1 divide-y divide-atalaya-border overflow-y-auto">
                             {eventosFiltrados.length === 0 && (
                                 <div className="p-6 text-center font-mono text-xs text-atalaya-text-muted">
                                     Sin novedades registradas
-                                    {(filtro !== TODAS || filtroTipo) &&
+                                    {(filtro !== TODAS || busqueda.trim()) &&
                                         ' para este filtro'}
                                     .
                                 </div>

@@ -2,7 +2,7 @@ import InputLabel from '@/Components/InputLabel';
 import FechaInput from '@/Components/FechaInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { colorGrupo, estiloGrupo } from '@/catalogos';
+import { colorGrupo, colorTipoPunto, estiloGrupo, TIPOS_PUNTO } from '@/catalogos';
 import type { Opciones, PuntoConCoordenadas, PuntoMapa, TipoEventoOpcion } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import L from '@/lib/leafletGlobal';
@@ -89,15 +89,15 @@ const RADIO_DRILL_DOWN = 250;
 
 /** Estilo del círculo según el tipo de PM (municipal | provincial | alarma). */
 const ESTILO_TIPO_PUNTO: Record<string, PathOptions> = {
-    municipal: { color: '#00d2ff', weight: 2, fillColor: '#00d2ff', fillOpacity: 0.45 },
-    provincial: { color: '#ffffff', weight: 2, dashArray: '3 3', fillColor: '#ffffff', fillOpacity: 0.12 },
-    alarma: { color: '#a855f7', weight: 2, fillColor: '#a855f7', fillOpacity: 0.35 },
+    municipal: { color: colorTipoPunto('municipal'), weight: 2, fillColor: colorTipoPunto('municipal'), fillOpacity: 0.45 },
+    provincial: { color: colorTipoPunto('provincial'), weight: 2, dashArray: '3 3', fillColor: colorTipoPunto('provincial'), fillOpacity: 0.35 },
+    alarma: { color: colorTipoPunto('alarma'), weight: 2, fillColor: colorTipoPunto('alarma'), fillOpacity: 0.35 },
 };
 
 /**
  * US-016: forma del marcador según el tipo de PM y color según la categoría.
- * La forma distingue municipal / provincial / alarma sin usar color (el cian
- * ya es de Internos y del mapa de calor).
+ * La forma distingue municipal / provincial / alarma: el color del marcador
+ * ya es el del grupo de la novedad.
  */
 const FORMA_PUNTO: Record<string, string> = {
     municipal: '<circle cx="8" cy="8" r="6" />',
@@ -505,11 +505,7 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                                 </p>
                             ))}
                             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-atalaya-text-dim">
-                                {[
-                                    ['municipal', 'Municipal'],
-                                    ['provincial', 'Provincial'],
-                                    ['alarma', 'Alarma'],
-                                ].map(([tipo, nombre]) => (
+                                {TIPOS_PUNTO.map(([tipo, nombre]) => (
                                     <span key={tipo} className="flex items-center gap-1">
                                         <span dangerouslySetInnerHTML={{ __html: svgMarcador(tipo, '#94A3B8') }} />
                                         {nombre}
@@ -520,15 +516,24 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                                 Referencias · puntos con novedades
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className="inline-block h-3 w-3 rounded-full border-2 border-atalaya-cyan bg-atalaya-cyan/70" />
+                                <span
+                                    className="inline-block h-3 w-3 rounded-full border-2"
+                                    style={{ borderColor: colorTipoPunto('municipal'), backgroundColor: `${colorTipoPunto('municipal')}B3` }}
+                                />
                                 PM municipal
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className="inline-block h-3 w-3 rounded-full border-2 border-dashed border-white bg-transparent" />
-                                PM provincial
+                                <span
+                                    className="inline-block h-3 w-3 rounded-full border-2 border-dashed"
+                                    style={{ borderColor: colorTipoPunto('provincial'), backgroundColor: `${colorTipoPunto('provincial')}59` }}
+                                />
+                                PM provincial (policial)
                             </p>
                             <p className="flex items-center gap-2">
-                                <span className="inline-block h-3 w-3 rounded-full border-2 border-[#a855f7] bg-[#a855f7]/50" />
+                                <span
+                                    className="inline-block h-3 w-3 rounded-full border-2"
+                                    style={{ borderColor: colorTipoPunto('alarma'), backgroundColor: `${colorTipoPunto('alarma')}80` }}
+                                />
                                 Alarma comunitaria
                             </p>
                             <p className="text-atalaya-text-dim">

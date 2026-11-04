@@ -122,25 +122,6 @@ class DashboardService
     }
 
     /**
-     * Totales de la red de monitoreo, por tipo de punto.
-     *
-     * // TODO: el modelo no registra estado operativo de la cámara (en línea /
-     * // mantenimiento). Confirmar con el equipo si se releva.
-     *
-     * @return array{total: int, por_tipo: array<string, int>}
-     */
-    public function resumenPuntosMonitoreo(Collection $puntos): array
-    {
-        return [
-            'total' => $puntos->count(),
-            'por_tipo' => $puntos
-                ->groupBy('tipo')
-                ->map->count()
-                ->all(),
-        ];
-    }
-
-    /**
      * Tiempo transcurrido desde la apertura del turno, en formato "04h 12m".
      */
     private function transcurrido(Evento $apertura): string

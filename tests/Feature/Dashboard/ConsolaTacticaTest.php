@@ -146,9 +146,7 @@ class ConsolaTacticaTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('puntosMonitoreo', 3)
-                ->where('resumenPuntos.total', 3)
-                ->where('resumenPuntos.por_tipo.municipal', 1)
-                ->where('resumenPuntos.por_tipo.provincial', 2)
+                ->missing('resumenPuntos')
             );
     }
 }

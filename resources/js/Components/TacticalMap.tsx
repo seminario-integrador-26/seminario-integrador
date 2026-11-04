@@ -1,10 +1,9 @@
-import type { EventoPanel, PuntoConCoordenadas, PuntoMapa } from '@/types';
-import { colorDeGrupo } from '@/catalogos';
+import type { PuntoConCoordenadas, PuntoMapa } from '@/types';
+import { colorTipoPunto } from '@/catalogos';
 import { Link } from '@inertiajs/react';
 import type { LatLngTuple, Marker as LeafletMarker } from 'leaflet';
 import { type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Circle,
     MapContainer,
     Marker,
     Popup,
@@ -12,9 +11,6 @@ import {
     useMap,
 } from 'react-leaflet';
 import L from 'leaflet';
-
-/** Evento con punto de monitoreo: el único que se dibuja (RN-03). */
-export type EventoGeorreferenciado = EventoPanel & { latitud: number; longitud: number };
 
 /** PM a enfocar; `n` cambia en cada búsqueda para re-enfocar el mismo PM. */
 export interface Enfoque {
@@ -75,46 +71,17 @@ function EnfocarPunto({ enfoque, marcadores }: { enfoque: Enfoque | null; marcad
 }
 
 /**
- * Visor cartográfico táctico del dashboard: eventos georreferenciados sobre los
- * puntos de monitoreo. Teselas de OpenStreetMap oscurecidas por filtro CSS
+ * Visor cartográfico táctico del panel: solo los puntos de monitoreo, por tipo.
+ * Las novedades del libro de guardia no se dibujan acá: se ven en el mapa de
+ * calor (Mapa/Index). Teselas de OpenStreetMap oscurecidas por filtro CSS
  * (clase .mapa-tactico en app.css) — CLAUDE.md fija OSM vía Leaflet.
  */
 
 // Fix de iconos por defecto de Leaflet bajo Vite.
 delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 
-/** Color del semáforo por grupo de evento (RN-02), desde @/catalogos. */
-export const colorDeCategoria = colorDeGrupo;
-
-const iconoEvento = (color: string) =>
-    L.divIcon({
-        className: 'custom-tactical-marker',
-        html: `
-            <div style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 22px;
-                height: 22px;
-                border-radius: 50%;
-                background-color: #031427;
-                border: 2px solid ${color};
-                box-shadow: 0 0 10px ${color}88;
-            ">
-                <div style="
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    background-color: ${color};
-                "></div>
-            </div>
-        `,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-        popupAnchor: [0, -12],
-    });
-
-const iconoCamara = () =>
+/** Marcador del PM, con el color de su tipo (municipal / provincial / alarma). */
+const iconoCamara = (tipo: string) =>
     L.divIcon({
         className: 'custom-camera-marker',
         html: `
@@ -125,12 +92,12 @@ const iconoCamara = () =>
                 width: 18px;
                 height: 18px;
                 background-color: #031427;
-                border: 1.5px solid #00D2FF;
+                border: 1.5px solid ${colorTipoPunto(tipo)};
             ">
                 <div style="
                     width: 6px;
                     height: 6px;
-                    background-color: #00D2FF;
+                    background-color: ${colorTipoPunto(tipo)};
                 "></div>
             </div>
         `,
@@ -143,17 +110,11 @@ const iconoCamara = () =>
 const CENTRO_VILLA_MARIA: LatLngTuple = [-32.4075, -63.2403];
 
 export default function TacticalMap({
-    eventos = [],
     puntosMonitoreo = [],
-    eventoSeleccionado = null,
-    onSeleccionarEvento = () => {},
     enfoque = null,
     puedeRegistrar = false,
 }: {
-    eventos?: EventoGeorreferenciado[];
     puntosMonitoreo?: PuntoMapa[];
-    eventoSeleccionado?: EventoPanel | null;
-    onSeleccionarEvento?: (evento: EventoGeorreferenciado) => void;
     enfoque?: Enfoque | null;
     puedeRegistrar?: boolean;
 }) {
@@ -208,7 +169,7 @@ export default function TacticalMap({
                     <Marker
                         key={`pm-${pm.id}`}
                         position={[pm.latitud, pm.longitud]}
-                        icon={iconoCamara()}
+                        icon={iconoCamara(pm.tipo)}
                         ref={(m) => {
                             marcadores.current[pm.id] = m;
                         }}
@@ -241,67 +202,6 @@ export default function TacticalMap({
                     </Marker>
                 ))}
 
-                {/* Eventos georreferenciados */}
-                {eventos.map((ev) => {
-                    const color = colorDeCategoria(ev.categoria);
-                    const seleccionado = eventoSeleccionado?.id === ev.id;
-
-                    return (
-                        <div key={`ev-${ev.id}`}>
-                            <Marker
-                                position={[ev.latitud, ev.longitud]}
-                                icon={iconoEvento(color)}
-                                eventHandlers={{
-                                    click: () => onSeleccionarEvento(ev),
-                                }}
-                            >
-                                <Popup>
-                                    <div className="max-w-[220px] p-1 font-mono text-xs">
-                                        <div className="mb-1 flex items-center justify-between gap-2 border-b border-atalaya-border pb-1">
-                                            <span className="font-bold uppercase text-white">
-                                                {ev.codigo}
-                                            </span>
-                                            <span
-                                                className="px-1.5 text-[9px] font-bold uppercase"
-                                                style={{
-                                                    color,
-                                                    border: `1px solid ${color}`,
-                                                    backgroundColor: `${color}15`,
-                                                }}
-                                            >
-                                                {ev.categoria}
-                                            </span>
-                                        </div>
-                                        <div className="mb-1 font-sans text-[11px] text-white">
-                                            {ev.descripcion}
-                                        </div>
-                                        <div className="text-[10px] text-atalaya-text-muted">
-                                            LUGAR: {ev.ubicacion}
-                                        </div>
-                                        <div className="text-[10px] text-atalaya-text-dim">
-                                            HORA: {ev.hora}
-                                        </div>
-                                    </div>
-                                </Popup>
-                            </Marker>
-
-                            {/* Perímetro del evento seleccionado */}
-                            {seleccionado && (
-                                <Circle
-                                    center={[ev.latitud, ev.longitud]}
-                                    radius={180}
-                                    pathOptions={{
-                                        color,
-                                        fillColor: color,
-                                        fillOpacity: 0.15,
-                                        weight: 1,
-                                        dashArray: '4, 4',
-                                    }}
-                                />
-                            )}
-                        </div>
-                    );
-                })}
             </MapContainer>
         </div>
     );
