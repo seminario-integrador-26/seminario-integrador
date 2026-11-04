@@ -2,7 +2,7 @@ import InputLabel from '@/Components/InputLabel';
 import FechaInput from '@/Components/FechaInput';
 import Select from '@/Components/Select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { colorGrupo } from '@/catalogos';
+import { colorGrupo, estiloGrupo } from '@/catalogos';
 import type { Opciones, PuntoConCoordenadas, PuntoMapa, TipoEventoOpcion } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import L from '@/lib/leafletGlobal';
@@ -86,12 +86,6 @@ const GRADIENTE = { 0.25: '#0b3a5c', 0.5: '#0e7fa8', 0.8: '#00d2ff', 1: '#e6fbff
 
 // Radio (m) para el drill-down al hacer clic en una zona del mapa de calor.
 const RADIO_DRILL_DOWN = 250;
-
-const categoriaActiva: Record<string, string> = {
-    policia: 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
-    guardia_local: 'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
-    internos: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
-};
 
 /** Estilo del círculo según el tipo de PM (municipal | provincial | alarma). */
 const ESTILO_TIPO_PUNTO: Record<string, PathOptions> = {
@@ -389,10 +383,11 @@ export default function Index({ filtros, densidad, eventos, puntos, tipos, categ
                                             type="button"
                                             aria-pressed={activa}
                                             onClick={() => alternarCategoria(clave)}
+                                            style={activa ? estiloGrupo(clave) : undefined}
                                             className={
                                                 'border px-2 py-1 font-mono text-[10px] font-bold uppercase ' +
                                                 (activa
-                                                    ? categoriaActiva[clave]
+                                                    ? ''
                                                     : 'border-atalaya-border text-atalaya-text-dim hover:text-white')
                                             }
                                         >

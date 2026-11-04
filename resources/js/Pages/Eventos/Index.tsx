@@ -1,3 +1,4 @@
+import { estiloGrupo } from '@/catalogos';
 import EstadoNotificaciones from '@/Components/EstadoNotificaciones';
 import FlashMessages from '@/Components/FlashMessages';
 import { Cabecera, Celda, CeldaAcciones, Cuerpo, Encabezado, Fila, FilaVacia, Insignia, Paginacion, Tabla } from '@/Components/Tabla';
@@ -66,13 +67,6 @@ interface Exportacion {
     formato?: string;
     mensaje?: string;
 }
-
-const categoriaBadge: Record<string, string> = {
-    Policía: 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
-    'Guardia Local':
-        'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
-    Internos: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
-};
 
 const filtrosVacios: Filtros = {
     categorias: [],
@@ -276,12 +270,11 @@ export default function Index({
                                                 onClick={() =>
                                                     alternarCategoria(clave)
                                                 }
+                                                style={activa ? estiloGrupo(clave) : undefined}
                                                 className={
                                                     'border px-3 py-1 font-mono text-[11px] font-bold uppercase ' +
                                                     (activa
-                                                        ? categoriaBadge[
-                                                              etiqueta
-                                                          ]
+                                                        ? ''
                                                         : 'border-atalaya-border text-atalaya-text-dim hover:text-white')
                                                 }
                                             >
@@ -592,7 +585,7 @@ export default function Index({
                                     <Celda>
                                         <div className="font-medium text-white">{e.tipo}</div>
                                         <div className="mt-1 flex flex-wrap gap-1">
-                                            <Insignia color={categoriaBadge[e.categoria]}>{e.categoria}</Insignia>
+                                            <Insignia style={estiloGrupo(e.categoria)}>{e.categoria}</Insignia>
                                             {e.informativo && (
                                                 <Insignia title="Tipo no cuantificable: no entra en las estadísticas">
                                                     Informativo

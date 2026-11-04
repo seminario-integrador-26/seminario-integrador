@@ -1,3 +1,4 @@
+import { colorGrupo, estiloGrupo } from '@/catalogos';
 import BuscadorPuntoMapa from '@/Components/BuscadorPuntoMapa';
 import TacticalMap, { colorDeCategoria, type Enfoque, type EventoGeorreferenciado } from '@/Components/TacticalMap';
 import Select from '@/Components/Select';
@@ -30,18 +31,6 @@ interface Props {
 }
 
 const TODAS = 'TODAS';
-
-/** Clases del badge de categoría, alineadas al semáforo del mapa. */
-const badgeDeCategoria = (categoria: string) => {
-    switch (categoria) {
-        case 'Policía':
-            return 'text-atalaya-crimson border-atalaya-crimson bg-atalaya-crimson/10';
-        case 'Guardia Local':
-            return 'text-atalaya-amber border-atalaya-amber bg-atalaya-amber/10';
-        default:
-            return 'text-atalaya-cyan border-atalaya-cyan bg-atalaya-cyan/10';
-    }
-};
 
 export default function Dashboard({
     turno,
@@ -136,13 +125,13 @@ export default function Dashboard({
                                     <span className="text-atalaya-cyan">· En vivo</span>
                                 </div>
                                 <div className="flex flex-wrap gap-x-2 text-[10px] font-bold">
-                                    <span className="text-atalaya-crimson">
+                                    <span style={{ color: colorGrupo('policia') }}>
                                         ● {conteoPorCategoria['Policía'] ?? 0} POL
                                     </span>
-                                    <span className="text-atalaya-amber">
+                                    <span style={{ color: colorGrupo('guardia_local') }}>
                                         ● {conteoPorCategoria['Guardia Local'] ?? 0} GL
                                     </span>
-                                    <span className="text-atalaya-cyan">
+                                    <span style={{ color: colorGrupo('internos') }}>
                                         ● {conteoPorCategoria['Internos'] ?? 0} INT
                                     </span>
                                     {eventos.length - cuantificables > 0 && (
@@ -291,19 +280,19 @@ export default function Dashboard({
                                     [ Leyenda ]
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2.5 w-2.5 border border-atalaya-crimson bg-atalaya-crimson/50"></span>
+                                    <span className="inline-block h-2.5 w-2.5 border" style={{ borderColor: colorGrupo('policia'), backgroundColor: `${colorGrupo('policia')}80` }}></span>
                                     <span className="text-atalaya-text-muted">
                                         Policía
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2.5 w-2.5 border border-atalaya-amber bg-atalaya-amber/50"></span>
+                                    <span className="inline-block h-2.5 w-2.5 border" style={{ borderColor: colorGrupo('guardia_local'), backgroundColor: `${colorGrupo('guardia_local')}80` }}></span>
                                     <span className="text-atalaya-text-muted">
                                         Guardia Local
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="inline-block h-2.5 w-2.5 border border-atalaya-cyan bg-atalaya-cyan/50"></span>
+                                    <span className="inline-block h-2.5 w-2.5 border" style={{ borderColor: colorGrupo('internos'), backgroundColor: `${colorGrupo('internos')}80` }}></span>
                                     <span className="text-atalaya-text-muted">
                                         Internos
                                     </span>
@@ -383,9 +372,8 @@ export default function Dashboard({
                                                 {ev.codigo}
                                             </span>
                                             <span
-                                                className={`border px-1.5 py-0.5 text-[9px] font-bold uppercase ${badgeDeCategoria(
-                                                    ev.categoria,
-                                                )}`}
+                                                className="border px-1.5 py-0.5 text-[9px] font-bold uppercase"
+                                                style={estiloGrupo(ev.categoria)}
                                             >
                                                 {ev.categoria}
                                             </span>

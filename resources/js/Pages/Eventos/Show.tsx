@@ -1,3 +1,4 @@
+import { estiloGrupo } from '@/catalogos';
 import EstadoNotificaciones from '@/Components/EstadoNotificaciones';
 import FlashMessages from '@/Components/FlashMessages';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -50,14 +51,6 @@ interface EventoDetalle {
     registrado: string | null;
     notificaciones: Notificacion[];
 }
-
-/** Badge por grupo de evento, alineado al semáforo del mapa. */
-const categoriaBadge: Record<string, string> = {
-    Policía: 'border-atalaya-crimson bg-atalaya-crimson/10 text-atalaya-crimson',
-    'Guardia Local':
-        'border-atalaya-amber bg-atalaya-amber/10 text-atalaya-amber',
-    Internos: 'border-atalaya-cyan bg-atalaya-cyan/10 text-atalaya-cyan',
-};
 
 const badge =
     'inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4';
@@ -125,14 +118,7 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             <h3 className="mr-2 text-lg font-semibold text-white">
                                 {evento.tipo}
                             </h3>
-                            <span
-                                className={
-                                    badge +
-                                    ' ' +
-                                    (categoriaBadge[evento.categoria] ??
-                                        'border-atalaya-border text-atalaya-text-muted')
-                                }
-                            >
+                            <span className={badge} style={estiloGrupo(evento.categoria)}>
                                 {evento.categoria}
                             </span>
                             {!evento.punto && !evento.direccion && !evento.barrio && (

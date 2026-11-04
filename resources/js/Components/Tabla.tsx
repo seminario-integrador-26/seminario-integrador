@@ -1,6 +1,6 @@
 import type { Paginador } from '@/types';
 import { Link } from '@inertiajs/react';
-import type { MouseEventHandler, ReactNode } from 'react';
+import type { CSSProperties, MouseEventHandler, ReactNode } from 'react';
 
 type Alineacion = 'izquierda' | 'derecha' | 'centro';
 type Hijos = { children?: ReactNode };
@@ -207,14 +207,18 @@ export function Accion({ icono, etiqueta, href, descarga = false, onClick, varia
     );
 }
 
-/** Etiqueta compacta (estado, rol, categoría). `color`: clases de borde/fondo/texto. */
+/**
+ * Etiqueta compacta (estado, rol, categoría). `color`: clases de borde/fondo/texto;
+ * `style` para colores fuera de la paleta Tailwind (grupos de evento).
+ */
 export function Insignia({
     color = 'border-atalaya-border bg-atalaya-canvas text-atalaya-text-muted',
+    style,
     children,
     title,
-}: Hijos & { color?: string; title?: string }) {
+}: Hijos & { color?: string; style?: CSSProperties; title?: string }) {
     return (
-        <span title={title} className={`inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4 ${color}`}>
+        <span title={title} style={style} className={`inline-flex border px-2 py-0.5 font-mono text-[10px] font-bold uppercase leading-4 ${color}`}>
             {children}
         </span>
     );

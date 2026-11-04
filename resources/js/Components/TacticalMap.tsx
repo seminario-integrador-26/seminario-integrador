@@ -1,4 +1,5 @@
 import type { EventoPanel, PuntoConCoordenadas, PuntoMapa } from '@/types';
+import { colorDeGrupo } from '@/catalogos';
 import { Link } from '@inertiajs/react';
 import type { LatLngTuple, Marker as LeafletMarker } from 'leaflet';
 import { type MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
@@ -82,15 +83,8 @@ function EnfocarPunto({ enfoque, marcadores }: { enfoque: Enfoque | null; marcad
 // Fix de iconos por defecto de Leaflet bajo Vite.
 delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 
-/** Color del semáforo por grupo de evento (RN-02). */
-export const COLOR_POR_CATEGORIA: Record<string, string> = {
-    policía: '#EF4444',
-    'seguridad ciudadana': '#F59E0B',
-    'oficios recepcionados': '#00D2FF',
-};
-
-export const colorDeCategoria = (categoria: string | null | undefined) =>
-    COLOR_POR_CATEGORIA[categoria?.toLowerCase() ?? ''] ?? '#00D2FF';
+/** Color del semáforo por grupo de evento (RN-02), desde @/catalogos. */
+export const colorDeCategoria = colorDeGrupo;
 
 const iconoEvento = (color: string) =>
     L.divIcon({
