@@ -288,7 +288,7 @@ export default function Dashboard({
                                     >
                                         <div className="mb-1.5 flex items-center justify-between gap-2">
                                             <span className="text-xs font-bold tracking-wider text-white">
-                                                {ev.codigo}
+                                                {ev.hora}
                                             </span>
                                             <span
                                                 className="border px-1.5 py-0.5 text-[9px] font-bold uppercase"
@@ -308,13 +308,8 @@ export default function Dashboard({
                                             </div>
                                         )}
 
-                                        <div className="mt-2 flex items-center justify-between text-[11px] text-atalaya-text-muted">
-                                            <span className="max-w-[190px] truncate">
-                                                {ev.ubicacion ?? 'Sin ubicación'}
-                                            </span>
-                                            <span className="text-atalaya-text-dim">
-                                                {ev.hora}
-                                            </span>
+                                        <div className="mt-2 truncate text-[11px] text-atalaya-text-muted">
+                                            {ev.ubicacion ?? 'Sin ubicación'}
                                         </div>
                                     </div>
                                 );
