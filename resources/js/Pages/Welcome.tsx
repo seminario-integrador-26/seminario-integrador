@@ -61,7 +61,7 @@ export default function Welcome({ auth }: PageProps) {
                                 </span>
                             </div>
                             <div className="border border-atalaya-border bg-atalaya-canvas px-2.5 py-1 text-[11px] text-atalaya-cyan">
-                                <span className="mr-1 text-atalaya-text-dim">
+                                <span className="mr-1 text-white">
                                     {fecha}
                                 </span>
                                 <span>{hora || '00:00:00'}</span>

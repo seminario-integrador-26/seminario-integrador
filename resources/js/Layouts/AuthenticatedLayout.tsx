@@ -152,7 +152,7 @@ export default function AuthenticatedLayout({
                             </div>
 
                             <div className="border border-atalaya-border bg-atalaya-canvas px-2.5 py-1 font-semibold text-atalaya-cyan">
-                                <span className="mr-1.5 text-atalaya-text-dim">
+                                <span className="mr-1.5 text-white">
                                     {fecha}
                                 </span>
                                 <span>{hora || '00:00:00'}</span>

@@ -4,7 +4,7 @@ import TacticalMap, { type Enfoque } from '@/Components/TacticalMap';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import type { EventoPanel, PageProps, PuntoMapa } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, usePoll } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 /** Turno abierto (DashboardService::turnoVigente): última Apertura de turno sin Cierre. */
@@ -50,6 +50,10 @@ export default function Dashboard({
     const puedeCorregir = auth.permissions.includes('erratas.crear');
     const puedeExportar = auth.permissions.includes('reportes.exportar');
 
+    // "En vivo": cada 30 s recarga solo turno y novedades (no el mapa ni los
+    // filtros/búsqueda, que quedan como están). Las cámaras no se recargan.
+    usePoll(30_000, { only: ['turno', 'eventos', 'conteoPorCategoria'] });
+
     const [filtro, setFiltro] = useState(TODAS);
     const [seleccionado, setSeleccionado] = useState<EventoPanel | null>(null);
 
@@ -88,10 +92,6 @@ export default function Dashboard({
         setEnfoque((actual) => ({ punto, n: (actual?.n ?? 0) + 1 }));
 
     const categorias = Object.keys(conteoPorCategoria);
-    const cuantificables = Object.values(conteoPorCategoria).reduce(
-        (total, n) => total + n,
-        0,
-    );
 
     return (
         <AuthenticatedLayout>
@@ -181,11 +181,6 @@ export default function Dashboard({
                                     <span style={{ color: colorGrupo('internos') }}>
                                         ● {conteoPorCategoria['Internos'] ?? 0} INT
                                     </span>
-                                    {eventos.length - cuantificables > 0 && (
-                                        <span className="font-normal text-atalaya-text-dim">
-                                            {eventos.length - cuantificables} NC
-                                        </span>
-                                    )}
                                 </div>
                             </div>
                         </div>
