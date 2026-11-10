@@ -5,17 +5,28 @@ import { useEffect, useState } from 'react';
 
 export default function Welcome({ auth }: PageProps) {
     const [hora, setHora] = useState('');
+    const [fecha, setFecha] = useState('');
 
     useEffect(() => {
-        const actualizar = () =>
+        const actualizar = () => {
+            const ahora = new Date();
             setHora(
-                new Date().toLocaleTimeString('es-AR', {
+                ahora.toLocaleTimeString('es-AR', {
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
                     hour12: false,
                 }),
             );
+            // dd/mm/aaaa, p. ej. 10/11/2026
+            setFecha(
+                ahora.toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                }),
+            );
+        };
 
         actualizar();
         const intervalo = setInterval(actualizar, 1000);
@@ -51,7 +62,7 @@ export default function Welcome({ auth }: PageProps) {
                             </div>
                             <div className="border border-atalaya-border bg-atalaya-canvas px-2.5 py-1 text-[11px] text-atalaya-cyan">
                                 <span className="mr-1 text-atalaya-text-dim">
-                                    UTC-3
+                                    {fecha}
                                 </span>
                                 <span>{hora || '00:00:00'}</span>
                             </div>

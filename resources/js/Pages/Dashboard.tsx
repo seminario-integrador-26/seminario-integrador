@@ -133,11 +133,11 @@ export default function Dashboard({
                                             </span>
                                         )}
                                     </div>
-                                    <div className="truncate text-[10px] text-atalaya-text-muted">
-                                        {turno.franja && <>{turno.franja} · </>}
-                                        desde {turno.hora_inicio} ({turno.transcurrido})
-                                        {turno.supervisor && <> · {turno.supervisor}</>}
-                                    </div>
+                                    {(turno.franja || turno.supervisor) && (
+                                        <div className="truncate text-[10px] text-atalaya-text-muted">
+                                            {[turno.franja, turno.supervisor].filter(Boolean).join(' · ')}
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
