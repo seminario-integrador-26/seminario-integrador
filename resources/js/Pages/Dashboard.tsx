@@ -18,6 +18,10 @@ interface TurnoVigente {
     supervisor: string | null;
     /** "04h 12m" */
     transcurrido: string;
+    /** Etiqueta de la franja ("Mañana"); null en aperturas anteriores al campo. */
+    franja: string | null;
+    /** Grupo de guardia de turno (1 a 4); null en aperturas anteriores al campo. */
+    grupo_guardia: number | null;
 }
 
 interface Props {
@@ -96,13 +100,67 @@ export default function Dashboard({
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
                 {/* 1. Barra de telemetría (compacta: el protagonista es el mapa) */}
                 <section className="border-b border-atalaya-border bg-atalaya-surface">
-                    {/* Sin Reportes (Supervisor) queda solo la caja de novedades, a todo el ancho. */}
+                    {/* Turno + novedades; sin Reportes (Supervisor) no va la caja de la derecha. */}
                     <div
                         className={
-                            'swiss-grid ' +
-                            (puedeExportar ? 'grid-cols-1 sm:grid-cols-[3fr_1fr]' : 'grid-cols-1')
+                            'swiss-grid grid-cols-1 ' +
+                            (puedeExportar
+                                ? 'sm:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,2fr)]'
+                                : 'sm:grid-cols-[minmax(0,3fr)_minmax(0,4fr)]')
                         }
                     >
+                        {/* Estado del turno de guardia: abierto (con grupo y franja) o cerrado */}
+                        <div
+                            className={
+                                'swiss-panel flex items-center gap-3 border-l-4 px-4 py-2 font-mono ' +
+                                (turno ? 'border-l-emerald-500' : 'border-l-atalaya-crimson')
+                            }
+                        >
+                            <span
+                                aria-hidden
+                                className={
+                                    'h-2.5 w-2.5 shrink-0 rounded-full ' +
+                                    (turno ? 'animate-pulse bg-emerald-500' : 'bg-atalaya-crimson')
+                                }
+                            />
+                            {turno ? (
+                                <div className="min-w-0">
+                                    <div className="truncate text-xs font-black uppercase tracking-wider text-white">
+                                        Turno abierto
+                                        {turno.grupo_guardia !== null && (
+                                            <span className="text-emerald-400">
+                                                {' '}· Grupo {turno.grupo_guardia}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="truncate text-[10px] text-atalaya-text-muted">
+                                        {turno.franja && <>{turno.franja} · </>}
+                                        desde {turno.hora_inicio} ({turno.transcurrido})
+                                        {turno.supervisor && <> · {turno.supervisor}</>}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <div className="truncate text-xs font-black uppercase tracking-wider text-atalaya-crimson">
+                                            Turno cerrado
+                                        </div>
+                                        <div className="truncate text-[10px] text-atalaya-text-muted">
+                                            Sin guardia en curso
+                                        </div>
+                                    </div>
+                                    {esSupervisor && (
+                                        <Link
+                                            href={route('eventos.create')}
+                                            className="shrink-0 border border-atalaya-cyan bg-atalaya-cyan/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-cyan/25"
+                                        >
+                                            Abrir turno
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                         {/* Eventos del turno */}
                         <div className="swiss-panel flex items-center gap-3 px-4 py-2">
                             <span className="font-mono text-xl font-black leading-none text-white">

@@ -36,7 +36,10 @@ class DashboardService
     /**
      * Turno vigente aplanado para la UI; `id` es el número del evento de apertura.
      *
-     * @return array{id: int, fecha: string, hora_inicio: string, supervisor: ?string, transcurrido: string}|null
+     * `franja` es la etiqueta ("Mañana") y `grupo_guardia` el grupo de 1 a 4;
+     * los dos los indica el Supervisor al abrir (null en aperturas viejas).
+     *
+     * @return array{id: int, fecha: string, hora_inicio: string, supervisor: ?string, transcurrido: string, franja: ?string, grupo_guardia: ?int}|null
      */
     public function turnoVigente(?Evento $apertura): ?array
     {
@@ -50,6 +53,8 @@ class DashboardService
             'hora_inicio' => $apertura->fecha_hora->format('H:i'),
             'supervisor' => $apertura->usuario?->name,
             'transcurrido' => $this->transcurrido($apertura),
+            'franja' => Evento::FRANJAS[$apertura->franja] ?? null,
+            'grupo_guardia' => $apertura->grupo_guardia,
         ];
     }
 

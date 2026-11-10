@@ -58,7 +58,11 @@ class ConsolaTacticaTest extends TestCase
 
     public function test_el_panel_muestra_la_apertura_vigente(): void
     {
-        $apertura = $this->interno(TipoEvento::APERTURA_TURNO, '2026-10-23 06:00:00');
+        $apertura = $this->evento('2026-10-23 06:00:00', [
+            'tipo_evento_id' => TipoEvento::interno(TipoEvento::APERTURA_TURNO),
+            'franja' => 'manana',
+            'grupo_guardia' => 2,
+        ]);
 
         $this->actingAs($this->supervisor)
             ->get(route('dashboard'))
@@ -66,6 +70,8 @@ class ConsolaTacticaTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
                 ->where('turno.id', $apertura->id)
+                ->where('turno.franja', 'Mañana')
+                ->where('turno.grupo_guardia', 2)
                 ->where('turno.hora_inicio', '06:00')
                 ->where('turno.supervisor', $this->supervisor->name)
                 ->where('turno.transcurrido', '06h 00m')
