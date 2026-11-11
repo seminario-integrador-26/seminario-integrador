@@ -44,8 +44,14 @@
   pendientes (hoy `turnos.novedades_pendientes`) también.
 - **Guardia vigente** (Panel, encabezado "TURNO #…"): se deriva de la última
   Apertura de turno sin un Cierre posterior.
-- **Constancias automáticas:** el evento "Errata" lo crea el sistema y no se
-  carga a mano ni se le hace errata.
+- **Constancias automáticas:** los eventos "Errata" y "Ampliación" los crea
+  el sistema y no se cargan a mano ni se amplían. Sí se les hace fe de
+  errata (2026-11-11): una errata con el motivo mal escrito se corrige con
+  otra errata sobre su constancia.
+- **Ampliación (2026-11-11):** información posterior a una novedad (tabla
+  `ampliaciones`, `AmpliacionService::ampliar`). Mismo circuito que la errata:
+  pide turno abierto, deja la constancia "Ampliación sobre AT-2026-0012:
+  <detalle>" y se notifica según la matriz.
 
 ## Decidido el 2026-10-23 (2ª tanda)
 

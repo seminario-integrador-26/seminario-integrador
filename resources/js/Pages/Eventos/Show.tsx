@@ -19,6 +19,15 @@ interface ErrataDetalle {
     fecha: string | null;
 }
 
+/** Ampliación de la novedad (EventoController::show). */
+interface AmpliacionDetalle {
+    id: number;
+    detalle: string;
+    autor: string | null;
+    /** dd/mm/aaaa hh:mm:ss */
+    fecha: string | null;
+}
+
 /** Detalle del evento con sus valores vigentes (EventoController::show). */
 interface EventoDetalle {
     id: number;
@@ -47,6 +56,7 @@ interface EventoDetalle {
     /** Apertura de turno: "Mañana · Grupo 2". */
     guardia: string | null;
     erratas: ErrataDetalle[];
+    ampliaciones: AmpliacionDetalle[];
     autor: string | null;
     registrado: string | null;
     notificaciones: Notificacion[];
@@ -68,9 +78,18 @@ function Dato({ etiqueta, children, className = '' }: { etiqueta: string; childr
 
 /**
  * US-010: detalle completo de un evento. Solo lectura: los eventos son
- * inmutables (las correcciones van por fe de errata).
+ * inmutables (las correcciones van por fe de errata y la información
+ * posterior, por ampliación).
  */
-export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle; puedeCorregir: boolean }) {
+export default function Show({
+    evento,
+    puedeCorregir,
+    puedeAmpliar,
+}: {
+    evento: EventoDetalle;
+    puedeCorregir: boolean;
+    puedeAmpliar: boolean;
+}) {
     const { auth } = usePage<PageProps>().props;
     const puedeReenviar = auth.roles.includes('Supervisor');
 
@@ -82,6 +101,14 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                         Novedad #{evento.id}
                     </h2>
                     <div className="flex items-center gap-4">
+                        {puedeAmpliar && (
+                            <Link
+                                href={route('ampliaciones.create', evento.id)}
+                                className="border border-atalaya-cyan px-3 py-1 font-mono text-xs font-bold uppercase text-atalaya-cyan hover:bg-atalaya-cyan/10"
+                            >
+                                Ampliación
+                            </Link>
+                        )}
                         {puedeCorregir && (
                             <Link
                                 href={route('erratas.create', evento.id)}
@@ -110,6 +137,13 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                         <p className="border border-atalaya-amber/50 bg-atalaya-amber/10 px-4 py-2 text-sm text-amber-100">
                             Esta novedad tiene {evento.erratas.length} fe(s) de
                             errata; el detalle está al final.
+                        </p>
+                    )}
+
+                    {evento.ampliaciones.length > 0 && (
+                        <p className="border border-atalaya-cyan/50 bg-atalaya-cyan/10 px-4 py-2 text-sm text-cyan-100">
+                            Esta novedad tiene {evento.ampliaciones.length}{' '}
+                            ampliación(es); el detalle está al final.
                         </p>
                     )}
 
@@ -234,6 +268,29 @@ export default function Show({ evento, puedeCorregir }: { evento: EventoDetalle;
                             </div>
                         </div>
                     </section>
+
+                    {evento.ampliaciones.length > 0 && (
+                        <section className="border border-atalaya-border bg-atalaya-surface p-6">
+                            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-atalaya-text-dim">
+                                Ampliaciones
+                            </h3>
+                            <ol className="mt-4 space-y-4">
+                                {evento.ampliaciones.map((a) => (
+                                    <li
+                                        key={a.id}
+                                        className="border-l-2 border-atalaya-cyan pl-4 text-sm"
+                                    >
+                                        <p className="whitespace-pre-line text-white">
+                                            {a.detalle}
+                                        </p>
+                                        <p className="text-xs text-atalaya-text-dim">
+                                            {a.autor} · {a.fecha}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ol>
+                        </section>
+                    )}
 
                     {evento.erratas.length > 0 && (
                         <section className="border border-atalaya-border bg-atalaya-surface p-6">

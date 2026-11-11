@@ -40,11 +40,11 @@ export default function Index({ turnos, filtros }: { turnos: Paginador<Guardia>;
         <AuthenticatedLayout
             header={
                 <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-white">
-                    Libro de guardia
+                    Libros de guardia
                 </h2>
             }
         >
-            <Head title="Reportes" />
+            <Head title="Libros de guardia" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-5xl space-y-4 px-4 sm:px-6 lg:px-8">

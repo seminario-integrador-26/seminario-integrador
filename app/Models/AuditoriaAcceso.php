@@ -54,6 +54,9 @@ class AuditoriaAcceso extends Model
     // Fe de errata (regla de negocio 1).
     public const EVENTO_ERRATA = 'errata_registrada';
 
+    // Ampliación de una novedad.
+    public const EVENTO_AMPLIACION = 'ampliacion_registrada';
+
     // Puntos de monitoreo (US-024).
     public const EVENTO_PM_ALTA = 'punto_creado';
 
@@ -106,6 +109,7 @@ class AuditoriaAcceso extends Model
         self::EVENTO_REPORTE_PDF => 'Reporte PDF generado',
         self::EVENTO_EXPORTACION => 'Exportación de datos',
         self::EVENTO_ERRATA => 'Fe de errata',
+        self::EVENTO_AMPLIACION => 'Ampliación',
         self::EVENTO_PM_ALTA => 'PM creado',
         self::EVENTO_PM_MOD => 'PM actualizado',
         self::EVENTO_PM_BAJA => 'PM eliminado',

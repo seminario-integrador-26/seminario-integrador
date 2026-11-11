@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AmpliacionController;
 use App\Http\Controllers\AnalisisController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\DashboardController;
@@ -104,6 +105,12 @@ Route::middleware(['auth', 'role:Supervisor'])->group(function () {
         ->whereNumber('evento')->name('erratas.create');
     Route::post('eventos/{evento}/errata', [ErrataController::class, 'store'])
         ->whereNumber('evento')->name('erratas.store');
+
+    // Ampliación: suma información posterior sin tocar la novedad.
+    Route::get('eventos/{evento}/ampliacion', [AmpliacionController::class, 'create'])
+        ->whereNumber('evento')->name('ampliaciones.create');
+    Route::post('eventos/{evento}/ampliacion', [AmpliacionController::class, 'store'])
+        ->whereNumber('evento')->name('ampliaciones.store');
 
     // US-007: reenvío manual de una notificación fallida.
     Route::post('notificaciones/{notificacion}/reenviar', [NotificacionController::class, 'reenviar'])

@@ -70,6 +70,7 @@ class TipoEventoSeeder extends Seeder
             'Cierre de turno',
             'Nota',
             'Errata',
+            'Ampliación',
             'Otros',
         ]],
     ];
@@ -81,7 +82,7 @@ class TipoEventoSeeder extends Seeder
      *
      * @var list<string>
      */
-    public const INTERNOS_NO_CUANTIFICABLES = ['Apertura de turno', 'Cierre de turno', 'Nota', 'Errata', 'Otros'];
+    public const INTERNOS_NO_CUANTIFICABLES = ['Apertura de turno', 'Cierre de turno', 'Nota', 'Errata', 'Ampliación', 'Otros'];
 
     /** Tipos de ejemplo que cargaba la versión anterior de este seeder. */
     private const TIPOS_DE_EJEMPLO = [

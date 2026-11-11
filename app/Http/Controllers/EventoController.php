@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BuscarEventosRequest;
 use App\Http\Requests\StoreEventoRequest;
+use App\Models\Ampliacion;
 use App\Models\AuditoriaAcceso;
 use App\Models\Barrio;
 use App\Models\Cuadrante;
@@ -134,7 +135,9 @@ class EventoController extends Controller
         $fechaHora = Carbon::parse($vigentes['fecha_hora']);
 
         return Inertia::render('Eventos/Show', [
-            'puedeCorregir' => $request->user()->can('erratas.crear') && ! $this->eventos->esConstancia($evento),
+            // A una constancia se le hace errata, pero no ampliación.
+            'puedeCorregir' => $this->eventos->puedeCorregir($request->user()),
+            'puedeAmpliar' => $this->eventos->puedeAmpliar($request->user()) && ! $this->eventos->esConstancia($evento),
             'evento' => [
                 'id' => $evento->id,
                 'tipo' => $tipo->nombre,
@@ -166,6 +169,12 @@ class EventoController extends Controller
                     'motivo' => $e->motivo,
                     'autor' => $e->autor?->name,
                     'fecha' => $e->created_at?->format('d/m/Y H:i:s'),
+                ]),
+                'ampliaciones' => $evento->ampliaciones->map(fn (Ampliacion $a) => [
+                    'id' => $a->id,
+                    'detalle' => $a->detalle,
+                    'autor' => $a->autor?->name,
+                    'fecha' => $a->created_at?->format('d/m/Y H:i:s'),
                 ]),
                 'autor' => $evento->usuario?->name,
                 'registrado' => $evento->created_at?->format('d/m/Y H:i:s'),

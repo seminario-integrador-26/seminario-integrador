@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Evento;
 use App\Models\GrupoEvento;
 use App\Models\PuntoMonitoreo;
-use Illuminate\Support\Carbon;
+use App\Models\TipoEvento;
 use Illuminate\Support\Collection;
 
 /**
@@ -66,6 +66,8 @@ class DashboardService
      */
     public function eventosDelTurno(?Evento $apertura): array
     {
+        $constancias = TipoEvento::constanciaIds();
+
         return ($apertura ? $this->libro->eventosDe($apertura) : Evento::vigentes()->limit(self::EVENTOS_SIN_TURNO))
             ->with([
                 'tipoEvento:id,nombre,grupo_evento_id,es_cuantificable',
@@ -80,6 +82,8 @@ class DashboardService
             ->map(fn (Evento $e) => [
                 'id' => $e->id,
                 'codigo' => $e->codigo(),
+                // Errata o Ampliación: se le hace errata, pero no ampliación.
+                'constancia' => in_array($e->tipo_evento_id, $constancias, true),
                 'categoria' => $e->tipoEvento->grupoEvento->nombre,
                 'es_cuantificable' => $e->tipoEvento->es_cuantificable,
                 'tipo' => $e->tipoEvento->nombre,

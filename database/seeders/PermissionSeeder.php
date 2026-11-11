@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
         'eventos.registrar' => ['Supervisor'],
         'eventos.consultar' => ['Supervisor', 'Administrativo', 'Administrador de sistema'],
         'erratas.crear' => ['Supervisor'],
+        'ampliaciones.crear' => ['Supervisor'],
         'estadisticas.ver' => ['Administrativo', 'Administrador de sistema'],
         'dashboards.ver' => ['Administrativo', 'Administrador de sistema'],
         'reportes.exportar' => ['Administrativo', 'Administrador de sistema'],

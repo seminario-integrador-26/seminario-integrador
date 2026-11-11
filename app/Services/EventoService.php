@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Events\EventoRegistrado;
 use App\Models\Evento;
+use App\Models\GrupoEvento;
 use App\Models\PuntoMonitoreo;
 use App\Models\TipoEvento;
+use App\Models\TipoPuntoMonitoreo;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -108,9 +110,9 @@ class EventoService
     }
 
     /**
-     * Evento interno que registra el sistema (hoy, la constancia de una fe de
-     * errata): con la hora actual, sin ubicación, y se notifica como cualquier
-     * otro según la matriz de Notificaciones.
+     * Evento interno que registra el sistema (la constancia de una fe de
+     * errata o de una ampliación): con la hora actual, sin ubicación, y se
+     * notifica como cualquier otro según la matriz de Notificaciones.
      */
     public function registrarConstancia(string $tipo, string $descripcion, User $autor): Evento
     {
@@ -127,24 +129,24 @@ class EventoService
     }
 
     /**
-     * Las constancias (evento interno Errata) las crea el sistema: no se
-     * cargan a mano ni se corrigen.
+     * Las constancias (eventos internos Errata y Ampliación) las crea el
+     * sistema: no se cargan a mano ni se amplían (sí se les hace errata).
      */
     public function esConstancia(Evento $evento): bool
     {
-        return $evento->tipo_evento_id === TipoEvento::interno(TipoEvento::ERRATA);
+        return in_array($evento->tipo_evento_id, TipoEvento::constanciaIds(), true);
     }
 
     /**
      * Tipos para selects; `categoria` es el código de su GrupoEvento. Con
-     * `$cargables`, sin la constancia Errata (no se carga a mano).
+     * `$cargables`, sin las constancias Errata y Ampliación (no se cargan a mano).
      *
      * @return Collection<int, array{id: int, nombre: string, categoria: string, requiere_ubicacion: bool}>
      */
     public function tiposEvento(bool $cargables = false): Collection
     {
         return TipoEvento::with('grupoEvento:id,codigo')
-            ->when($cargables ? TipoEvento::interno(TipoEvento::ERRATA) : null, fn (Builder $q, int $errata) => $q->whereKeyNot($errata))
+            ->when($cargables, fn (Builder $q) => $q->whereKeyNot(TipoEvento::constanciaIds()))
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'grupo_evento_id', 'requiere_ubicacion'])
             ->map(fn (TipoEvento $t) => [
@@ -181,6 +183,7 @@ class EventoService
             'usuario:id,name',
             'notificaciones.grupoInteresado:id,nombre',
             'erratas.autor:id,name',
+            'ampliaciones.autor:id,name',
         ]);
     }
 
@@ -359,11 +362,52 @@ class EventoService
     }
 
     /**
+     * Ampliación: como la fe de errata, el Supervisor amplía cualquier
+     * evento, incluso de otros supervisores (auditado).
+     */
+    public function puedeAmpliar(User $usuario): bool
+    {
+        return $usuario->can('ampliaciones.crear');
+    }
+
+    /**
+     * Props de los formularios que se cargan SOBRE una novedad (fe de errata,
+     * ampliación): sus valores vigentes, bloqueados, y lo necesario para
+     * mostrarlos (tipos, grupos, PMs y mapa).
+     *
+     * @return array<string, mixed>
+     */
+    public function formularioSobre(Evento $evento): array
+    {
+        $vigentes = $evento->load('erratas')->valoresVigentes();
+        $fechaHora = Carbon::parse($vigentes['fecha_hora']);
+
+        return [
+            'evento' => [
+                'id' => $evento->id,
+                'tipo_evento_id' => (int) $vigentes['tipo_evento_id'],
+                'fecha' => $fechaHora->format('Y-m-d'),
+                'hora' => $fechaHora->format('H:i:s'),
+                'punto_monitoreo_id' => $vigentes['punto_monitoreo_id'] ? (int) $vigentes['punto_monitoreo_id'] : null,
+                'descripcion' => $vigentes['descripcion'],
+                // Sin PM: dirección y barrio cargados a mano.
+                'ubicacion' => $evento->load('barrio:id,nombre')->ubicacion(),
+            ],
+            // Todos los tipos: solo se usan para mostrar el de la novedad, que
+            // puede ser una constancia (errata sobre una errata).
+            'tipos' => $this->tiposEvento(),
+            'categorias' => GrupoEvento::opciones(),
+            'puntos' => $this->puntosMonitoreo(),
+            'tiposPunto' => TipoPuntoMonitoreo::opciones(),
+        ];
+    }
+
+    /**
      * Detalle de un evento: lo que puede consultar o, si no, lo que puede
      * corregir (para ver qué está corrigiendo y su historial).
      */
     public function puedeVerDetalle(User $usuario, Evento $evento): bool
     {
-        return $this->puedeCorregir($usuario) || $this->puedeVer($usuario, $evento);
+        return $this->puedeCorregir($usuario) || $this->puedeAmpliar($usuario) || $this->puedeVer($usuario, $evento);
     }
 }

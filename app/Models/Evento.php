@@ -159,6 +159,14 @@ class Evento extends Model
     }
 
     /**
+     * Ampliaciones: información posterior que se suma sin tocar el evento.
+     */
+    public function ampliaciones(): HasMany
+    {
+        return $this->hasMany(Ampliacion::class)->orderBy('id');
+    }
+
+    /**
      * Valores vigentes de los campos corregibles: el original con las fe de
      * erratas aplicadas en orden. El registro original no se toca.
      *

@@ -48,7 +48,7 @@ export default function AuthenticatedLayout({
         {
             titulo: 'Operación',
             items: [
-                puedeConsultarEventos && { etiqueta: 'Novedades', ruta: 'eventos.index', activo: actual('eventos.index', 'eventos.show', 'erratas.*') },
+                puedeConsultarEventos && { etiqueta: 'Novedades', ruta: 'eventos.index', activo: actual('eventos.index', 'eventos.show', 'erratas.*', 'ampliaciones.*') },
                 esSupervisor && { etiqueta: 'Registrar novedad', ruta: 'eventos.create', activo: actual('eventos.create') },
             ],
         },
@@ -58,7 +58,7 @@ export default function AuthenticatedLayout({
                 puedeVerMapa && { etiqueta: 'Análisis', ruta: 'analisis.index', activo: actual('analisis.index') },
                 puedeVerMapa && { etiqueta: 'Mapa', ruta: 'mapa.index', activo: actual('mapa.index') },
                 puedeVerEstadisticas && { etiqueta: 'Estadísticas', ruta: 'estadisticas.index', activo: actual('estadisticas.index') },
-                puedeExportar && { etiqueta: 'Reportes', ruta: 'reportes.index', activo: actual('reportes.index') },
+                puedeExportar && { etiqueta: 'Libros de guardia', ruta: 'reportes.index', activo: actual('reportes.index') },
             ],
         },
         {

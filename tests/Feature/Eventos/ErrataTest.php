@@ -245,22 +245,37 @@ class ErrataTest extends TestCase
         Event::assertDispatched(EventoRegistrado::class, fn ($e) => $e->evento->is($constancia));
     }
 
-    public function test_a_una_constancia_no_se_le_hace_errata(): void
+    public function test_a_una_constancia_tambien_se_le_hace_errata(): void
     {
-        $constancia = Evento::factory()->create([
-            'tipo_evento_id' => TipoEvento::interno(TipoEvento::ERRATA),
-            'usuario_id' => $this->supervisor->id,
-        ]);
-
-        $this->actingAs($this->supervisor)->get(route('erratas.create', $constancia))->assertForbidden();
+        // Una errata con el motivo mal escrito se corrige con otra errata.
         $this->actingAs($this->supervisor)
-            ->post(route('erratas.store', $constancia), ['motivo' => self::MOTIVO])
-            ->assertSessionHas('error');
+            ->post(route('erratas.store', $this->evento), ['motivo' => self::MOTIVO]);
+        $constancia = Evento::where('tipo_evento_id', TipoEvento::interno(TipoEvento::ERRATA))->sole();
+
         $this->actingAs($this->supervisor)
             ->get(route('eventos.show', $constancia))
-            ->assertInertia(fn (Assert $page) => $page->where('puedeCorregir', false));
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('puedeCorregir', true)
+                ->where('puedeAmpliar', false));
+        // El formulario muestra el tipo de la constancia (bloqueado).
+        $this->actingAs($this->supervisor)
+            ->get(route('erratas.create', $constancia))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where(
+                'tipos',
+                fn ($tipos) => collect($tipos)->pluck('id')->contains($constancia->tipo_evento_id),
+            ));
 
-        $this->assertDatabaseCount('erratas', 0);
+        $motivo = 'El PM correcto es PM-M-003, no PM-M-002.';
+        $this->actingAs($this->supervisor)
+            ->post(route('erratas.store', $constancia), ['motivo' => $motivo])
+            ->assertRedirect(route('eventos.show', $constancia));
+
+        $this->assertSame($constancia->id, Errata::latest('id')->value('evento_id'));
+        $this->assertSame(
+            sprintf('Errata sobre AT-2026-%04d: %s', $constancia->id, $motivo),
+            Evento::where('tipo_evento_id', TipoEvento::interno(TipoEvento::ERRATA))->latest('id')->value('descripcion'),
+        );
     }
 
     public function test_la_errata_es_inmutable(): void

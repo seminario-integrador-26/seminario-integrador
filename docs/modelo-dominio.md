@@ -41,6 +41,7 @@ esta tabla deja registradas las diferencias.
 |---|---|---|
 | **Evento** | tipo_evento_id, punto_monitoreo_id (nullable), barrio_id y direccion (nullable, solo sin PM), usuario_id, fecha_hora, timestamp_video (hh:mm:ss, nullable, ya no se carga), descripcion, created_at | **Inmutable** (sin updated_at; el modelo bloquea update/delete). Sin derivación. Abrir y cerrar el turno también son eventos (grupo Internos). descripción obligatoria (US-003/US-005). Sin PM: barrio y dirección, obligatorios si el tipo exige ubicación. |
 | **Errata** | evento_id, motivo, usuario_id, created_at (campo_corregido, valor_anterior, valor_nuevo: solo en las anteriores a 2026-10-23) | Tabla separada, inmutable. Único mecanismo de corrección: registra el motivo; los datos del evento quedan bloqueados. Las erratas viejas con campo y valores siguen aplicando en `eventos_vigentes`. |
+| **Ampliacion** | evento_id, detalle, usuario_id, created_at | Tabla separada, inmutable (2026-11-11). Suma información posterior a una novedad sin tocarla; deja una constancia (evento interno Ampliación) en el libro, como la errata. |
 | **TipoEvento** | nombre, categoria, requiere_ubicacion (bool), es_cuantificable (bool) | Flags independientes. N:M con GrupoInteresado. |
 | **PuntoMonitoreo** | codigo (único), nombre, jurisdiccion (`municipal` \| `provincial`), zona (nullable), latitud, longitud (nullable) | 394 PM: 235 municipales + 159 provinciales. Coordenadas dentro de Villa María. Se cargan desde Puntos → Importación masiva (US-024). |
 | **GrupoInteresado** | nombre, identificador_whatsapp (nullable) | N:M con TipoEvento; 1:N con Contacto. |
@@ -52,7 +53,7 @@ esta tabla deja registradas las diferencias.
 ## Relaciones
 
 - Evento **N:1** TipoEvento, PuntoMonitoreo (nullable), Usuario.
-- Evento **1:N** Errata, Notificacion.
+- Evento **1:N** Errata, Ampliacion, Notificacion.
 - TipoEvento **N:M** GrupoInteresado (tabla pivote `grupo_interesado_tipo_evento`).
 - GrupoInteresado **1:N** Contacto, Notificacion.
 - AuditoriaAcceso **N:1** Usuario (nullable: el email puede no existir).
@@ -63,7 +64,7 @@ Valor persistido → etiqueta (`TipoEvento::CATEGORIAS`):
 `prevencion` → Prevención · `convivencia_urbana` → Convivencia Urbana ·
 `seguridad_publica` → Seguridad Pública · `informativo` → Informativo
 
-Tablas: `grupos_evento`, `tipos_evento`, `puntos_monitoreo`, `eventos`, `erratas`,
+Tablas: `grupos_evento`, `tipos_evento`, `puntos_monitoreo`, `eventos`, `erratas`, `ampliaciones`,
 `grupos_interesados`, `contactos`, `grupo_interesado_tipo_evento`,
 `notificaciones`, `auditoria_accesos`.
 

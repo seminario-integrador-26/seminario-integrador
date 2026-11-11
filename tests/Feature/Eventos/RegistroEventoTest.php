@@ -422,20 +422,23 @@ class RegistroEventoTest extends TestCase
         $this->assertSame(0, $this->registrados()->count());
     }
 
-    public function test_la_constancia_errata_no_se_registra_a_mano(): void
+    public function test_las_constancias_no_se_registran_a_mano(): void
     {
-        $errata = TipoEvento::interno(TipoEvento::ERRATA);
+        foreach ([TipoEvento::ERRATA, TipoEvento::AMPLIACION] as $nombre) {
+            $constancia = TipoEvento::interno($nombre);
+            $this->assertNotNull($constancia);
 
-        $this->actingAs($this->supervisor)
-            ->get(route('eventos.create'))
-            ->assertInertia(fn (Assert $page) => $page->where(
-                'tipos',
-                fn ($tipos) => collect($tipos)->pluck('id')->doesntContain($errata),
-            ));
+            $this->actingAs($this->supervisor)
+                ->get(route('eventos.create'))
+                ->assertInertia(fn (Assert $page) => $page->where(
+                    'tipos',
+                    fn ($tipos) => collect($tipos)->pluck('id')->doesntContain($constancia),
+                ));
 
-        $this->actingAs($this->supervisor)
-            ->post(route('eventos.store'), $this->datosValidos(['tipo_evento_id' => $errata, 'punto_monitoreo_id' => null]))
-            ->assertSessionHasErrors('tipo_evento_id');
+            $this->actingAs($this->supervisor)
+                ->post(route('eventos.store'), $this->datosValidos(['tipo_evento_id' => $constancia, 'punto_monitoreo_id' => null]))
+                ->assertSessionHasErrors('tipo_evento_id');
+        }
 
         $this->assertSame(0, $this->registrados()->count());
     }

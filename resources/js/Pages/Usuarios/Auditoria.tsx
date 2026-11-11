@@ -70,6 +70,7 @@ const accionBadge: Record<string, string | undefined> = {
     reporte_pdf: CIAN,
     exportacion_datos: CIAN,
     errata_registrada: AMBAR,
+    ampliacion_registrada: CIAN,
     punto_creado: VERDE,
     punto_actualizado: AZUL,
     punto_eliminado: ROJO,

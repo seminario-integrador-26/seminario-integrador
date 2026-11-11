@@ -27,7 +27,7 @@ class CatalogosSeederTest extends TestCase
             ['policia' => 'Policía', 'guardia_local' => 'Guardia Local', 'internos' => 'Internos'],
             GrupoEvento::opciones(),
         );
-        $this->assertSame(41, TipoEvento::count());
+        $this->assertSame(42, TipoEvento::count());
         // "Otros" existe en los tres grupos: el nombre es único por grupo, no global.
         $this->assertSame(3, TipoEvento::where('nombre', 'Otros')->count());
         $this->assertFalse(TipoEvento::where('nombre', 'Apertura de turno')->value('es_cuantificable'));
@@ -42,7 +42,7 @@ class CatalogosSeederTest extends TestCase
 
         $this->seed(TipoEventoSeeder::class);
 
-        $this->assertSame(41, TipoEvento::count());
+        $this->assertSame(42, TipoEvento::count());
         $this->assertFalse(TipoEvento::where('nombre', 'Robos')->value('requiere_ubicacion'));
     }
 

@@ -39,6 +39,59 @@ const TODAS = 'TODAS';
 const normalizar = (texto: string) =>
     texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
+const dos = (n: string | number) => String(n).padStart(2, '0');
+
+/**
+ * Hora de la novedad (hh:mm:ss) dentro del rango [desde, hasta] (hh:mm, con
+ * los extremos incluidos al minuto). Si desde > hasta, el rango cruza la
+ * medianoche (turno noche, 22:00 a 06:00).
+ */
+const enRangoHorario = (hora: string, desde: string, hasta: string) => {
+    const despues = hora >= `${desde}:00`;
+    const antes = hora <= `${hasta}:59`;
+
+    return desde > hasta ? despues || antes : despues && antes;
+};
+
+/** ("14", "30") → "14:30"; ("14") → "14:00"; null si no es una hora válida. */
+const horaDe = (h: string, m?: string) =>
+    Number(h) < 24 && Number(m ?? 0) < 60 ? `${dos(h)}:${dos(m ?? 0)}` : null;
+
+/**
+ * Cómo coincide cada palabra del buscador con una novedad:
+ *   10/11, 10/11/2026, 10/11/26  → fecha de la novedad (con barra: el
+ *                                  guion es para rangos horarios)
+ *   14:30, 14.30, 14hs, 9:3       → hora de la novedad (por prefijo)
+ *   14-16, 22:00-06:00            → rango horario (cruza la medianoche si hace falta)
+ *   cualquier otra cosa           → texto (código, tipo, lugar, descripción, autor)
+ */
+const coincide = (termino: string, ev: EventoPanel, texto: string): boolean => {
+    const fecha = termino.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
+    if (fecha) {
+        const [d, m, a] = ev.fecha.split('/');
+        const anio = fecha[3] ? (fecha[3].length === 2 ? `20${fecha[3]}` : fecha[3]) : a;
+        return dos(fecha[1]) === d && dos(fecha[2]) === m && anio === a;
+    }
+
+    const rango = termino.match(/^(\d{1,2})(?:[:.](\d{2}))?(?:hs?)?-(\d{1,2})(?:[:.](\d{2}))?(?:hs?)?$/);
+    if (rango) {
+        const desde = horaDe(rango[1], rango[2]);
+        const hasta = horaDe(rango[3], rango[4]);
+        if (desde && hasta) {
+            return enRangoHorario(ev.hora, desde, hasta);
+        }
+    }
+
+    const hora = termino.match(/^(\d{1,2})(?:hs?|[:.](\d{0,2})(?:hs?)?(?::(\d{0,2}))?)$/);
+    if (hora) {
+        // "9:3" → "09:3", prefijo de "09:35:12".
+        const prefijo = [dos(hora[1]), hora[2], hora[3]].filter(Boolean).join(':');
+        return ev.hora.startsWith(prefijo);
+    }
+
+    return texto.includes(termino);
+};
+
 export default function Dashboard({
     turno,
     eventos,
@@ -48,6 +101,7 @@ export default function Dashboard({
     const { auth } = usePage<PageProps>().props;
     const esSupervisor = (auth.roles ?? []).includes('Supervisor');
     const puedeCorregir = auth.permissions.includes('erratas.crear');
+    const puedeAmpliar = auth.permissions.includes('ampliaciones.crear');
     const puedeExportar = auth.permissions.includes('reportes.exportar');
 
     // "En vivo": cada 30 s recarga solo turno y novedades (no el mapa ni los
@@ -69,19 +123,22 @@ export default function Dashboard({
         [eventos, filtro],
     );
 
-    // Búsqueda libre en el feed: código, tipo, grupo, ubicación, descripción y
-    // autor, sin distinguir mayúsculas ni tildes.
+    // Búsqueda en el feed: cada palabra tiene que coincidir (ver `coincide`),
+    // sin distinguir mayúsculas ni tildes. Fechas y horas filtran por la fecha
+    // y el horario de la novedad: "10/11 14-16 robo".
     const eventosFiltrados = useMemo(() => {
-        const termino = normalizar(busqueda.trim());
-        if (!termino) {
+        const terminos = normalizar(busqueda.trim()).split(/\s+/).filter(Boolean);
+        if (terminos.length === 0) {
             return eventosDeCategoria;
         }
 
-        return eventosDeCategoria.filter((ev) =>
-            normalizar(
+        return eventosDeCategoria.filter((ev) => {
+            const texto = normalizar(
                 [ev.codigo, ev.tipo, ev.categoria, ev.ubicacion, ev.descripcion, ev.autor].join(' '),
-            ).includes(termino),
-        );
+            );
+
+            return terminos.every((termino) => coincide(termino, ev, texto));
+        });
     }, [eventosDeCategoria, busqueda]);
 
     const cambiarCategoria = (categoria: string) => {
@@ -100,7 +157,7 @@ export default function Dashboard({
             <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col bg-atalaya-canvas font-sans">
                 {/* 1. Barra de telemetría (compacta: el protagonista es el mapa) */}
                 <section className="border-b border-atalaya-border bg-atalaya-surface">
-                    {/* Turno + novedades; sin Reportes (Supervisor) no va la caja de la derecha. */}
+                    {/* Turno + novedades; sin Libros de guardia (Supervisor) no va la caja de la derecha. */}
                     <div
                         className={
                             'swiss-grid grid-cols-1 ' +
@@ -192,7 +249,7 @@ export default function Dashboard({
                                     href={route('reportes.index')}
                                     className="flex-1 border border-atalaya-border bg-atalaya-elevated px-2 py-1 text-center font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-border"
                                 >
-                                    Reportes
+                                    Libros de guardia
                                 </Link>
                             </div>
                         )}
@@ -309,7 +366,8 @@ export default function Dashboard({
                             <TextInput
                                 type="search"
                                 aria-label="Buscar en el libro de guardia"
-                                placeholder={`Buscar en ${eventosDeCategoria.length} novedades (tipo, lugar, código…)`}
+                                placeholder={`Buscar en ${eventosDeCategoria.length} novedades (tipo, lugar, 10/11, 14:30, 14-16…)`}
+                                title="Texto, fecha (10/11), hora (14:30, 14hs) o rango horario (14-16, 22-06). Varias palabras se combinan."
                                 value={busqueda}
                                 onChange={(e) => setBusqueda(e.target.value)}
                                 className="block w-full"
@@ -376,14 +434,24 @@ export default function Dashboard({
                                     <span className="font-bold text-white">
                                         Detalle: {seleccionado.codigo}
                                     </span>
-                                    {puedeCorregir && (
-                                        <Link
-                                            href={route('erratas.create', seleccionado.id)}
-                                            className="border border-atalaya-amber px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-atalaya-amber transition hover:bg-atalaya-amber/10"
-                                        >
-                                            [ + Fe de errata ]
-                                        </Link>
-                                    )}
+                                    <div className="flex gap-2">
+                                        {puedeAmpliar && !seleccionado.constancia && (
+                                            <Link
+                                                href={route('ampliaciones.create', seleccionado.id)}
+                                                className="border border-atalaya-cyan px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-atalaya-cyan transition hover:bg-atalaya-cyan/10"
+                                            >
+                                                [ + Ampliación ]
+                                            </Link>
+                                        )}
+                                        {puedeCorregir && (
+                                            <Link
+                                                href={route('erratas.create', seleccionado.id)}
+                                                className="border border-atalaya-amber px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-atalaya-amber transition hover:bg-atalaya-amber/10"
+                                            >
+                                                [ + Fe de errata ]
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="space-y-1.5 text-[11px]">

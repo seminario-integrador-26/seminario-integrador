@@ -55,6 +55,8 @@ export interface EventoPanel {
     id: number;
     /** AT-<año>-<id con 4 dígitos> */
     codigo: string;
+    /** Constancia Errata o Ampliación: admite fe de errata, no ampliación. */
+    constancia: boolean;
     /** Nombre del GrupoEvento. */
     categoria: string;
     es_cuantificable: boolean;

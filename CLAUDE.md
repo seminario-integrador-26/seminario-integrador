@@ -46,6 +46,9 @@ por email vía el flujo estándar de reseteo).
    2026-10-23). Las erratas anteriores con campo, valor anterior y valor nuevo
    siguen aplicando: para leer estadísticas, mapa, exportaciones y API usar
    `Evento::vigentes()` (vista `eventos_vigentes`), no `Evento::query()`.
+   La información posterior (qué pasó después) se suma con una **ampliación**
+   (tabla `ampliaciones`: detalle y autor; decisión 2026-11-11): mismo circuito
+   que la errata, pero no corrige nada.
 2. **Clasificación obligatoria.** Todo evento se clasifica al registrarse por su
    TipoEvento, que pertenece a un **GrupoEvento**: Policía, Guardia Local
    o Internos (catálogo real del "Registro de Intervenciones" más los eventos
@@ -69,8 +72,8 @@ por email vía el flujo estándar de reseteo).
    `eventos.grupo_guardia`, solo en la Apertura. El turno vigente es la última Apertura sin Cierre
    posterior (`LibroGuardiaService`); `EventoService` lo vuelve a chequear con
    lock para dos Aperturas simultáneas. Apertura, Cierre y Nota se notifican
-   (Telegram/WhatsApp) a todos los grupos por defecto (decisión 2026-10-28). Cada fe de errata deja además una constancia
-   (evento interno Errata) en el libro. Ver `docs/rediseno-libro-guardia.md`.
+   (Telegram/WhatsApp) a todos los grupos por defecto (decisión 2026-10-28). Cada fe de errata y cada ampliación deja
+   además una constancia (evento interno Errata / Ampliación) en el libro. Ver `docs/rediseno-libro-guardia.md`.
 6. **Sin derivación ni seguimiento.** El sistema registra, clasifica, localiza,
    notifica y consulta; **no** deriva al área ni hace seguimiento posterior del
    evento (eso queda fuera de alcance por decisión del dominio final).
@@ -136,7 +139,7 @@ solo esos).
 
 ## Modelo de dominio
 
-Ver `docs/modelo-dominio.md`. Entidades: Evento, Errata, TipoEvento,
+Ver `docs/modelo-dominio.md`. Entidades: Evento, Errata, Ampliacion, TipoEvento,
 PuntoMonitoreo, GrupoEvento, GrupoInteresado, Contacto, Usuario (rol Supervisor,
 Administrativo o Administrador de sistema).
 

@@ -31,15 +31,14 @@ class ErrataService
      * transacción, la constancia (evento interno Errata) que la deja en el
      * libro de guardia y se notifica según la matriz.
      *
-     * @throws DomainException si el evento es una constancia o no hay un
-     *                         turno abierto (la constancia debe caer en uno).
+     * También se le hace errata a una constancia (Errata o Ampliación), por
+     * ejemplo si el motivo quedó mal escrito (decisión 2026-11-11).
+     *
+     * @throws DomainException si no hay un turno abierto (la constancia
+     *                         debe caer en uno).
      */
     public function corregir(Evento $evento, string $motivo, User $autor): Errata
     {
-        if ($this->eventos->esConstancia($evento)) {
-            throw new DomainException('Las constancias de errata las registra el sistema: no se corrigen.');
-        }
-
         if (! $this->libro->aperturaVigente()) {
             throw new DomainException('No hay un turno abierto: registrá primero la Apertura de turno.');
         }

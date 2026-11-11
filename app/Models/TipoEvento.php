@@ -43,9 +43,18 @@ class TipoEvento extends Model
 
     /**
      * Constancia que crea el sistema al cargar una fe de errata: no se
-     * registra a mano ni se le hace errata.
+     * registra a mano ni se amplía (sí se le hace errata).
      */
     public const ERRATA = 'Errata';
+
+    /**
+     * Constancia que crea el sistema al cargar una ampliación de una novedad:
+     * no se registra a mano ni se amplía (sí se le hace errata).
+     */
+    public const AMPLIACION = 'Ampliación';
+
+    /** Constancias que registra el sistema (no se cargan a mano). */
+    public const CONSTANCIAS = [self::ERRATA, self::AMPLIACION];
 
     protected $table = 'tipos_evento';
 
@@ -68,6 +77,16 @@ class TipoEvento extends Model
     public static function sinCamaraIds(): array
     {
         return array_values(array_filter(array_map(static::interno(...), self::SIN_CAMARA)));
+    }
+
+    /**
+     * Ids de las constancias (Errata y Ampliación) que están sembradas.
+     *
+     * @return list<int>
+     */
+    public static function constanciaIds(): array
+    {
+        return array_values(array_filter(array_map(static::interno(...), self::CONSTANCIAS)));
     }
 
     /**
