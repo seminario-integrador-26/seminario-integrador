@@ -35,6 +35,7 @@ export default function AuthenticatedLayout({
     const puedeConsultarEventos = permisos.includes('eventos.consultar');
     const puedeVerEstadisticas = permisos.includes('estadisticas.ver');
     const puedeExportar = permisos.includes('reportes.exportar');
+    const puedeDescargarIntervenciones = permisos.includes('reportes.intervenciones');
     const puedeVerMapa = permisos.includes('dashboards.ver');
     const puedeGestionarPuntos = permisos.includes('puntos.gestionar');
     const puedeConfigurarNotificaciones = permisos.includes('notificaciones.configurar');
@@ -59,6 +60,7 @@ export default function AuthenticatedLayout({
                 puedeVerMapa && { etiqueta: 'Mapa', ruta: 'mapa.index', activo: actual('mapa.index') },
                 puedeVerEstadisticas && { etiqueta: 'Estadísticas', ruta: 'estadisticas.index', activo: actual('estadisticas.index') },
                 puedeExportar && { etiqueta: 'Libros de guardia', ruta: 'reportes.index', activo: actual('reportes.index') },
+                puedeDescargarIntervenciones && { etiqueta: 'Registro de intervenciones', ruta: 'intervenciones.index', activo: actual('intervenciones.index') },
             ],
         },
         {

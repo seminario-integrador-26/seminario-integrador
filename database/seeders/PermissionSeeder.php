@@ -30,6 +30,8 @@ class PermissionSeeder extends Seeder
         'estadisticas.ver' => ['Administrativo', 'Administrador de sistema'],
         'dashboards.ver' => ['Administrativo', 'Administrador de sistema'],
         'reportes.exportar' => ['Administrativo', 'Administrador de sistema'],
+        // Registro de Intervenciones mensual (.xlsx) para el Portal de Transparencia.
+        'reportes.intervenciones' => ['Supervisor', 'Administrativo', 'Administrador de sistema'],
         // Gestión reservada al Administrador de sistema (el Administrativo es solo lectura).
         'usuarios.gestionar' => ['Administrador de sistema'],
         'tipos_evento.gestionar' => ['Administrador de sistema'],

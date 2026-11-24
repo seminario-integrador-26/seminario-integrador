@@ -13,6 +13,7 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ParametroController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PuntoMonitoreoController;
+use App\Http\Controllers\RegistroIntervencionesController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\TokenApiController;
@@ -158,6 +159,16 @@ Route::middleware(['auth', 'permission:reportes.exportar'])->group(function () {
     Route::get('reportes/eventos.{formato}', [ReporteController::class, 'eventosPlanilla'])
         ->whereIn('formato', ['xlsx', 'xls'])
         ->name('reportes.eventos.planilla');
+});
+
+/*
+| Registro de Intervenciones mensual para el Portal de Transparencia —
+| permiso reportes.intervenciones (Supervisor, Administrativo y Administrador de sistema).
+*/
+Route::middleware(['auth', 'permission:reportes.intervenciones'])->group(function () {
+    Route::get('intervenciones', [RegistroIntervencionesController::class, 'index'])->name('intervenciones.index');
+    Route::get('intervenciones/{anio}/{mes}.xlsx', [RegistroIntervencionesController::class, 'descargar'])
+        ->whereNumber(['anio', 'mes'])->name('intervenciones.descargar');
 });
 
 require __DIR__.'/auth.php';
