@@ -41,6 +41,20 @@ class MapaService
     }
 
     /**
+     * Fecha de la primera novedad cuantificable (para "todo hasta la fecha");
+     * hoy si todavía no hay ninguna.
+     */
+    public function primeraFecha(): string
+    {
+        $primera = Evento::vigentes()
+            ->join('tipos_evento', 'tipos_evento.id', '=', 'eventos.tipo_evento_id')
+            ->where('tipos_evento.es_cuantificable', true)
+            ->min('eventos.fecha_hora');
+
+        return $primera ? Carbon::parse($primera)->toDateString() : now()->toDateString();
+    }
+
+    /**
      * Cantidad de eventos por PM en el período, con sus coordenadas.
      *
      * @param  array<string, mixed>  $filtros
@@ -178,6 +192,8 @@ class MapaService
             ->where('eventos.fecha_hora', '>=', Carbon::parse($periodo['desde'])->startOfDay())
             ->where('eventos.fecha_hora', '<', Carbon::parse($periodo['hasta'])->addDay()->startOfDay())
             ->when($filtros['categorias'] ?? null, fn (Builder $q, array $c) => $q->whereIn('grupos_evento.codigo', $c))
-            ->when($filtros['tipo_evento_id'] ?? null, fn (Builder $q, $id) => $q->where('eventos.tipo_evento_id', (int) $id));
+            ->when($filtros['tipo_evento_id'] ?? null, fn (Builder $q, $id) => $q->where('eventos.tipo_evento_id', (int) $id))
+            // Tablero Mapa de calor: uno, varios o (vacío) todos los tipos.
+            ->when($filtros['tipos'] ?? null, fn (Builder $q, array $ids) => $q->whereIn('eventos.tipo_evento_id', array_map('intval', $ids)));
     }
 }

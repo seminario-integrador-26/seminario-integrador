@@ -6,7 +6,7 @@ import { colorGrupo, colorTipoPunto, estiloGrupo, TIPOS_PUNTO } from '@/catalogo
 import type { Opciones, PuntoConCoordenadas, PuntoMapa, TipoEventoOpcion } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import L from '@/lib/leafletGlobal';
-import 'leaflet.heat';
+import { AjustarTamano, CapaCalor, CENTRO_VILLA_MARIA, DrillDownPorZona } from '@/Components/CapaCalor';
 import type { DivIcon, CircleMarker as LeafletCircleMarker, LatLngTuple, PathOptions } from 'leaflet';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -15,8 +15,6 @@ import {
     Marker,
     Popup,
     TileLayer,
-    useMap,
-    useMapEvents,
 } from 'react-leaflet';
 
 /** PM con eventos en el período (MapaService::densidad). */
@@ -77,15 +75,6 @@ interface Props {
     tipos: TipoEventoOpcion[];
     categorias: Opciones;
 }
-
-const CENTRO_VILLA_MARIA: LatLngTuple = [-32.4075, -63.2403];
-
-// Rampa secuencial de un solo tono (cian de marca): sobre el mapa oscuro,
-// más eventos = más claro.
-const GRADIENTE = { 0.25: '#0b3a5c', 0.5: '#0e7fa8', 0.8: '#00d2ff', 1: '#e6fbff' };
-
-// Radio (m) para el drill-down al hacer clic en una zona del mapa de calor.
-const RADIO_DRILL_DOWN = 250;
 
 /** Estilo del círculo según el tipo de PM (municipal | provincial | alarma). */
 const ESTILO_TIPO_PUNTO: Record<string, PathOptions> = {
@@ -206,80 +195,6 @@ function MarcadoresEventos({ eventos }: { eventos: EventoMapa[] }) {
             ))}
         </>
     );
-}
-
-/** Capa de calor (leaflet.heat); se rehace cuando cambian los datos. */
-function CapaCalor({ puntos }: { puntos: PuntoDensidad[] }) {
-    const map = useMap();
-
-    useEffect(() => {
-        // leaflet.heat falla (getImageData) si el mapa todavía mide 0 px.
-        const { x, y } = map.getSize();
-        if (puntos.length === 0 || x === 0 || y === 0) {
-            return undefined;
-        }
-
-        const max = Math.max(...puntos.map((p) => p.cantidad));
-        const capa = L.heatLayer(
-            puntos.map((p) => [p.latitud, p.longitud, p.cantidad / max]),
-            // maxZoom: desde ese zoom la intensidad es completa; con uno mayor
-            // al inicial (14) el calor se ve apagado al abrir el mapa.
-            { radius: 30, blur: 20, maxZoom: 13, max: 1, minOpacity: 0.4, gradient: GRADIENTE },
-        ).addTo(map);
-
-        return () => {
-            map.removeLayer(capa);
-        };
-    }, [map, puntos]);
-
-    return null;
-}
-
-/** Recalcula el tamaño del mapa cuando el contenedor cambia. */
-function AjustarTamano() {
-    const map = useMap();
-
-    useEffect(() => {
-        const observer = new ResizeObserver(() => map.invalidateSize());
-        observer.observe(map.getContainer());
-
-        return () => observer.disconnect();
-    }, [map]);
-
-    return null;
-}
-
-/**
- * US-017 drill-down: clic en una zona -> PM con eventos más cercano (dentro
- * del radio) y se abre su detalle.
- */
-function DrillDownPorZona({
-    puntos,
-    onElegir,
-}: {
-    puntos: PuntoDensidad[];
-    onElegir: (punto: PuntoDensidad) => void;
-}) {
-    const map = useMapEvents({
-        click(e) {
-            let elegido = null as PuntoDensidad | null;
-            let mejor = RADIO_DRILL_DOWN;
-
-            puntos.forEach((p) => {
-                const d = map.distance(e.latlng, [p.latitud, p.longitud]);
-                if (d <= mejor) {
-                    mejor = d;
-                    elegido = p;
-                }
-            });
-
-            if (elegido) {
-                onElegir(elegido);
-            }
-        },
-    });
-
-    return null;
 }
 
 function Interruptor({

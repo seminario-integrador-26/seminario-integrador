@@ -56,6 +56,7 @@ export default function AuthenticatedLayout({
         {
             titulo: 'Análisis',
             items: [
+                puedeConsultarEventos && { etiqueta: 'Tableros', ruta: 'tableros.operativo', activo: actual('tableros.*') },
                 puedeVerMapa && { etiqueta: 'Análisis', ruta: 'analisis.index', activo: actual('analisis.index') },
                 puedeVerMapa && { etiqueta: 'Mapa', ruta: 'mapa.index', activo: actual('mapa.index') },
                 puedeVerEstadisticas && { etiqueta: 'Estadísticas', ruta: 'estadisticas.index', activo: actual('estadisticas.index') },

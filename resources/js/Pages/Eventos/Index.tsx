@@ -124,7 +124,8 @@ export default function Index({
 }: Props) {
     const { errors, auth } = usePage<PageProps>().props;
     // US-021: si se llegó desde un gráfico de Análisis, ofrecer volver.
-    const desdeAnalisis = usePage().url.includes('origen=analisis');
+    const origen = usePage().url.match(/origen=(analisis|tableros)/)?.[1];
+    const desdeAnalisis = origen !== undefined;
     const puedeReenviar = auth.roles.includes('Supervisor');
     const puedeExportar = auth.permissions.includes('reportes.exportar');
     const [exportacion, setExportacion] = useState<Exportacion | null>(null);
@@ -245,7 +246,7 @@ export default function Index({
                                 onClick={() => window.history.back()}
                                 className="font-mono text-xs font-bold uppercase text-atalaya-cyan hover:underline"
                             >
-                                ← Volver al análisis
+                                ← Volver {origen === 'tableros' ? 'al tablero' : 'al análisis'}
                             </button>
                         </div>
                     )}

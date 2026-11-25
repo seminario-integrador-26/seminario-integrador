@@ -16,6 +16,7 @@ use App\Http\Controllers\PuntoMonitoreoController;
 use App\Http\Controllers\RegistroIntervencionesController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TokenApiController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Foundation\Application;
@@ -131,6 +132,14 @@ Route::middleware(['auth', 'permission:eventos.consultar'])->group(function () {
 });
 
 /*
+| Tablero de Control Operativo (tiempo real) — permiso eventos.consultar:
+| también lo ve el Supervisor, que es quien está en la sala.
+*/
+Route::middleware(['auth', 'permission:eventos.consultar'])->group(function () {
+    Route::get('tableros/operativo', [TableroController::class, 'operativo'])->name('tableros.operativo');
+});
+
+/*
 | Estadísticas mensuales y anuales (US-014) — permiso estadisticas.ver
 | (Administrativo y Administrador de sistema).
 */
@@ -145,6 +154,9 @@ Route::middleware(['auth', 'permission:dashboards.ver'])->group(function () {
     Route::get('mapa', [MapaController::class, 'index'])->name('mapa.index');
     // US-015, US-018 a US-022: dashboards de análisis.
     Route::get('analisis', [AnalisisController::class, 'index'])->name('analisis.index');
+    // Tableros de análisis estratégico y mapa de calor.
+    Route::get('tableros/estrategico', [TableroController::class, 'estrategico'])->name('tableros.estrategico');
+    Route::get('tableros/calor', [TableroController::class, 'calor'])->name('tableros.calor');
 });
 
 /*
